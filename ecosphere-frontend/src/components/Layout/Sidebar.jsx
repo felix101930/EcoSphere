@@ -19,38 +19,56 @@ const Sidebar = () => {
     {
       category: 'Dashboards',
       items: [
-        { text: 'Overview', path: '/dashboard', roles: ['Admin', 'TeamMember'] },
-        { text: 'Electricity', path: '/electricity', roles: ['Admin', 'TeamMember'], comingSoon: true },
-        { text: 'Water', path: '/water', roles: ['Admin', 'TeamMember'], comingSoon: true },
-        { text: 'Thermal', path: '/thermal', roles: ['Admin', 'TeamMember'], comingSoon: true }
+        { text: 'Overview', path: '/dashboard', roles: ['Admin', 'TeamMember'], permission: null },
+        { text: 'Electricity', path: '/electricity', roles: ['Admin', 'TeamMember'], permission: 'electricity', comingSoon: true },
+        { text: 'Water', path: '/water', roles: ['Admin', 'TeamMember'], permission: 'water', comingSoon: true },
+        { text: 'Thermal', path: '/thermal', roles: ['Admin', 'TeamMember'], permission: 'thermal', comingSoon: true }
       ]
     },
     {
       category: 'Advanced',
       items: [
-        { text: '3D Model', path: '/3d-model', roles: ['Admin', 'TeamMember'], comingSoon: true }
+        { text: '3D Model', path: '/3d-model', roles: ['Admin', 'TeamMember'], permission: '3d-model', comingSoon: true }
       ]
     },
     {
       category: 'Calculator',
       items: [
-        { text: 'Carbon Footprint', path: '/carbon-footprint', roles: ['Admin', 'TeamMember'], comingSoon: true }
+        { text: 'Carbon Footprint', path: '/carbon-footprint', roles: ['Admin', 'TeamMember'], permission: 'carbon-footprint', comingSoon: true }
       ]
     },
     {
       category: 'Management',
       items: [
-        { text: 'User Management', path: '/users', roles: ['Admin'] },
-        { text: 'Dashboard Management', path: '/dashboard-management', roles: ['Admin'], comingSoon: true },
-        { text: 'Quiz Management', path: '/quiz-management', roles: ['Admin'], comingSoon: true }
+        { text: 'User Management', path: '/users', roles: ['Admin'], permission: null },
+        { text: 'Dashboard Management', path: '/dashboard-management', roles: ['Admin'], permission: null, comingSoon: true },
+        { text: 'Quiz Management', path: '/quiz-management', roles: ['Admin'], permission: null, comingSoon: true }
       ]
     }
   ];
 
-  // Filter menu items based on user role
+  // Check if user has permission to access a menu item
+  const hasPermission = (item) => {
+    // Admin has all permissions
+    if (currentUser?.role === 'Admin') {
+      return true;
+    }
+    
+    // If no specific permission required, allow access
+    if (!item.permission) {
+      return true;
+    }
+    
+    // Check if TeamMember has the required permission
+    return currentUser?.permissions && currentUser.permissions.includes(item.permission);
+  };
+
+  // Filter menu items based on user role and permissions
   const visibleMenuStructure = menuStructure.map(section => ({
     ...section,
-    items: section.items.filter(item => item.roles.includes(currentUser?.role))
+    items: section.items.filter(item => 
+      item.roles.includes(currentUser?.role) && hasPermission(item)
+    )
   })).filter(section => section.items.length > 0);
 
   return (

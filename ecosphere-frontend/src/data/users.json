@@ -24,7 +24,11 @@
       "email": "test.test@edu.sait.ca",
       "password": "abcd1234",
       "role": "TeamMember",
-      "permissions": []
+      "permissions": [
+        "electricity",
+        "3d-model",
+        "carbon-footprint"
+      ]
     }
   ],
   "nextId": 6

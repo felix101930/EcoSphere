@@ -1,11 +1,30 @@
 // UserForm - Form for adding/editing users
-import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
+import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography, FormGroup, FormControlLabel, Checkbox, Paper } from '@mui/material';
+
+const AVAILABLE_PERMISSIONS = [
+  { id: 'electricity', label: 'Electricity Dashboard' },
+  { id: 'water', label: 'Water Dashboard' },
+  { id: 'thermal', label: 'Thermal Dashboard' },
+  { id: '3d-model', label: '3D Model' },
+  { id: 'carbon-footprint', label: 'Carbon Footprint Calculator' }
+];
 
 const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange({ ...formData, [name]: value });
   };
+
+  const handlePermissionChange = (permissionId) => {
+    const currentPermissions = formData.permissions || [];
+    const newPermissions = currentPermissions.includes(permissionId)
+      ? currentPermissions.filter(p => p !== permissionId)
+      : [...currentPermissions, permissionId];
+    
+    onChange({ ...formData, permissions: newPermissions });
+  };
+
+  const isTeamMember = formData.role === 'TeamMember';
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
@@ -48,14 +67,18 @@ const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
         fullWidth
       />
       <FormControl fullWidth required>
-        <InputLabel>Role</InputLabel>
+        <InputLabel>Role *</InputLabel>
         <Select
           name="role"
           value={formData.role}
           onChange={handleChange}
-          label="Role"
+          label="Role *"
           disabled={isEditingSelf}
+          displayEmpty
         >
+          <MenuItem value="" disabled>
+            <em>- Select a role -</em>
+          </MenuItem>
           <MenuItem value="Admin">Admin</MenuItem>
           <MenuItem value="TeamMember">Team Member</MenuItem>
         </Select>
@@ -65,6 +88,33 @@ const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
           </Typography>
         )}
       </FormControl>
+
+      {/* Permissions Section - Only show for Team Members */}
+      {isTeamMember && (
+        <Paper elevation={0} sx={{ p: 2, bgcolor: '#F5F5F5', border: '1px solid #E0E0E0' }}>
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+            Permissions
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+            Select which features this Team Member can access
+          </Typography>
+          <FormGroup>
+            {AVAILABLE_PERMISSIONS.map((permission) => (
+              <FormControlLabel
+                key={permission.id}
+                control={
+                  <Checkbox
+                    checked={(formData.permissions || []).includes(permission.id)}
+                    onChange={() => handlePermissionChange(permission.id)}
+                    size="small"
+                  />
+                }
+                label={permission.label}
+              />
+            ))}
+          </FormGroup>
+        </Paper>
+      )}
     </Box>
   );
 };

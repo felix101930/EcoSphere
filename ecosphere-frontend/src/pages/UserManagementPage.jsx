@@ -99,7 +99,8 @@ const UserManagementPage = () => {
         lastName: user.lastName,
         email: user.email,
         password: '',
-        role: user.role
+        role: user.role,
+        permissions: user.permissions || []
       });
     } else {
       setEditingUser(null);
@@ -108,7 +109,8 @@ const UserManagementPage = () => {
         lastName: '',
         email: '',
         password: '',
-        role: ''
+        role: '',
+        permissions: []
       });
     }
     setOpenDialog(true);
@@ -159,11 +161,29 @@ const UserManagementPage = () => {
           updateData.password = formData.password;
         }
         
+        // Include permissions for TeamMember role
+        if (formData.role === 'TeamMember') {
+          updateData.permissions = formData.permissions || [];
+        }
+        
         await userService.updateUser(editingUser.id, updateData);
         showSnackbar('User updated successfully', 'success');
       } else {
-        // Add new user
-        await userService.addUser(formData);
+        // Add new user - include permissions for TeamMember
+        const newUserData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        };
+        
+        // Include permissions for TeamMember role
+        if (formData.role === 'TeamMember') {
+          newUserData.permissions = formData.permissions || [];
+        }
+        
+        await userService.addUser(newUserData);
         showSnackbar('User added successfully', 'success');
       }
       
