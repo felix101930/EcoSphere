@@ -1,6 +1,6 @@
 // DashboardPage - Main page for TeamMembers
 import { Box, Container, Typography, Paper, Grid } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const DashboardPage = () => {
   const { currentUser } = useAuth();

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button, Snackbar, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import userService from '../services/UserService';
 import UserTable from '../components/UserManagement/UserTable';
 import UserDialog from '../components/UserManagement/UserDialog';
@@ -32,8 +32,20 @@ const UserManagementPage = () => {
 
   // Load users on mount
   useEffect(() => {
-    loadUsers();
-     
+    let mounted = true;
+    
+    const fetchUsers = async () => {
+      const allUsers = await userService.getAllUsers();
+      if (mounted) {
+        setUsers(allUsers);
+      }
+    };
+    
+    fetchUsers();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const showSnackbar = (message, severity) => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Checkbox, FormControlLabel, Typography, Paper, Alert } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import loginBackground from '../assets/loginbackground.jpg';
 import saitLogo from '../assets/sait-logo_horz.svg';
 

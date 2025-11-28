@@ -1,7 +1,7 @@
 // Sidebar - Navigation component
 import { Box, List, ListItem, ListItemButton, ListItemText, Typography, Avatar } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/sait-logo_vert.svg';
 
 const Sidebar = () => {

@@ -1,58 +1,60 @@
 // AuthContext - Manages authentication state and user session
 // Implements UI class pattern using React Context API
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react';
 import userService from '../services/UserService';
 import Admin from '../models/Admin';
 import TeamMember from '../models/TeamMember';
 
 const AuthContext = createContext(null);
 
+// Helper function to create user instance based on role
+const createUserInstance = (userData) => {
+  let instance;
+  
+  if (userData.role === 'Admin') {
+    instance = new Admin();
+  } else {
+    instance = new TeamMember();
+  }
+  
+  // Populate instance with user data
+  instance.createUser(
+    userData.id,
+    userData.firstName,
+    userData.lastName,
+    userData.email,
+    '', // Don't store password in memory
+    userData.role
+  );
+  
+  if (userData.permissions) {
+    instance.permissions = userData.permissions;
+  }
+  
+  return instance;
+};
+
+// Helper function to load user from session storage
+const loadUserFromSession = () => {
+  const storedUser = sessionStorage.getItem('ecosphere_current_user');
+  if (storedUser) {
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 export const AuthProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userInstance, setUserInstance] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Create user instance based on role
-  const createUserInstance = (userData) => {
-    let instance;
-    
-    if (userData.role === 'Admin') {
-      instance = new Admin();
-    } else {
-      instance = new TeamMember();
-    }
-    
-    // Populate instance with user data
-    instance.createUser(
-      userData.id,
-      userData.firstName,
-      userData.lastName,
-      userData.email,
-      '', // Don't store password in memory
-      userData.role
-    );
-    
-    if (userData.permissions) {
-      instance.permissions = userData.permissions;
-    }
-    
-    return instance;
-  };
-
-  // Load user from session storage on mount
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem('ecosphere_current_user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setCurrentUser(userData);
-      
-      // Create appropriate user instance
-      const instance = createUserInstance(userData);
-      setUserInstance(instance);
-    }
-    setIsLoading(false);
-   
-  }, []);
+  // Initialize state from session storage using lazy initialization
+  const [currentUser, setCurrentUser] = useState(() => loadUserFromSession());
+  const [userInstance, setUserInstance] = useState(() => {
+    const user = loadUserFromSession();
+    return user ? createUserInstance(user) : null;
+  });
+  const [isLoading] = useState(false);
 
   // Login function
   const login = async (email, password) => {
@@ -120,15 +122,6 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
 };
 
 export default AuthContext;
