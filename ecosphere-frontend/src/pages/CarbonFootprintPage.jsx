@@ -1,6 +1,6 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
 import { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import PageHeader from '../components/Common/PageHeader';
 import {
@@ -34,12 +34,50 @@ const CarbonFootprintPage = () => {
   const [realTimeData, setRealTimeData] = useState([]);
   const [dailyData, setDailyData] = useState([]);
   const [longTermData, setLongTermData] = useState([]);
+  
+  // Date range for Daily View
+  const today = new Date();
+  const tenDaysAgo = new Date(today);
+  tenDaysAgo.setDate(today.getDate() - 10);
+  
+  const [fromDate, setFromDate] = useState(tenDaysAgo.toISOString().split('T')[0]);
+  const [toDate, setToDate] = useState(today.toISOString().split('T')[0]);
 
+  // State for Daily View loading
+  const [dailyLoading, setDailyLoading] = useState(false);
+
+  // Function to load daily data by date range
+  const loadDailyData = async () => {
+    try {
+      setDailyLoading(true);
+      const daily = await ElectricityService.getDataByRange(fromDate, toDate);
+      setDailyData(daily);
+      setDailyLoading(false);
+    } catch (err) {
+      console.error('Error loading daily data:', err);
+      setError(err.message);
+      setDailyLoading(false);
+    }
+  };
+
+  // Handle Generate button click
+  const handleGenerateDailyReport = () => {
+    loadDailyData();
+  };
+
+  // Initial data load
   useEffect(() => {
-    const loadData = async () => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        // Calculate initial date range
+        const today = new Date();
+        const tenDaysAgo = new Date(today);
+        tenDaysAgo.setDate(today.getDate() - 10);
+        const initialFromDate = tenDaysAgo.toISOString().split('T')[0];
+        const initialToDate = today.toISOString().split('T')[0];
 
         // Fetch carbon intensity from Electricity Maps API
         const intensity = await ElectricityMapsService.getCurrentCarbonIntensity();
@@ -48,7 +86,7 @@ const CarbonFootprintPage = () => {
         // Fetch electricity data
         const [realTime, daily, longTerm] = await Promise.all([
           ElectricityService.getRealTimeData(),
-          ElectricityService.getDailyData(10),
+          ElectricityService.getDataByRange(initialFromDate, initialToDate),
           ElectricityService.getLongTermData()
         ]);
 
@@ -64,8 +102,8 @@ const CarbonFootprintPage = () => {
       }
     };
 
-    loadData();
-  }, []);
+    loadInitialData();
+  }, []); // Only load once on mount
 
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -301,20 +339,105 @@ const CarbonFootprintPage = () => {
       {/* Daily View */}
       <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
         <Typography variant="h5" gutterBottom>
-          Daily View (Last 10 Days)
+          Daily View
         </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Records: {dailyData.length} | 
-          Total Energy: {ElectricityService.calculateTotalEnergy(dailyData).toFixed(2)} kWh | 
-          Carbon Footprint: {(ElectricityService.calculateTotalEnergy(dailyData) * emissionFactor).toFixed(2)} kg CO2
-        </Typography>
-        <Box sx={{ height: 300, mt: 2 }}>
-          {dailyData.length > 0 ? (
-            <Line data={dailyChartData} options={chartOptions} />
-          ) : (
-            <Typography variant="body2" color="text.secondary">No data available</Typography>
-          )}
+        
+        {/* Date Range Selector */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 2, 
+          mb: 2,
+          p: 2,
+          bgcolor: '#F5F5F5',
+          borderRadius: 1
+        }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              From
+            </Typography>
+            <TextField
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              size="small"
+              fullWidth
+              InputProps={{
+                sx: {
+                  bgcolor: 'white',
+                  fontFamily: 'DM Sans, sans-serif'
+                }
+              }}
+            />
+          </Box>
+          
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              To
+            </Typography>
+            <TextField
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              size="small"
+              fullWidth
+              InputProps={{
+                sx: {
+                  bgcolor: 'white',
+                  fontFamily: 'DM Sans, sans-serif'
+                }
+              }}
+            />
+          </Box>
+          
+          <Box sx={{ alignSelf: 'flex-end' }}>
+            <Button
+              variant="contained"
+              onClick={handleGenerateDailyReport}
+              disabled={dailyLoading}
+              sx={{
+                bgcolor: '#DA291C',
+                color: 'white',
+                px: 4,
+                py: 1,
+                fontFamily: 'Titillium Web, sans-serif',
+                fontWeight: 600,
+                textTransform: 'none',
+                '&:hover': {
+                  bgcolor: '#A6192E'
+                },
+                '&:disabled': {
+                  bgcolor: '#CCC',
+                  color: '#666'
+                }
+              }}
+            >
+              {dailyLoading ? 'Generating...' : 'Generate'}
+            </Button>
+          </Box>
         </Box>
+        
+        {/* Loading State for Daily View */}
+        {dailyLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, mt: 2 }}>
+            <CircularProgress sx={{ color: '#DA291C' }} />
+          </Box>
+        ) : (
+          <>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Records: {dailyData.length} | 
+              Total Energy: {ElectricityService.calculateTotalEnergy(dailyData).toFixed(2)} kWh | 
+              Carbon Footprint: {(ElectricityService.calculateTotalEnergy(dailyData) * emissionFactor).toFixed(2)} kg CO2
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              {dailyData.length > 0 ? (
+                <Line data={dailyChartData} options={chartOptions} />
+              ) : (
+                <Typography variant="body2" color="text.secondary">No data available</Typography>
+              )}
+            </Box>
+          </>
+        )}
       </Box>
 
       {/* Long-term View */}
