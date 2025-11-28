@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, TextField, Button, Checkbox, FormControlLabel, Typography, Paper } from '@mui/material';
 import loginBackground from '../assets/loginbackground.jpg';
-import saitLogo from '../assets/sait-logo_vert.svg';
+import saitLogo from '../assets/sait-logo_horz.svg';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,40 +17,33 @@ function LoginPage() {
   return (
     <Box
       sx={{
-        display: 'flex',
         minHeight: '100vh',
+        backgroundImage: `url(${loginBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: 4,
         position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          background: 'linear-gradient(90deg, transparent 0%, rgba(156, 102, 192, 0.3) 100%)',
+          zIndex: 1,
+        },
       }}
     >
-      {/* Left side - Background Image */}
+      {/* Login Form Card */}
       <Box
         sx={{
-          flex: '0 0 60%',
-          backgroundImage: `url(${loginBackground})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
           position: 'relative',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            background: 'linear-gradient(90deg, transparent 0%, rgba(156, 102, 192, 0.3) 100%)',
-          },
-        }}
-      />
-
-      {/* Right side - Login Form */}
-      <Box
-        sx={{
-          flex: '0 0 40%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#f5f5f5',
-          position: 'relative',
+          zIndex: 2,
+          marginRight: 8,
         }}
       >
         <Paper
@@ -64,11 +57,16 @@ function LoginPage() {
           }}
         >
           {/* SAIT Logo */}
-          <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Box sx={{ mb: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
             <img 
               src={saitLogo} 
               alt="SAIT Logo" 
-              style={{ height: '80px', marginBottom: '8px' }}
+              style={{ 
+                maxWidth: '280px',
+                width: '100%',
+                height: 'auto',
+                marginBottom: '8px'
+              }}
             />
           </Box>
 
