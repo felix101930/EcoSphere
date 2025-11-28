@@ -1,6 +1,7 @@
 # Project specific folders - Do not upload to GitHub
 FigmaScreenshot/
 ReadMeBeforeStart/
+README.md
 
 # Node modules
 node_modules/
