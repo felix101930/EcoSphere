@@ -5,6 +5,7 @@ import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
+import CarbonFootprintPage from './pages/CarbonFootprintPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
@@ -126,7 +127,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <MainLayout showAIChatbot={true}>
-                  <ComingSoonPage featureName="Carbon Footprint Calculator" />
+                  <CarbonFootprintPage />
                 </MainLayout>
               </ProtectedRoute>
             }

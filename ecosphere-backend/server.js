@@ -7,6 +7,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const config = require('./config/config');
 const userRoutes = require('./routes/userRoutes');
+const electricityRoutes = require('./routes/electricityRoutes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 
 // API Routes
 app.use('/api', userRoutes);
+app.use('/api/electricity', electricityRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -23,8 +25,17 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     message: 'EcoSphere Backend is running',
     environment: config.env,
-    version: '1.0.0'
+    version: '1.0.0',
+    routes: {
+      users: 'loaded',
+      electricity: 'loaded'
+    }
   });
+});
+
+// Test electricity endpoint
+app.get('/api/electricity/test', (req, res) => {
+  res.json({ message: 'Electricity routes working!' });
 });
 
 // 404 handler
