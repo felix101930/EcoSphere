@@ -1,5 +1,5 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import PageHeader from '../components/Common/PageHeader';
@@ -112,6 +112,146 @@ const CarbonFootprintPage = () => {
     alert('Export functionality coming soon!');
   };
 
+  // Memoize emission factor calculation
+  const emissionFactor = useMemo(() => {
+    return carbonIntensity ? ElectricityMapsService.getCarbonIntensityInKg(carbonIntensity) : 0.65;
+  }, [carbonIntensity]);
+
+  // Memoize aggregated daily data
+  const aggregatedDailyData = useMemo(() => {
+    const dailyMap = new Map();
+    
+    dailyData.forEach(record => {
+      const date = new Date(record.ts.replace(' ', 'T'));
+      const dateKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      
+      if (!dailyMap.has(dateKey)) {
+        dailyMap.set(dateKey, { date: dateKey, totalValue: 0 });
+      }
+      
+      dailyMap.get(dateKey).totalValue += record.value;
+    });
+    
+    return Array.from(dailyMap.values());
+  }, [dailyData]);
+
+  // Memoize aggregated long-term data
+  const aggregatedLongTermData = useMemo(() => {
+    const monthlyMap = new Map();
+    
+    longTermData.forEach(record => {
+      const date = new Date(record.ts.replace(' ', 'T'));
+      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      
+      if (!monthlyMap.has(monthKey)) {
+        monthlyMap.set(monthKey, { date: monthKey, totalValue: 0 });
+      }
+      
+      monthlyMap.get(monthKey).totalValue += record.value;
+    });
+    
+    return Array.from(monthlyMap.values());
+  }, [longTermData]);
+
+  // Memoize real-time chart data
+  const realTimeChartData = useMemo(() => ({
+    labels: realTimeData.map(record => {
+      const date = new Date(record.ts.replace(' ', 'T'));
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }),
+    datasets: [
+      {
+        label: 'Energy Consumption (kWh)',
+        data: realTimeData.map(record => ElectricityService.convertToKWh(record.value)),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1
+      },
+      {
+        label: 'Carbon Footprint (kg CO2)',
+        data: realTimeData.map(record => ElectricityService.convertToKWh(record.value) * emissionFactor),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        tension: 0.1
+      }
+    ]
+  }), [realTimeData, emissionFactor]);
+
+  // Memoize daily chart data
+  const dailyChartData = useMemo(() => ({
+    labels: aggregatedDailyData.map(record => record.date),
+    datasets: [
+      {
+        label: 'Energy Consumption (kWh)',
+        data: aggregatedDailyData.map(record => ElectricityService.convertToKWh(record.totalValue)),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      },
+      {
+        label: 'Carbon Footprint (kg CO2)',
+        data: aggregatedDailyData.map(record => ElectricityService.convertToKWh(record.totalValue) * emissionFactor),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        tension: 0.1,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }
+    ]
+  }), [aggregatedDailyData, emissionFactor]);
+
+  // Memoize long-term chart data
+  const longTermChartData = useMemo(() => ({
+    labels: aggregatedLongTermData.map(record => record.date),
+    datasets: [
+      {
+        label: 'Energy Consumption (kWh)',
+        data: aggregatedLongTermData.map(record => ElectricityService.convertToKWh(record.totalValue)),
+        borderColor: 'rgb(75, 192, 192)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        tension: 0.1,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      },
+      {
+        label: 'Carbon Footprint (kg CO2)',
+        data: aggregatedLongTermData.map(record => ElectricityService.convertToKWh(record.totalValue) * emissionFactor),
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        tension: 0.1,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }
+    ]
+  }), [aggregatedLongTermData, emissionFactor]);
+
+  // Memoize chart options
+  const chartOptions = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: false,
+          boxWidth: 50,
+          boxHeight: 2,
+          padding: 15
+        }
+      },
+      title: {
+        display: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }), []);
+
   if (loading) {
     return (
       <>
@@ -143,151 +283,6 @@ const CarbonFootprintPage = () => {
       </>
     );
   }
-
-  const emissionFactor = carbonIntensity ? ElectricityMapsService.getCarbonIntensityInKg(carbonIntensity) : 0.65;
-
-  // Helper function to aggregate data by day
-  const aggregateByDay = (data) => {
-    const dailyMap = new Map();
-    
-    data.forEach(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      const dateKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      
-      if (!dailyMap.has(dateKey)) {
-        dailyMap.set(dateKey, { date: dateKey, totalValue: 0 });
-      }
-      
-      dailyMap.get(dateKey).totalValue += record.value;
-    });
-    
-    return Array.from(dailyMap.values());
-  };
-  
-  const aggregatedDailyData = aggregateByDay(dailyData);
-
-  // Helper function to aggregate data by month
-  const aggregateByMonth = (data) => {
-    const monthlyMap = new Map();
-    
-    data.forEach(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-      
-      if (!monthlyMap.has(monthKey)) {
-        monthlyMap.set(monthKey, { date: monthKey, totalValue: 0 });
-      }
-      
-      monthlyMap.get(monthKey).totalValue += record.value;
-    });
-    
-    return Array.from(monthlyMap.values());
-  };
-  
-  const aggregatedLongTermData = aggregateByMonth(longTermData);
-
-  // Prepare chart data for Real-time View
-  const realTimeChartData = {
-    labels: realTimeData.map(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    }),
-    datasets: [
-      {
-        label: 'Energy Consumption (kWh)',
-        data: realTimeData.map(record => ElectricityService.convertToKWh(record.value)),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1
-      },
-      {
-        label: 'Carbon Footprint (kg CO2)',
-        data: realTimeData.map(record => ElectricityService.convertToKWh(record.value) * emissionFactor),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.1
-      }
-    ]
-  };
-
-  // Prepare chart data for Daily View (aggregated by day)
-  const dailyChartData = {
-    labels: aggregatedDailyData.map(record => record.date),
-    datasets: [
-      {
-        label: 'Energy Consumption (kWh)',
-        data: aggregatedDailyData.map(record => ElectricityService.convertToKWh(record.totalValue)),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      },
-      {
-        label: 'Carbon Footprint (kg CO2)',
-        data: aggregatedDailyData.map(record => ElectricityService.convertToKWh(record.totalValue) * emissionFactor),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.1,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }
-    ]
-  };
-
-  // Prepare chart data for Long-term View (aggregated by month)
-  const longTermChartData = {
-    labels: aggregatedLongTermData.map(record => record.date),
-    datasets: [
-      {
-        label: 'Energy Consumption (kWh)',
-        data: aggregatedLongTermData.map(record => ElectricityService.convertToKWh(record.totalValue)),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1,
-        pointRadius: 5,
-        pointHoverRadius: 7
-      },
-      {
-        label: 'Carbon Footprint (kg CO2)',
-        data: aggregatedLongTermData.map(record => ElectricityService.convertToKWh(record.totalValue) * emissionFactor),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.1,
-        pointRadius: 5,
-        pointHoverRadius: 7
-      }
-    ]
-  };
-
-  // Chart options for Real-time and Daily views (no zoom)
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: false,
-          boxWidth: 50,
-          boxHeight: 2,
-          padding: 15
-        }
-      },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  };
-
-
-
-
 
   return (
     <>
