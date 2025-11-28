@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import PageHeader from '../components/Common/PageHeader';
+import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -162,6 +163,8 @@ const CarbonFootprintPage = () => {
     
     return Array.from(dailyMap.values());
   };
+  
+  const aggregatedDailyData = aggregateByDay(dailyData);
 
   // Helper function to aggregate data by month
   const aggregateByMonth = (data) => {
@@ -180,9 +183,7 @@ const CarbonFootprintPage = () => {
     
     return Array.from(monthlyMap.values());
   };
-
-  // Aggregate daily and long-term data
-  const aggregatedDailyData = aggregateByDay(dailyData);
+  
   const aggregatedLongTermData = aggregateByMonth(longTermData);
 
   // Prepare chart data for Real-time View
@@ -283,6 +284,8 @@ const CarbonFootprintPage = () => {
       }
     }
   };
+
+
 
 
 
@@ -458,6 +461,9 @@ const CarbonFootprintPage = () => {
           )}
         </Box>
       </Box>
+
+      {/* Custom Calculator */}
+      <CustomCalculator emissionFactor={emissionFactor} />
       </Box>
     </>
   );
