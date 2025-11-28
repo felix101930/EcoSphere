@@ -1,0 +1,19 @@
+{
+  "config": {
+    "location": "Alberta, Calgary",
+    "building": "GBTAC (Green Building Technology Access Centre)",
+    "emissionFactorSource": "Electricity Maps API (https://api.electricitymaps.com)",
+    "fallbackEmissionFactor": 0.65,
+    "unit": "kg CO2",
+    "lastUpdated": "2025-11-28",
+    "note": "Emission factor varies based on Alberta's electricity grid mix (coal, natural gas, renewables). Alberta has one of the highest carbon intensities in Canada."
+  },
+  "history": [],
+  "apiUsage": {
+    "totalCalls": 0,
+    "dailyLimit": 1000,
+    "remaining": 1000,
+    "lastReset": "2025-11-28T00:00:00Z",
+    "lastCall": null
+  }
+}

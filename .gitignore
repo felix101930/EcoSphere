@@ -16,7 +16,8 @@ dist/
 build/
 
 # Environment variables
-.env
+# Note: .env files are committed for internal team collaboration
+# .env
 .env.local
 .env.*.local
 
