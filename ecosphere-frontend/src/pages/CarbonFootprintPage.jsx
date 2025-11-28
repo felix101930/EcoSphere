@@ -1,7 +1,8 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
 import { useState, useEffect } from 'react';
-import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { Line } from 'react-chartjs-2';
+import PageHeader from '../components/Common/PageHeader';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -66,19 +67,41 @@ const CarbonFootprintPage = () => {
     loadData();
   }, []);
 
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    console.log('Exporting report...');
+    alert('Export functionality coming soon!');
+  };
+
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Container>
+      <>
+        <PageHeader 
+          title="Carbon Footprint Calculator" 
+          subtitle="Monitor and analyze your carbon emissions"
+          showExportButton={true}
+          onExport={handleExport}
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', px: 4 }}>
+          <CircularProgress />
+        </Box>
+      </>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">Error loading data: {error}</Alert>
-      </Container>
+      <>
+        <PageHeader 
+          title="Carbon Footprint Calculator" 
+          subtitle="Monitor and analyze your carbon emissions"
+          showExportButton={true}
+          onExport={handleExport}
+        />
+        <Box sx={{ px: 4, mt: 4 }}>
+          <Alert severity="error">Error loading data: {error}</Alert>
+        </Box>
+      </>
     );
   }
 
@@ -226,8 +249,15 @@ const CarbonFootprintPage = () => {
 
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* API Status Card */}
+    <>
+      <PageHeader 
+        title="Carbon Footprint Calculator" 
+        subtitle="Monitor and analyze your carbon emissions"
+        showExportButton={true}
+        onExport={handleExport}
+      />
+      <Box sx={{ px: 4, py: 3 }}>
+        {/* API Status Card */}
       <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
         <Typography variant="h6" gutterBottom>
           📊 Data Source
@@ -305,7 +335,8 @@ const CarbonFootprintPage = () => {
           )}
         </Box>
       </Box>
-    </Container>
+      </Box>
+    </>
   );
 };
 

@@ -80,7 +80,9 @@ const Sidebar = () => {
         borderRight: '2px solid #DA291C',
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'Titillium Web, sans-serif'
+        fontFamily: 'Titillium Web, sans-serif',
+        position: 'sticky',
+        top: 0
       }}
     >
       {/* Logo and GBTAC */}

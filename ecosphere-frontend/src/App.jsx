@@ -34,22 +34,23 @@ function ProtectedRoute({ children, adminOnly = false }) {
 // Layout with Sidebar and conditional AI Chatbot
 function MainLayout({ children, showAIChatbot = true }) {
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* Left Sidebar */}
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Left Sidebar - Fixed */}
       <Sidebar />
       
-      {/* Main Content Area */}
+      {/* Main Content Area - Scrollable */}
       <Box 
         sx={{ 
           flexGrow: 1, 
           bgcolor: 'white', 
-          minHeight: '100vh'
+          overflowY: 'auto',
+          height: '100vh'
         }}
       >
         {children}
       </Box>
 
-      {/* Right AI Chatbot Panel - Only show for non-Management pages */}
+      {/* Right AI Chatbot Panel - Fixed - Only show for non-Management pages */}
       {showAIChatbot && <AIChatbot />}
     </Box>
   );

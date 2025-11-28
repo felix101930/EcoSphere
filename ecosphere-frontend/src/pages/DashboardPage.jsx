@@ -1,21 +1,18 @@
 // DashboardPage - Main page for TeamMembers
-import { Box, Container, Typography, Paper, Grid } from '@mui/material';
+import { Box, Typography, Paper, Grid } from '@mui/material';
 import { useAuth } from '../hooks/useAuth';
+import PageHeader from '../components/Common/PageHeader';
 
 const DashboardPage = () => {
   const { currentUser } = useAuth();
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Welcome Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome, {currentUser?.firstName} {currentUser?.lastName}!
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Role: {currentUser?.role}
-        </Typography>
-      </Box>
+    <>
+      <PageHeader 
+        title={`Welcome, ${currentUser?.firstName} ${currentUser?.lastName}!`}
+        subtitle={`Role: ${currentUser?.role}`}
+      />
+      <Box sx={{ px: 4, py: 3 }}>
 
       {/* Dashboard Content */}
       <Grid container spacing={3}>
@@ -72,7 +69,8 @@ const DashboardPage = () => {
           </Paper>
         </Grid>
       </Grid>
-    </Container>
+      </Box>
+    </>
   );
 };
 

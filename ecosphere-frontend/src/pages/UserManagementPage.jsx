@@ -1,12 +1,13 @@
 // UserManagementPage - Admin page for managing users
 // This page is a CONTAINER component that orchestrates child components
 import { useState, useEffect } from 'react';
-import { Box, Container, Typography, Button, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Snackbar, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import userService from '../services/UserService';
 import UserTable from '../components/UserManagement/UserTable';
 import UserDialog from '../components/UserManagement/UserDialog';
+import PageHeader from '../components/Common/PageHeader';
 
 const UserManagementPage = () => {
   const { currentUser } = useAuth();
@@ -224,22 +225,30 @@ const UserManagementPage = () => {
     }
   };
 
+  const addUserButton = (
+    <Button
+      variant="contained"
+      startIcon={<AddIcon />}
+      onClick={() => handleOpenDialog()}
+      sx={{ 
+        bgcolor: '#DA291C', 
+        '&:hover': { bgcolor: '#A6192E' },
+        fontFamily: 'Titillium Web, sans-serif',
+        fontWeight: 600
+      }}
+    >
+      Add User
+    </Button>
+  );
+
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          User Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ bgcolor: '#DA291C', '&:hover': { bgcolor: '#A6192E' } }}
-        >
-          Add User
-        </Button>
-      </Box>
+    <>
+      <PageHeader 
+        title="User Management"
+        subtitle="Manage system users and permissions"
+        rightContent={addUserButton}
+      />
+      <Box sx={{ px: 4, py: 3 }}>
 
       {/* User Table */}
       <UserTable
@@ -277,7 +286,8 @@ const UserManagementPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </Container>
+      </Box>
+    </>
   );
 };
 
