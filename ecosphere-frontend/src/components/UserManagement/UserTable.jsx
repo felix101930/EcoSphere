@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import UserTableRow from './UserTableRow';
 
-const UserTable = ({ users, onEdit, onDelete, currentUserId }) => {
+const UserTable = ({ users, onEdit, onDelete, currentUserId, canEditUser, canDeleteUser }) => {
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -32,6 +32,8 @@ const UserTable = ({ users, onEdit, onDelete, currentUserId }) => {
               onEdit={onEdit}
               onDelete={onDelete}
               isCurrentUser={user.id === currentUserId}
+              canEdit={canEditUser(user)}
+              canDelete={canDeleteUser(user)}
             />
           ))}
         </TableBody>

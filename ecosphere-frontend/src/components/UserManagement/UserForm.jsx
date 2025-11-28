@@ -1,7 +1,7 @@
 // UserForm - Form for adding/editing users
-import { Box, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography } from '@mui/material';
 
-const UserForm = ({ formData, onChange, isEditMode }) => {
+const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange({ ...formData, [name]: value });
@@ -14,6 +14,7 @@ const UserForm = ({ formData, onChange, isEditMode }) => {
         name="firstName"
         value={formData.firstName}
         onChange={handleChange}
+        placeholder="Enter first name"
         required
         fullWidth
       />
@@ -22,6 +23,7 @@ const UserForm = ({ formData, onChange, isEditMode }) => {
         name="lastName"
         value={formData.lastName}
         onChange={handleChange}
+        placeholder="Enter last name"
         required
         fullWidth
       />
@@ -31,6 +33,7 @@ const UserForm = ({ formData, onChange, isEditMode }) => {
         type="email"
         value={formData.email}
         onChange={handleChange}
+        placeholder="user@edu.sait.ca"
         required
         fullWidth
       />
@@ -40,20 +43,27 @@ const UserForm = ({ formData, onChange, isEditMode }) => {
         type="password"
         value={formData.password}
         onChange={handleChange}
+        placeholder={isEditMode ? 'Leave blank to keep current' : 'Enter password'}
         required={!isEditMode}
         fullWidth
       />
-      <FormControl fullWidth>
+      <FormControl fullWidth required>
         <InputLabel>Role</InputLabel>
         <Select
           name="role"
           value={formData.role}
           onChange={handleChange}
           label="Role"
+          disabled={isEditingSelf}
         >
           <MenuItem value="Admin">Admin</MenuItem>
           <MenuItem value="TeamMember">Team Member</MenuItem>
         </Select>
+        {isEditingSelf && (
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+            You cannot change your own role
+          </Typography>
+        )}
       </FormControl>
     </Box>
   );

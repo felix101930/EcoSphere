@@ -2,7 +2,7 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import UserForm from './UserForm';
 
-const UserDialog = ({ open, onClose, onSubmit, formData, onChange, isEditMode }) => {
+const UserDialog = ({ open, onClose, onSubmit, formData, onChange, isEditMode, isEditingSelf }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
@@ -13,6 +13,7 @@ const UserDialog = ({ open, onClose, onSubmit, formData, onChange, isEditMode })
           formData={formData}
           onChange={onChange}
           isEditMode={isEditMode}
+          isEditingSelf={isEditingSelf}
         />
       </DialogContent>
       <DialogActions>

@@ -1,130 +1,133 @@
 // UserService - Handles all user-related operations
-// Uses JSON file for temporary storage (will be replaced with SQL Server)
-import usersData from '../data/users.json';
+// Now uses Express backend API (preparation for SQL Server)
+
+const API_BASE_URL = 'http://localhost:3001/api';
 
 class UserService {
   constructor() {
-    // Load users from JSON (in real app, this would be from database)
-    this.users = usersData.users || [];
-    this.nextId = usersData.nextId || 1;
+    this.users = [];
   }
 
   // Get all users
-  getAllUsers() {
-    return this.users;
+  async getAllUsers() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`);
+      if (!response.ok) throw new Error('Failed to fetch users');
+      this.users = await response.json();
+      return this.users;
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
   }
 
   // Get user by ID
-  getUserById(id) {
-    return this.users.find(user => user.id === id);
+  async getUserById(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      return null;
+    }
   }
 
-  // Get user by email
-  getUserByEmail(email) {
-    return this.users.find(user => user.email === email);
+  // Get user by email (client-side filter)
+  async getUserByEmail(email) {
+    const users = await this.getAllUsers();
+    return users.find(user => user.email === email);
   }
 
   // Authenticate user (login)
-  authenticate(email, password) {
-    const user = this.users.find(
-      u => u.email === email && u.password === password
-    );
-    
-    if (user) {
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+  async authenticate(email, password) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!response.ok) {
+        return null;
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error authenticating user:', error);
+      return null;
     }
-    
-    return null;
   }
 
   // Add new user (Admin only)
-  addUser(userData) {
-    const newUser = {
-      id: this.nextId++,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
-      password: userData.password,
-      role: userData.role || 'TeamMember',
-      permissions: userData.permissions || []
-    };
-
-    this.users.push(newUser);
-    this.saveToStorage();
-    
-    return newUser;
+  async addUser(userData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add user');
+      }
+      
+      const newUser = await response.json();
+      return newUser;
+    } catch (error) {
+      console.error('Error adding user:', error);
+      throw error;
+    }
   }
 
   // Update user
-  updateUser(id, userData) {
-    const index = this.users.findIndex(user => user.id === id);
-    
-    if (index !== -1) {
-      this.users[index] = {
-        ...this.users[index],
-        ...userData,
-        id: this.users[index].id // Preserve ID
-      };
-      this.saveToStorage();
-      return this.users[index];
+  async updateUser(id, userData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update user');
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
     }
-    
-    return null;
   }
 
   // Delete user
-  deleteUser(id) {
-    const index = this.users.findIndex(user => user.id === id);
-    
-    if (index !== -1) {
-      const deletedUser = this.users.splice(index, 1)[0];
-      this.saveToStorage();
-      return deletedUser;
+  async deleteUser(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete user');
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
     }
-    
-    return null;
   }
 
   // Update user permissions
-  updateUserPermissions(userId, permissions) {
-    const user = this.getUserById(userId);
-    
-    if (user) {
-      user.permissions = permissions;
-      this.saveToStorage();
-      return user;
-    }
-    
-    return null;
-  }
-
-  // Save to localStorage (temporary solution)
-  // In production, this would be API calls to backend
-  saveToStorage() {
-    const data = {
-      users: this.users,
-      nextId: this.nextId
-    };
-    localStorage.setItem('ecosphere_users', JSON.stringify(data));
-  }
-
-  // Load from localStorage
-  loadFromStorage() {
-    const stored = localStorage.getItem('ecosphere_users');
-    if (stored) {
-      const data = JSON.parse(stored);
-      this.users = data.users || [];
-      this.nextId = data.nextId || 1;
-    }
+  async updateUserPermissions(userId, permissions) {
+    return await this.updateUser(userId, { permissions });
   }
 }
 
 // Create singleton instance
 const userService = new UserService();
-
-// Initialize from localStorage if available
-userService.loadFromStorage();
 
 export default userService;

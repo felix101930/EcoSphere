@@ -12,20 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [userInstance, setUserInstance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from session storage on mount
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem('ecosphere_current_user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setCurrentUser(userData);
-      
-      // Create appropriate user instance
-      const instance = createUserInstance(userData);
-      setUserInstance(instance);
-    }
-    setIsLoading(false);
-  }, []);
-
   // Create user instance based on role
   const createUserInstance = (userData) => {
     let instance;
@@ -53,10 +39,25 @@ export const AuthProvider = ({ children }) => {
     return instance;
   };
 
+  // Load user from session storage on mount
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('ecosphere_current_user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setCurrentUser(userData);
+      
+      // Create appropriate user instance
+      const instance = createUserInstance(userData);
+      setUserInstance(instance);
+    }
+    setIsLoading(false);
+   
+  }, []);
+
   // Login function
   const login = async (email, password) => {
     try {
-      const user = userService.authenticate(email, password);
+      const user = await userService.authenticate(email, password);
       
       if (user) {
         setCurrentUser(user);
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         return { success: false, error: 'Invalid email or password' };
       }
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Login failed' };
     }
   };

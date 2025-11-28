@@ -1,8 +1,20 @@
 // UserTableRow - Single row in user table
-import { TableCell, TableRow, Box, IconButton } from '@mui/material';
+import { TableCell, TableRow, Box, IconButton, Tooltip } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
-const UserTableRow = ({ user, onEdit, onDelete, isCurrentUser }) => {
+const UserTableRow = ({ user, onEdit, onDelete, isCurrentUser, canEdit, canDelete }) => {
+  const getDeleteTooltip = () => {
+    if (isCurrentUser) return 'Cannot delete your own account';
+    if (user.id === 1) return 'Cannot delete Super Admin';
+    if (!canDelete) return 'No permission to delete this user';
+    return 'Delete user';
+  };
+
+  const getEditTooltip = () => {
+    if (!canEdit) return 'No permission to edit this user';
+    return 'Edit user';
+  };
+
   return (
     <TableRow hover>
       <TableCell>{user.id}</TableCell>
@@ -22,24 +34,34 @@ const UserTableRow = ({ user, onEdit, onDelete, isCurrentUser }) => {
           }}
         >
           {user.role}
+          {user.id === 1 && ' (Super)'}
         </Box>
       </TableCell>
       <TableCell align="center">
-        <IconButton
-          color="primary"
-          onClick={() => onEdit(user)}
-          size="small"
-        >
-          <EditIcon />
-        </IconButton>
-        <IconButton
-          color="error"
-          onClick={() => onDelete(user.id)}
-          size="small"
-          disabled={isCurrentUser}
-        >
-          <DeleteIcon />
-        </IconButton>
+        <Tooltip title={getEditTooltip()}>
+          <span>
+            <IconButton
+              color="primary"
+              onClick={() => onEdit(user)}
+              size="small"
+              disabled={!canEdit}
+            >
+              <EditIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title={getDeleteTooltip()}>
+          <span>
+            <IconButton
+              color="error"
+              onClick={() => onDelete(user.id)}
+              size="small"
+              disabled={!canDelete}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
       </TableCell>
     </TableRow>
   );
