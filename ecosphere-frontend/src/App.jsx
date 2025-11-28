@@ -8,13 +8,15 @@ import UserManagementPage from './pages/UserManagementPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
+import ErrorBoundary from './components/Common/ErrorBoundary';
+import LoadingSpinner from './components/Common/LoadingSpinner';
 
 // Protected Route Component
 function ProtectedRoute({ children, adminOnly = false }) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner message="Authenticating..." />;
   }
 
   if (!isAuthenticated()) {
@@ -54,9 +56,10 @@ function MainLayout({ children, showAIChatbot = true }) {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <Routes>
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
 
@@ -168,6 +171,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </Router>
+    </ErrorBoundary>
   );
 }
 

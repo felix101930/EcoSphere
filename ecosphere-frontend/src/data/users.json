@@ -27,7 +27,8 @@
       "permissions": [
         "electricity",
         "3d-model",
-        "carbon-footprint"
+        "carbon-footprint",
+        "water"
       ]
     }
   ],

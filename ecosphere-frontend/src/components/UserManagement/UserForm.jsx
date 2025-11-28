@@ -1,4 +1,5 @@
 // UserForm - Form for adding/editing users
+import PropTypes from 'prop-types';
 import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography, FormGroup, FormControlLabel, Checkbox, Paper } from '@mui/material';
 
 const AVAILABLE_PERMISSIONS = [
@@ -117,6 +118,20 @@ const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
       )}
     </Box>
   );
+};
+
+UserForm.propTypes = {
+  formData: PropTypes.shape({
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+    email: PropTypes.string,
+    password: PropTypes.string,
+    role: PropTypes.string,
+    permissions: PropTypes.arrayOf(PropTypes.string)
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
+  isEditMode: PropTypes.bool.isRequired,
+  isEditingSelf: PropTypes.bool.isRequired
 };
 
 export default UserForm;

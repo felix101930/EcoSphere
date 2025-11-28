@@ -1,4 +1,5 @@
 // UserDialog - Dialog for adding/editing users
+import PropTypes from 'prop-types';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import UserForm from './UserForm';
 
@@ -28,6 +29,23 @@ const UserDialog = ({ open, onClose, onSubmit, formData, onChange, isEditMode, i
       </DialogActions>
     </Dialog>
   );
+};
+
+UserDialog.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  formData: PropTypes.shape({
+    firstName: PropTypes.string,
+    lastName: PropTypes.string,
+    email: PropTypes.string,
+    password: PropTypes.string,
+    role: PropTypes.string,
+    permissions: PropTypes.arrayOf(PropTypes.string)
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
+  isEditMode: PropTypes.bool.isRequired,
+  isEditingSelf: PropTypes.bool.isRequired
 };
 
 export default UserDialog;
