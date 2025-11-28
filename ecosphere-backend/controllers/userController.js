@@ -7,10 +7,13 @@ class UserController {
    */
   static async getAllUsers(req, res) {
     try {
+      console.log('📝 getAllUsers called');
       const users = await UserService.getAllUsers();
+      console.log('✅ Users fetched:', users.length);
       res.json(users);
     } catch (error) {
-      console.error('Error in getAllUsers:', error);
+      console.error('❌ Error in getAllUsers:', error.message);
+      console.error('Stack:', error.stack);
       res.status(500).json({ error: 'Failed to fetch users' });
     }
   }

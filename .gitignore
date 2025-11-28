@@ -3,6 +3,11 @@ FigmaScreenshot/
 ReadMeBeforeStart/
 README.md
 
+# Mock data (temporary - for Prototype phase only)
+# Note: You may want to commit this for team collaboration during Prototype
+# Uncomment the line below if you don't want to commit mock data:
+# mock-data/
+
 # Node modules
 node_modules/
 
