@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
+import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 
 // Protected Route Component
@@ -30,7 +31,7 @@ function MainLayout({ children }) {
   return (
     <Box sx={{ display: 'flex' }}>
       <Sidebar />
-      <Box sx={{ flexGrow: 1, bgcolor: '#F5F5F5', minHeight: '100vh' }}>
+      <Box sx={{ flexGrow: 1, bgcolor: 'white', minHeight: '100vh' }}>
         {children}
       </Box>
     </Box>
@@ -45,7 +46,7 @@ function App() {
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes - Dashboards */}
           <Route
             path="/dashboard"
             element={
@@ -58,11 +59,91 @@ function App() {
           />
 
           <Route
+            path="/electricity"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ComingSoonPage featureName="Electricity Dashboard" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/water"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ComingSoonPage featureName="Water Dashboard" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/thermal"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ComingSoonPage featureName="Thermal Dashboard" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes - Advanced */}
+          <Route
+            path="/3d-model"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ComingSoonPage featureName="3D Model" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes - Calculator */}
+          <Route
+            path="/carbon-footprint"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ComingSoonPage featureName="Carbon Footprint Calculator" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes - Management (Admin Only) */}
+          <Route
             path="/users"
             element={
               <ProtectedRoute adminOnly={true}>
                 <MainLayout>
                   <UserManagementPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard-management"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <MainLayout>
+                  <ComingSoonPage featureName="Dashboard Management" />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quiz-management"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <MainLayout>
+                  <ComingSoonPage featureName="Quiz Management" />
                 </MainLayout>
               </ProtectedRoute>
             }

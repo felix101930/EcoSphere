@@ -1,11 +1,5 @@
 // Sidebar - Navigation component
-import { Box, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Typography } from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Assessment as AssessmentIcon,
-  Logout as LogoutIcon
-} from '@mui/icons-material';
+import { Box, List, ListItem, ListItemButton, ListItemText, Typography, Avatar } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/sait-logo_vert.svg';
@@ -13,116 +7,207 @@ import logo from '../../assets/sait-logo_vert.svg';
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, logout, isAdmin } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  const menuItems = [
+  // Menu structure matching Figma design
+  const menuStructure = [
     {
-      text: 'Dashboard',
-      icon: <DashboardIcon />,
-      path: '/dashboard',
-      roles: ['Admin', 'TeamMember']
+      category: 'Dashboards',
+      items: [
+        { text: 'Overview', path: '/dashboard', roles: ['Admin', 'TeamMember'] },
+        { text: 'Electricity', path: '/electricity', roles: ['Admin', 'TeamMember'], comingSoon: true },
+        { text: 'Water', path: '/water', roles: ['Admin', 'TeamMember'], comingSoon: true },
+        { text: 'Thermal', path: '/thermal', roles: ['Admin', 'TeamMember'], comingSoon: true }
+      ]
     },
     {
-      text: 'User Management',
-      icon: <PeopleIcon />,
-      path: '/users',
-      roles: ['Admin']
+      category: 'Advanced',
+      items: [
+        { text: '3D Model', path: '/3d-model', roles: ['Admin', 'TeamMember'], comingSoon: true }
+      ]
     },
     {
-      text: 'Reports',
-      icon: <AssessmentIcon />,
-      path: '/reports',
-      roles: ['Admin', 'TeamMember']
+      category: 'Calculator',
+      items: [
+        { text: 'Carbon Footprint', path: '/carbon-footprint', roles: ['Admin', 'TeamMember'], comingSoon: true }
+      ]
+    },
+    {
+      category: 'Management',
+      items: [
+        { text: 'User Management', path: '/users', roles: ['Admin'] },
+        { text: 'Dashboard Management', path: '/dashboard-management', roles: ['Admin'], comingSoon: true },
+        { text: 'Quiz Management', path: '/quiz-management', roles: ['Admin'], comingSoon: true }
+      ]
     }
   ];
 
   // Filter menu items based on user role
-  const visibleMenuItems = menuItems.filter(item => 
-    item.roles.includes(currentUser?.role)
-  );
+  const visibleMenuStructure = menuStructure.map(section => ({
+    ...section,
+    items: section.items.filter(item => item.roles.includes(currentUser?.role))
+  })).filter(section => section.items.length > 0);
 
   return (
     <Box
       sx={{
-        width: 250,
+        width: 180,
         height: '100vh',
-        bgcolor: '#324053',
-        color: 'white',
+        bgcolor: 'white',
+        borderRight: '1px solid #E0E0E0',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        fontFamily: 'Titillium Web, sans-serif'
       }}
     >
-      {/* Logo */}
-      <Box sx={{ p: 2, textAlign: 'center' }}>
-        <img src={logo} alt="SAIT Logo" style={{ width: '80%', maxWidth: 150 }} />
-        <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-          EcoSphere
+      {/* Logo and GBTAC */}
+      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <img src={logo} alt="SAIT Logo" style={{ width: 40, height: 'auto' }} />
+        <Typography 
+          sx={{ 
+            fontSize: '18px',
+            fontWeight: 700,
+            color: '#324053',
+            fontFamily: 'Titillium Web, sans-serif'
+          }}
+        >
+          GBTAC
         </Typography>
       </Box>
-
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
-
-      {/* User Info */}
-      <Box sx={{ p: 2 }}>
-        <Typography variant="body2" sx={{ opacity: 0.7 }}>
-          Logged in as:
-        </Typography>
-        <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-          {currentUser?.firstName} {currentUser?.lastName}
-        </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.7 }}>
-          {currentUser?.role}
-        </Typography>
-      </Box>
-
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
 
       {/* Navigation Menu */}
-      <List sx={{ flexGrow: 1, pt: 2 }}>
-        {visibleMenuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
+        {visibleMenuStructure.map((section) => (
+          <Box key={section.category} sx={{ mb: 2 }}>
+            {/* Category Header */}
+            <Typography
               sx={{
-                '&.Mui-selected': {
-                  bgcolor: '#DA291C',
-                  '&:hover': {
-                    bgcolor: '#A6192E'
-                  }
-                },
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.1)'
-                }
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#999',
+                textTransform: 'uppercase',
+                px: 2,
+                py: 1,
+                fontFamily: 'Titillium Web, sans-serif'
               }}
             >
-              <ListItemIcon sx={{ color: 'white' }}>
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+              {section.category}
+            </Typography>
+
+            {/* Menu Items */}
+            <List disablePadding>
+              {section.items.map((item) => (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton
+                    onClick={() => navigate(item.path)}
+                    selected={location.pathname === item.path}
+                    sx={{
+                      py: 0.75,
+                      px: 2,
+                      borderRadius: '4px',
+                      mx: 0.5,
+                      '&.Mui-selected': {
+                        bgcolor: '#DA291C',
+                        color: 'white',
+                        '&:hover': {
+                          bgcolor: '#A6192E'
+                        }
+                      },
+                      '&:hover': {
+                        bgcolor: '#F5F5F5'
+                      }
+                    }}
+                  >
+                    <ListItemText 
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: '14px',
+                        fontFamily: 'Titillium Web, sans-serif',
+                        fontWeight: location.pathname === item.path ? 600 : 400
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
         ))}
-      </List>
+      </Box>
 
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
+      {/* User Info at Bottom */}
+      <Box sx={{ borderTop: '1px solid #E0E0E0', p: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+          <Avatar 
+            sx={{ 
+              width: 32, 
+              height: 32, 
+              bgcolor: '#6D2077',
+              fontSize: '14px',
+              fontWeight: 600
+            }}
+          >
+            {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography 
+              sx={{ 
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#324053',
+                fontFamily: 'Titillium Web, sans-serif',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {currentUser?.firstName} {currentUser?.lastName}
+            </Typography>
+            <Typography 
+              sx={{ 
+                fontSize: '12px',
+                color: '#999',
+                fontFamily: 'DM Sans, sans-serif',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {currentUser?.email}
+            </Typography>
+          </Box>
+        </Box>
 
-      {/* Logout */}
-      <List>
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout}>
-            <ListItemIcon sx={{ color: 'white' }}>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItemButton>
-        </ListItem>
-      </List>
+        {/* Logout Button */}
+        <ListItemButton
+          onClick={handleLogout}
+          sx={{
+            py: 1,
+            px: 1.5,
+            borderRadius: '4px',
+            bgcolor: '#6D2077',
+            color: 'white',
+            justifyContent: 'center',
+            '&:hover': {
+              bgcolor: '#5A1A63'
+            }
+          }}
+        >
+          <Typography 
+            sx={{ 
+              fontSize: '14px',
+              fontWeight: 600,
+              fontFamily: 'Titillium Web, sans-serif'
+            }}
+          >
+            Sign Out
+          </Typography>
+        </ListItemButton>
+      </Box>
     </Box>
   );
 };
