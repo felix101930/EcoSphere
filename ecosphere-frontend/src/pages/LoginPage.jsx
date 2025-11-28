@@ -1,17 +1,42 @@
 import { useState } from 'react';
-import { Box, TextField, Button, Checkbox, FormControlLabel, Typography, Paper } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, TextField, Button, Checkbox, FormControlLabel, Typography, Paper, Alert } from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
 import loginBackground from '../assets/loginbackground.jpg';
 import saitLogo from '../assets/sait-logo_horz.svg';
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password, rememberMe });
-    // TODO: Implement login logic
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
+        // Redirect based on role
+        if (result.user.role === 'Admin') {
+          navigate('/users');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setError(result.error || 'Login failed');
+      }
+    } catch {
+      setError('An error occurred during login');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,6 +94,13 @@ function LoginPage() {
               }}
             />
           </Box>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit}>
@@ -141,6 +173,7 @@ function LoginPage() {
               type="submit"
               fullWidth
               variant="contained"
+              disabled={isLoading}
               sx={{
                 backgroundColor: '#E31837',
                 color: 'white',
@@ -154,7 +187,7 @@ function LoginPage() {
                 },
               }}
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
         </Paper>

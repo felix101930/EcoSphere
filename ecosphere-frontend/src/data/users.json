@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin.admin@edu.sait.ca",
+      "password": "abcd1234",
+      "role": "Admin"
+    }
+  ],
+  "nextId": 2
+}
