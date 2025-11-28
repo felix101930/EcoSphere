@@ -59,7 +59,7 @@ const Sidebar = () => {
         width: 180,
         height: '100vh',
         bgcolor: 'white',
-        borderRight: '1px solid #E0E0E0',
+        borderRight: '2px solid #DA291C',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'Titillium Web, sans-serif'
@@ -81,18 +81,19 @@ const Sidebar = () => {
       </Box>
 
       {/* Navigation Menu */}
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1 }}>
+      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 1, pt: 1 }}>
         {visibleMenuStructure.map((section) => (
-          <Box key={section.category} sx={{ mb: 2 }}>
+          <Box key={section.category} sx={{ mb: 2.5 }}>
             {/* Category Header */}
             <Typography
               sx={{
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 color: '#999',
                 textTransform: 'uppercase',
                 px: 2,
-                py: 1,
+                py: 0.5,
+                mb: 0.5,
                 fontFamily: 'Titillium Web, sans-serif'
               }}
             >
@@ -100,17 +101,18 @@ const Sidebar = () => {
             </Typography>
 
             {/* Menu Items */}
-            <List disablePadding>
+            <List disablePadding sx={{ '& .MuiListItem-root': { mb: 0.25 } }}>
               {section.items.map((item) => (
                 <ListItem key={item.text} disablePadding>
                   <ListItemButton
                     onClick={() => navigate(item.path)}
                     selected={location.pathname === item.path}
                     sx={{
-                      py: 0.75,
+                      py: 0.5,
                       px: 2,
                       borderRadius: '4px',
                       mx: 0.5,
+                      minHeight: '32px',
                       '&.Mui-selected': {
                         bgcolor: '#DA291C',
                         color: 'white',
@@ -126,7 +128,7 @@ const Sidebar = () => {
                     <ListItemText 
                       primary={item.text}
                       primaryTypographyProps={{
-                        fontSize: '14px',
+                        fontSize: '13px',
                         fontFamily: 'Titillium Web, sans-serif',
                         fontWeight: location.pathname === item.path ? 600 : 400
                       }}

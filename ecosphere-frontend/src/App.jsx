@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
+import AIChatbot from './components/Layout/AIChatbot';
 
 // Protected Route Component
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -26,14 +27,26 @@ function ProtectedRoute({ children, adminOnly = false }) {
   return children;
 }
 
-// Layout with Sidebar
-function MainLayout({ children }) {
+// Layout with Sidebar and conditional AI Chatbot
+function MainLayout({ children, showAIChatbot = true }) {
   return (
     <Box sx={{ display: 'flex' }}>
+      {/* Left Sidebar */}
       <Sidebar />
-      <Box sx={{ flexGrow: 1, bgcolor: 'white', minHeight: '100vh' }}>
+      
+      {/* Main Content Area */}
+      <Box 
+        sx={{ 
+          flexGrow: 1, 
+          bgcolor: 'white', 
+          minHeight: '100vh'
+        }}
+      >
         {children}
       </Box>
+
+      {/* Right AI Chatbot Panel - Only show for non-Management pages */}
+      {showAIChatbot && <AIChatbot />}
     </Box>
   );
 }
@@ -46,12 +59,12 @@ function App() {
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected Routes - Dashboards */}
+          {/* Protected Routes - Dashboards (with AI Chatbot) */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <DashboardPage />
                 </MainLayout>
               </ProtectedRoute>
@@ -62,7 +75,7 @@ function App() {
             path="/electricity"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <ComingSoonPage featureName="Electricity Dashboard" />
                 </MainLayout>
               </ProtectedRoute>
@@ -73,7 +86,7 @@ function App() {
             path="/water"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <ComingSoonPage featureName="Water Dashboard" />
                 </MainLayout>
               </ProtectedRoute>
@@ -84,43 +97,43 @@ function App() {
             path="/thermal"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <ComingSoonPage featureName="Thermal Dashboard" />
                 </MainLayout>
               </ProtectedRoute>
             }
           />
 
-          {/* Protected Routes - Advanced */}
+          {/* Protected Routes - Advanced (with AI Chatbot) */}
           <Route
             path="/3d-model"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <ComingSoonPage featureName="3D Model" />
                 </MainLayout>
               </ProtectedRoute>
             }
           />
 
-          {/* Protected Routes - Calculator */}
+          {/* Protected Routes - Calculator (with AI Chatbot) */}
           <Route
             path="/carbon-footprint"
             element={
               <ProtectedRoute>
-                <MainLayout>
+                <MainLayout showAIChatbot={true}>
                   <ComingSoonPage featureName="Carbon Footprint Calculator" />
                 </MainLayout>
               </ProtectedRoute>
             }
           />
 
-          {/* Protected Routes - Management (Admin Only) */}
+          {/* Protected Routes - Management (Admin Only, NO AI Chatbot) */}
           <Route
             path="/users"
             element={
               <ProtectedRoute adminOnly={true}>
-                <MainLayout>
+                <MainLayout showAIChatbot={false}>
                   <UserManagementPage />
                 </MainLayout>
               </ProtectedRoute>
@@ -131,7 +144,7 @@ function App() {
             path="/dashboard-management"
             element={
               <ProtectedRoute adminOnly={true}>
-                <MainLayout>
+                <MainLayout showAIChatbot={false}>
                   <ComingSoonPage featureName="Dashboard Management" />
                 </MainLayout>
               </ProtectedRoute>
@@ -142,7 +155,7 @@ function App() {
             path="/quiz-management"
             element={
               <ProtectedRoute adminOnly={true}>
-                <MainLayout>
+                <MainLayout showAIChatbot={false}>
                   <ComingSoonPage featureName="Quiz Management" />
                 </MainLayout>
               </ProtectedRoute>
