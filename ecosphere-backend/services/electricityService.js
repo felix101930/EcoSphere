@@ -32,12 +32,15 @@ class ElectricityService {
   async getRecordsByDateRange(startDate, endDate) {
     const allRecords = await this.getAllRecords();
     
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999); // Include the entire end date
+    // Parse dates in local timezone by adding time component
+    // This ensures the date is interpreted as local time, not UTC
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T23:59:59.999');
     
     return allRecords.filter(record => {
-      const recordDate = new Date(record.ts.substring(0, 19));
+      // Parse record timestamp in local timezone
+      // Replace space with 'T' to ensure proper ISO format
+      const recordDate = new Date(record.ts.replace(' ', 'T'));
       return recordDate >= start && recordDate <= end;
     });
   }
