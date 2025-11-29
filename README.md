@@ -1,38 +1,3 @@
-# EcoSphere - Smart Building Analytics System
-
-## 📁 项目结构
-
-```
-Capstone/
-├── ecosphere-frontend/     # 前端应用 (Vite + React)
-├── ecosphere-backend/      # 后端API (Node.js + Express)
-├── mock-data/              # Mock数据 (临时 - Prototype阶段)
-│   ├── users.json          # 用户数据
-│   ├── electricity.json    # 电力消耗数据
-│   └── carbonFootprint.json # 碳足迹数据
-├── .documentation/         # 📚 所有项目文档（统一管理）
-│   ├── INDEX.md            # 📖 文档索引（从这里开始）
-│   ├── ReadMeBeforeStart/  # 项目文档
-│   ├── FigmaScreenshot/    # 设计稿
-│   └── project-readmes/    # 各模块README
-└── README.md               # 本文件
-```
-
-⚠️ **重要**: `mock-data/` 文件夹是临时的，仅用于Prototype阶段。生产环境将使用SQL Server数据库。
-
-📚 **查找文档**: 所有文档已整理到 `.documentation/` 文件夹，请查看 [文档索引](.documentation/INDEX.md)
-
----
-
-## 🚀 如何启动应用
-
-### 前提条件
-
-- Node.js 18.x 或更高版本
-- npm 或 yarn
-
----
-
 ## 📝 启动步骤
 
 ### 1️⃣ 首先启动后端服务器
@@ -164,16 +129,3 @@ rm -rf node_modules package-lock.json
 # 重新安装
 npm install
 ```
-
----
-
-## 📚 更多信息
-
-**所有项目文档已整理到 `.documentation/` 文件夹**
-
-- 📖 **文档索引**: [.documentation/INDEX.md](.documentation/INDEX.md) - 查找所有文档
-- 📝 **开发日志**: [.documentation/ReadMeBeforeStart/log.md](.documentation/ReadMeBeforeStart/log.md)
-- 📋 **实现计划**: [.documentation/ReadMeBeforeStart/3.IMPLEMENTATION_PLAN.md](.documentation/ReadMeBeforeStart/3.IMPLEMENTATION_PLAN.md)
-- 🧪 **测试指南**: [.documentation/ReadMeBeforeStart/TESTING_GUIDE.md](.documentation/ReadMeBeforeStart/TESTING_GUIDE.md)
-
----
