@@ -15,6 +15,24 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Root route - Welcome message
+app.get('/', (req, res) => {
+  res.json({
+    name: 'EcoSphere Backend API',
+    version: '1.0.0',
+    status: 'running',
+    environment: config.env,
+    message: 'Welcome to EcoSphere Backend API',
+    endpoints: {
+      health: '/api/health',
+      users: '/api/users',
+      auth: '/api/auth/login',
+      electricity: '/api/electricity/*'
+    },
+    documentation: 'Visit /api/health for system status'
+  });
+});
+
 // API Routes
 app.use('/api', userRoutes);
 app.use('/api/electricity', electricityRoutes);
