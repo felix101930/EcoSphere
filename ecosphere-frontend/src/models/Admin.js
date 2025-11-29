@@ -1,41 +1,60 @@
-// Admin class (Inherits from User)
+// Admin Type Definition (Frontend - Lightweight)
 // Package: User Management
-// Relationship: Admin --|> User : is-a
-import User from './User.js';
+// 
+// NOTE: Admin-specific operations are handled by backend API.
+// Frontend only needs type definitions.
 
-class Admin extends User {
-  constructor() {
-    super();
-    this.role = 'Admin';
+/**
+ * @typedef {import('./User.js').User} User
+ */
+
+/**
+ * @typedef {User} Admin
+ * Admin is a User with role='Admin'
+ */
+
+/**
+ * Admin utility functions (Frontend only - for UI purposes)
+ */
+class AdminUtils {
+  /**
+   * Check if user has admin privileges
+   * @param {User} user 
+   * @returns {boolean}
+   */
+  static hasAdminPrivileges(user) {
+    return user && user.role === 'Admin';
   }
 
-  // Methods from class diagram
-  addUser(userData) {
-    console.log('Admin.addUser() called', userData);
-    // Implementation in UserService
-  }
+  /**
+   * Validate user data before sending to backend
+   * @param {Partial<User>} userData 
+   * @returns {{valid: boolean, errors: string[]}}
+   */
+  static validateUserData(userData) {
+    const errors = [];
 
-  editUserPermissions(userId, permissions) {
-    console.log('Admin.editUserPermissions() called', userId, permissions);
-    // Implementation in UserService
-  }
+    if (!userData.firstName || userData.firstName.trim() === '') {
+      errors.push('First name is required');
+    }
 
-  assignRole(userId, role) {
-    console.log('Admin.assignRole() called', userId, role);
-    // Implementation in UserService
-  }
+    if (!userData.lastName || userData.lastName.trim() === '') {
+      errors.push('Last name is required');
+    }
 
-  createQuiz() {
-    // Future implementation
-  }
+    if (!userData.email || !userData.email.includes('@')) {
+      errors.push('Valid email is required');
+    }
 
-  editQuiz(quizId) {
-    // Future implementation
-  }
+    if (!userData.role) {
+      errors.push('Role is required');
+    }
 
-  deleteQuiz(quizId) {
-    // Future implementation
+    return {
+      valid: errors.length === 0,
+      errors
+    };
   }
 }
 
-export default Admin;
+export default AdminUtils;

@@ -2,37 +2,8 @@
 // Implements UI class pattern using React Context API
 import { createContext, useState } from 'react';
 import userService from '../services/UserService';
-import Admin from '../models/Admin';
-import TeamMember from '../models/TeamMember';
 
 const AuthContext = createContext(null);
-
-// Helper function to create user instance based on role
-const createUserInstance = (userData) => {
-  let instance;
-  
-  if (userData.role === 'Admin') {
-    instance = new Admin();
-  } else {
-    instance = new TeamMember();
-  }
-  
-  // Populate instance with user data
-  instance.createUser(
-    userData.id,
-    userData.firstName,
-    userData.lastName,
-    userData.email,
-    '', // Don't store password in memory
-    userData.role
-  );
-  
-  if (userData.permissions) {
-    instance.permissions = userData.permissions;
-  }
-  
-  return instance;
-};
 
 // Helper function to load user from session storage
 const loadUserFromSession = () => {
@@ -50,10 +21,6 @@ const loadUserFromSession = () => {
 export const AuthProvider = ({ children }) => {
   // Initialize state from session storage using lazy initialization
   const [currentUser, setCurrentUser] = useState(() => loadUserFromSession());
-  const [userInstance, setUserInstance] = useState(() => {
-    const user = loadUserFromSession();
-    return user ? createUserInstance(user) : null;
-  });
   const [isLoading] = useState(false);
 
   // Login function
@@ -64,10 +31,6 @@ export const AuthProvider = ({ children }) => {
       if (user) {
         setCurrentUser(user);
         
-        // Create user instance
-        const instance = createUserInstance(user);
-        setUserInstance(instance);
-        
         // Save to session storage
         sessionStorage.setItem('ecosphere_current_user', JSON.stringify(user));
         
@@ -75,19 +38,15 @@ export const AuthProvider = ({ children }) => {
       } else {
         return { success: false, error: 'Invalid email or password' };
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error);
       return { success: false, error: 'Login failed' };
     }
   };
 
   // Logout function
   const logout = () => {
-    if (userInstance) {
-      userInstance.logout();
-    }
-    
     setCurrentUser(null);
-    setUserInstance(null);
     sessionStorage.removeItem('ecosphere_current_user');
   };
 
@@ -108,7 +67,6 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
-    userInstance,
     isLoading,
     login,
     logout,
