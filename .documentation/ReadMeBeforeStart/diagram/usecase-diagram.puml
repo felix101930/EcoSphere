@@ -1,0 +1,124 @@
+@startuml usecase-diagram
+
+skinparam backgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #000000
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #000000
+skinparam packageBackgroundColor #F5F5F5
+skinparam packageBorderColor #000000
+skinparam arrowColor #000000
+skinparam shadowing false
+skinparam linetype polyline
+
+left to right direction
+
+actor "Team Member" as teamMember
+actor "Admin" as admin
+actor "Visitor" as visitor
+
+rectangle "EcoSphere System" {
+  
+  ' User Management
+  usecase "Login" as login
+  usecase "Manage Users" as manageUsers
+  usecase "Create New Users" as createUsers
+  usecase "Edit User" as editUser
+  usecase "Assign Access\nPermissions" as assignPermissions
+  
+  ' Quiz Management
+  usecase "Manage Quizzes" as manageQuizzes
+  usecase "Add New Quiz" as addQuiz
+  usecase "Edit Quiz" as editQuiz
+  usecase "Delete Quiz" as deleteQuiz
+  usecase "Manage Landing\nPage Content" as manageLanding
+  
+  ' Dashboard & Reports
+  usecase "View Dashboard" as viewDashboard
+  usecase "Water Reports" as waterReports
+  usecase "Electricity Reports" as elecReports
+  usecase "Thermal Reports" as thermalReports
+  usecase "Generate Forecast" as generateForecast
+  usecase "Export Report" as exportReport
+  usecase "Manage Graphs" as manageGraphs
+  
+  ' Analytics
+  usecase "Carbon Footprint\nCalculation" as carbonCalc
+  usecase "View 3D Model" as view3D
+  
+  ' AI
+  usecase "Use AI Chatbot" as aiChatbot
+  
+  ' Visitor Features
+  usecase "Access QR Code\nwith Tech Info" as accessQR
+  usecase "Do Quizzes" as doQuizzes
+  usecase "View Quiz Results" as viewQuizResults
+  
+  ' Quiz Analytics
+  usecase "Analyze Quiz\nPerformance" as analyzeQuiz
+  
+  ' Notes
+  note right of manageLanding
+    By managing landing page
+    content the admin must
+    choose which content the
+    visitors will be able to view
+  end note
+  
+  note right of accessQR
+    The QR codes will contain
+    technical information
+    about some sensor and/
+    or features of the building
+  end note
+  
+  note bottom of doQuizzes
+    Quiz results are stored
+    in the database for
+    tracking and analysis
+  end note
+}
+
+' Team Member relationships (left side)
+teamMember -- login
+teamMember -- viewDashboard
+teamMember -- carbonCalc
+teamMember -- manageGraphs
+
+' Admin relationships (right side)
+admin -- login
+admin -- manageUsers
+admin -- manageQuizzes
+admin -- manageLanding
+admin -- viewDashboard
+admin -- view3D
+admin -- carbonCalc
+admin -- manageGraphs
+admin -- exportReport
+admin -- analyzeQuiz
+
+' Visitor relationships (right side)
+visitor -- accessQR
+visitor -- doQuizzes
+visitor -- viewQuizResults
+
+' Use case relationships
+manageUsers .> createUsers : <<include>>
+manageUsers .> editUser : <<include>>
+createUsers .> assignPermissions : <<include>>
+
+manageQuizzes .> addQuiz : <<include>>
+manageQuizzes .> editQuiz : <<include>>
+manageQuizzes .> deleteQuiz : <<include>>
+
+viewDashboard ..> waterReports : <<extend>>
+viewDashboard ..> elecReports : <<extend>>
+viewDashboard ..> thermalReports : <<extend>>
+viewDashboard .> aiChatbot : <<include>>
+viewDashboard ..> generateForecast : <<extend>>
+
+manageGraphs ..> exportReport : <<extend>>
+
+doQuizzes .> viewQuizResults : <<include>>
+
+@enduml

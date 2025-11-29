@@ -1,7 +1,6 @@
-# Project specific folders - Do not upload to GitHub
-FigmaScreenshot/
-ReadMeBeforeStart/
-README.md
+# Project specific folders
+# Note: All documentation is now in .documentation/ folder
+# .documentation/ is NOT ignored - it should be committed to Git
 
 # Mock data (temporary - for Prototype phase only)
 # Note: You may want to commit this for team collaboration during Prototype

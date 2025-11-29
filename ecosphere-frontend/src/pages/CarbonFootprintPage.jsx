@@ -377,7 +377,7 @@ const CarbonFootprintPage = () => {
               size="small"
               fullWidth
               inputProps={{
-                max: formatLocalDate(new Date()) // 不能选择今天之后的日期
+                max: formatLocalDate(new Date()) // Cannot select future dates
               }}
               slotProps={{
                 input: {
@@ -401,7 +401,7 @@ const CarbonFootprintPage = () => {
               size="small"
               fullWidth
               inputProps={{
-                max: formatLocalDate(new Date()) // 不能选择今天之后的日期
+                max: formatLocalDate(new Date()) // Cannot select future dates
               }}
               slotProps={{
                 input: {

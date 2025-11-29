@@ -30,7 +30,22 @@
         "carbon-footprint",
         "water"
       ]
+    },
+    {
+      "id": 6,
+      "firstName": "test2",
+      "lastName": "test",
+      "email": "test2.test@edu.sait.ca",
+      "password": "abcd1234",
+      "role": "TeamMember",
+      "permissions": [
+        "electricity",
+        "water",
+        "thermal",
+        "3d-model",
+        "carbon-footprint"
+      ]
     }
   ],
-  "nextId": 6
+  "nextId": 7
 }

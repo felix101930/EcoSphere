@@ -1,0 +1,506 @@
+@startuml seq-electricity-dashboard
+skinparam svek true
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+' Style matching class-diagram-optimized.puml
+skinparam backgroundColor #c4e2ff
+skinparam participant {
+    BackgroundColor #E8E8E8
+    BorderColor #666666
+}
+skinparam participant<<Actor>> {
+    BackgroundColor #FFFFFF
+    BorderColor #000000
+}
+skinparam arrowColor #333333
+
+title Sequence Diagram: Electricity Dashboard
+
+note across
+    **System Architecture Note:**
+    Building sensors automatically collect and store data in the Database.
+    EcoSphere system has **read-only** access to query this data
+    for visualization and analysis purposes only.
+    
+    **Dashboard Behavior:**
+    - Real-time mode: Shows current data only (no forecast/comparison)
+    - Time period selected: Automatically shows historical data + forecast + YoY/PoP comparison
+end note
+
+' Participants ordered by architectural layers
+participant "TeamMember :" as TM <<Actor>>
+participant "UI :" as UI
+participant "AccessControl :" as AC
+participant "Database :" as DB
+participant "ElectricityReport :" as Report
+participant "Forecast :" as Forecast
+participant "PeriodComparison :" as Comparison
+participant "Visualizer :" as Vis
+participant "ReportCustomization :" as Custom
+
+' ============================================
+' 1. Initial Dashboard Access & Real-time Visualization
+' ============================================
+group 1. Access & Visualization (Real-time Default)
+    TM -> UI : renderView("Electricity Dashboard")
+    activate TM
+    activate UI
+    
+    note right of UI
+        Check user permissions
+        before displaying data
+    end note
+    
+    UI -> AC : checkPermission(user, "Electricity")
+    activate AC
+    AC --> UI : permission granted
+    deactivate AC
+    
+    ' Fetch Real-time Sensor Data (Read-only)
+    UI -> DB : fetchSensorData()
+    activate DB
+    note right of DB
+        Read-only query to retrieve
+        latest electricity data collected
+        by building sensors
+    end note
+    DB --> UI : real-time sensor data
+    deactivate DB
+    
+    ' Generate Visualization
+    UI -> Vis : generateGraph(sensorData)
+    activate Vis
+    Vis --> UI : electricity consumption graph
+    deactivate Vis
+    
+    ' Calculate Carbon Footprint
+    UI -> Report : calculateCarbonFootprint(sensorData)
+    activate Report
+    note right of Report
+        Calculate CO2 emissions
+        based on consumption
+    end note
+    Report --> UI : carbon footprint value
+    deactivate Report
+    
+    note over UI, TM
+        Real-time mode displays current data only.
+        No forecast or comparison shown.
+    end note
+    
+    UI --> TM : Display Dashboard (Real-time Only)
+    deactivate UI
+    deactivate TM
+end
+
+' ============================================
+' 2. Time Period Selection (Triggers Complete Report with Forecast & Comparison)
+' ============================================
+group 2. Time Period Selection & Report Generation
+    TM -> UI : updateUI(filterParams="e.g. Past 7 Days")
+    activate TM
+    activate UI
+    
+    note right of UI
+        User selects time period
+        (Daily/Weekly/Monthly/Custom)
+        This triggers complete report generation
+    end note
+    
+    ' ===== Step 1: Query Historical Data =====
+    UI -> DB : executeQuery(filterParams)
+    activate DB
+    note right of DB
+        Read-only query for
+        historical sensor data
+        within specified period
+    end note
+    DB --> UI : filtered historical data
+    deactivate DB
+    
+    ' ===== Step 2: Visualize Historical Data =====
+    UI -> Vis : generateGraph(historicalData)
+    activate Vis
+    Vis --> UI : historical consumption graph
+    deactivate Vis
+    
+    ' ===== Step 3: Calculate Carbon Footprint =====
+    UI -> Report : calculateCarbonFootprint(historicalData)
+    activate Report
+    Report --> UI : carbon footprint for period
+    deactivate Report
+    
+    ' ===== Step 4: Generate Forecast (Automatic) =====
+    note over UI, Forecast
+        Automatically generate forecast
+        based on selected time period
+        (e.g., next 7 days for "Past 7 Days")
+    end note
+    
+    UI -> Forecast : generateForecast(historicalData)
+    activate Forecast
+    note right of Forecast
+        Analyze historical patterns
+        and predict future consumption
+    end note
+    Forecast --> UI : forecast data
+    deactivate Forecast
+    
+    UI -> Vis : generateGraph(forecastData)
+    activate Vis
+    Vis --> UI : forecast graph
+    deactivate Vis
+    
+    ' ===== Step 5: Generate Period Comparison (YoY/PoP) =====
+    note over UI, Comparison
+        Automatically calculate
+        Year-over-Year (YoY) and
+        Period-over-Period (PoP) comparisons
+    end note
+    
+    UI -> Comparison : compareYoY(currentPeriod)
+    activate Comparison
+    Comparison -> DB : executeQuery(previousYearPeriod)
+    activate DB
+    DB --> Comparison : previous year data
+    deactivate DB
+    Comparison --> UI : YoY comparison result
+    deactivate Comparison
+    
+    UI -> Comparison : comparePoP(currentPeriod)
+    activate Comparison
+    Comparison -> DB : executeQuery(previousPeriod)
+    activate DB
+    DB --> Comparison : previous period data
+    deactivate DB
+    Comparison --> UI : PoP comparison result
+    deactivate Comparison
+    
+    UI -> Vis : generateGraph(comparisonData)
+    activate Vis
+    Vis --> UI : comparison graphs
+    deactivate Vis
+    
+    note over UI, TM
+        Complete report now includes:
+        - Historical data visualization
+        - Carbon footprint calculation
+        - Forecast for next period
+        - YoY and PoP comparisons
+    end note
+    
+    UI --> TM : Display Complete Report
+    deactivate UI
+    deactivate TM
+end
+
+' ============================================
+' 3. Report Export & Customization
+' ============================================
+group 3. PDF Export Sequence
+    TM -> UI : updateUI("Open Export Dialog")
+    activate TM
+    activate UI
+    
+    note right of UI
+        Display available graphs
+        and customization options
+    end note
+    
+    UI --> TM : Show Graph Selection List
+    deactivate UI
+    
+    ' User Customizes Report Content
+    TM -> UI : updateUI("Select/Hide Graphs")
+    activate UI
+    UI --> TM : Update Selection
+    deactivate UI
+    
+    ' Request Preview
+    TM -> UI : updateUI("Request Preview")
+    activate UI
+    
+    note right of Custom
+        Generate preview with
+        selected graphs and data
+    end note
+    
+    UI -> Custom : preview()
+    activate Custom
+    Custom --> UI : report preview
+    deactivate Custom
+    
+    UI --> TM : Show Preview
+    deactivate UI
+    
+    ' Confirm and Download
+    TM -> UI : updateUI("Confirm Download")
+    activate UI
+    
+    note right of Custom
+        Generate PDF report
+        with customized content
+    end note
+    
+    UI -> Custom : download("PDF")
+    activate Custom
+    Custom --> UI : download complete
+    deactivate Custom
+    
+    UI --> TM : File Downloaded Successfully
+    note left of TM
+        PDF saved to
+        Downloads folder
+    end note
+    deactivate UI
+    deactivate TM
+end
+
+' ============================================
+' 4. Alternate Flow: No Data Available (UC-007 Alternate Flow 7.1)
+' ============================================
+group 4. No Data Available (Alternate Flow)
+    TM -> UI : updateUI(filterParams="Future Date Range")
+    activate TM
+    activate UI
+    
+    note right of TM
+        User selects parameters
+        with no available data
+    end note
+    
+    UI -> DB : executeQuery(filterParams)
+    activate DB
+    
+    note right of DB
+        Query returns empty result set
+        No sensor data for selected period
+    end note
+    
+    DB --> UI : empty dataset
+    deactivate DB
+    
+    UI -> UI : validateDataAvailability()
+    
+    note right of UI
+        Check if dataset is empty
+        or insufficient for visualization
+    end note
+    
+    UI --> TM : Display Warning Message
+    note left of TM
+        "No data available for the current selection.
+        Please try other parameters."
+        
+        Suggestions:
+        - Adjust time period
+        - Select different location/area
+        - Check data collection status
+    end note
+    
+    deactivate UI
+    
+    TM -> UI : updateUI(adjustedFilterParams)
+    activate UI
+    note right of TM
+        User adjusts filters
+        or time parameters
+    end note
+    
+    note over UI, DB
+        System returns to Step 1 of
+        "Time Period Selection" flow
+        with adjusted parameters
+    end note
+    
+    deactivate UI
+    deactivate TM
+end
+
+' ============================================
+' 5. Alternate Flow: Data Loading Failure (UC-007 Alternate Flow 7.2)
+' ============================================
+group 5. Data Loading Failure (Alternate Flow)
+    TM -> UI : updateUI(filterParams)
+    activate TM
+    activate UI
+    
+    UI -> DB : executeQuery(filterParams)
+    activate DB
+    
+    note right of DB
+        Database connection timeout
+        or query execution error
+    end note
+    
+    DB --> UI : error "Database connection failed"
+    deactivate DB
+    
+    UI -> UI : handleDatabaseError()
+    
+    note right of UI
+        Log error for debugging
+        Prepare user-friendly message
+    end note
+    
+    UI --> TM : Display Error Message
+    note left of TM
+        "Failed to load dashboard data.
+        Please try again."
+        
+        Options:
+        - Retry button
+        - Refresh page
+        - Contact support if persists
+    end note
+    
+    deactivate UI
+    
+    alt User chooses to retry
+        TM -> UI : updateUI("Retry")
+        activate UI
+        
+        note right of TM
+            User clicks retry button
+        end note
+        
+        note over UI, DB
+            System returns to Step 1 of
+            "Time Period Selection" flow
+            and retries the query
+        end note
+        
+        deactivate UI
+    else User refreshes page
+        TM -> UI : refreshPage()
+        activate UI
+        
+        note over UI, TM
+            Page reloads and returns to
+            "Access & Visualization" flow
+            (Real-time mode)
+        end note
+        
+        deactivate UI
+    end
+    
+    deactivate TM
+end
+
+' ============================================
+' 6. Alternate Flow: Permission Denied
+' ============================================
+group 6. Permission Denied (Alternate Flow)
+    TM -> UI : renderView("Electricity Dashboard")
+    activate TM
+    activate UI
+    
+    note right of TM
+        User attempts to access
+        Electricity Dashboard
+    end note
+    
+    UI -> AC : checkPermission(user, "Electricity")
+    activate AC
+    
+    note right of AC
+        User does not have
+        Electricity dashboard permission
+    end note
+    
+    AC --> UI : permission denied
+    deactivate AC
+    
+    UI --> TM : Display Permission Error
+    note left of TM
+        "You don't have permission to access
+        the Electricity Dashboard.
+        
+        Please contact your administrator
+        to request access."
+    end note
+    
+    deactivate UI
+    deactivate TM
+end
+
+' ============================================
+' 7. Alternate Flow: Forecast Generation Failure
+' ============================================
+group 7. Forecast Generation Failure (Alternate Flow)
+    note across
+        During "Time Period Selection" flow,
+        if forecast generation fails
+    end note
+    
+    UI -> Forecast : generateForecast(historicalData)
+    activate UI
+    activate Forecast
+    
+    note right of Forecast
+        Insufficient historical data
+        or model prediction error
+    end note
+    
+    Forecast --> UI : error "Insufficient data for forecast"
+    deactivate Forecast
+    
+    UI -> UI : handleForecastError()
+    
+    note right of UI
+        Continue displaying report
+        without forecast section
+    end note
+    
+    UI --> TM : Display Partial Report with Warning
+    note left of TM
+        Report shows:
+        - Historical data ✓
+        - Carbon footprint ✓
+        - YoY/PoP comparisons ✓
+        
+        Warning: "Forecast unavailable due to
+        insufficient historical data."
+    end note
+    
+    deactivate UI
+end
+
+' ============================================
+' 8. Alternate Flow: Export Failure
+' ============================================
+group 8. Export Failure (Alternate Flow)
+    note across
+        During "PDF Export Sequence",
+        if export generation fails
+    end note
+    
+    UI -> Custom : download("PDF")
+    activate UI
+    activate Custom
+    
+    note right of Custom
+        PDF generation error
+        (e.g., memory limit, file system error)
+    end note
+    
+    Custom --> UI : error "Export failed"
+    deactivate Custom
+    
+    UI --> TM : Display Export Error
+    note left of TM
+        "Failed to generate PDF report.
+        Please try again or contact support."
+        
+        Options:
+        - Retry export
+        - Try different format
+        - Reduce report size
+    end note
+    
+    deactivate UI
+end
+
+@enduml
