@@ -3,9 +3,13 @@
 # .documentation/ is NOT ignored - it should be committed to Git
 
 # Mock data (temporary - for Prototype phase only)
-# Note: You may want to commit this for team collaboration during Prototype
+# Note: Root mock-data/ is for local development
+# Backend data/ is for Vercel deployment (must be committed)
 # Uncomment the line below if you don't want to commit mock data:
 # mock-data/
+
+# DO NOT ignore ecosphere-backend/data/ - it's needed for Vercel deployment
+# !ecosphere-backend/data/*.json
 
 # Node modules
 node_modules/

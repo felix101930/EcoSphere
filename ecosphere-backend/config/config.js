@@ -2,7 +2,11 @@
 const path = require('path');
 
 // Mock data directory (temporary - will be replaced with SQL Server)
-const MOCK_DATA_DIR = path.join(__dirname, '../../mock-data');
+// For Vercel deployment, use data directory inside backend
+// For local development, use the root mock-data directory
+const MOCK_DATA_DIR = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../data')  // Vercel: use backend/data
+  : path.join(__dirname, '../../mock-data');  // Local: use root mock-data
 
 module.exports = {
   port: process.env.PORT || 3001,

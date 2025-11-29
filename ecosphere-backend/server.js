@@ -49,9 +49,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(config.port, () => {
-  console.log(`🚀 EcoSphere Backend running on http://localhost:${config.port}`);
-  console.log(`📁 Users file: ${config.usersFile}`);
-  console.log(`🌍 Environment: ${config.env}`);
-});
+// Start server (only in development, not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(config.port, () => {
+    console.log(`🚀 EcoSphere Backend running on http://localhost:${config.port}`);
+    console.log(`📁 Users file: ${config.usersFile}`);
+    console.log(`🌍 Environment: ${config.env}`);
+  });
+}
+
+// Export for Vercel serverless deployment
+module.exports = app;
