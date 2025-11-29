@@ -4,8 +4,28 @@ import { Box, Typography, TextField, Button, Select, MenuItem, FormControl } fro
 import { Line } from 'react-chartjs-2';
 
 const CustomCalculator = ({ emissionFactor }) => {
-  // Get current year for default
+  // Get current year and month for validation (user's local time)
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth(); // 0-11
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  // Generate available years (only up to current year)
+  const availableYears = [];
+  for (let year = 2020; year <= currentYear; year++) {
+    availableYears.push(year.toString());
+  }
+  
+  // Get available months for a given year
+  const getAvailableMonths = (selectedYear) => {
+    const year = parseInt(selectedYear);
+    if (year < currentYear) {
+      return monthNames; // All months available for past years
+    } else if (year === currentYear) {
+      return monthNames.slice(0, currentMonth + 1); // Only up to current month for current year
+    }
+    return []; // No months for future years (shouldn't happen)
+  };
   
   const [customEntries, setCustomEntries] = useState([
     { id: 1, year: currentYear.toString(), month: 'January', usage: '' }
@@ -35,14 +55,47 @@ const CustomCalculator = ({ emissionFactor }) => {
     setCustomEntries([...customEntries, { id: newId, year: nextYear, month: nextMonth, usage: '' }]);
   };
 
+  // Check if a year-month combination is in the future
+  const isFutureDate = (year, month) => {
+    const selectedYear = parseInt(year);
+    const selectedMonthIndex = monthNames.indexOf(month);
+    
+    if (selectedYear > currentYear) {
+      return true;
+    }
+    
+    if (selectedYear === currentYear && selectedMonthIndex > currentMonth) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const handleUpdateEntry = (id, field, value) => {
-    const updatedEntries = customEntries.map(entry => 
+    let updatedEntries = customEntries.map(entry => 
       entry.id === id ? { ...entry, [field]: value } : entry
     );
+    
+    // If year changed, reset month to first available month
+    if (field === 'year') {
+      const availableMonths = getAvailableMonths(value);
+      if (availableMonths.length > 0) {
+        updatedEntries = updatedEntries.map(entry => 
+          entry.id === id ? { ...entry, month: availableMonths[0] } : entry
+        );
+      }
+    }
     
     // Check for duplicates if year or month changed
     if (field === 'year' || field === 'month') {
       const currentEntry = updatedEntries.find(e => e.id === id);
+      
+      // Check if selected date is in the future (redundant now, but keep for safety)
+      if (isFutureDate(currentEntry.year, currentEntry.month)) {
+        alert(`Cannot select future date: ${currentEntry.month} ${currentEntry.year}`);
+        return; // Don't update if future date
+      }
+      
       const duplicate = updatedEntries.find(e => 
         e.id !== id && e.year === currentEntry.year && e.month === currentEntry.month
       );
@@ -203,8 +256,8 @@ const CustomCalculator = ({ emissionFactor }) => {
                 onChange={(e) => handleUpdateEntry(entry.id, 'year', e.target.value)}
                 sx={{ bgcolor: 'white' }}
               >
-                {Array.from({ length: 5 }, (_, i) => currentYear - 2 + i).map(year => (
-                  <MenuItem key={year} value={year.toString()}>{year}</MenuItem>
+                {availableYears.map(year => (
+                  <MenuItem key={year} value={year}>{year}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -215,8 +268,7 @@ const CustomCalculator = ({ emissionFactor }) => {
                 onChange={(e) => handleUpdateEntry(entry.id, 'month', e.target.value)}
                 sx={{ bgcolor: 'white' }}
               >
-                {['January', 'February', 'March', 'April', 'May', 'June',
-                  'July', 'August', 'September', 'October', 'November', 'December'].map(month => (
+                {getAvailableMonths(entry.year).map(month => (
                   <MenuItem key={month} value={month}>{month}</MenuItem>
                 ))}
               </Select>

@@ -36,13 +36,21 @@ const CarbonFootprintPage = () => {
   const [dailyData, setDailyData] = useState([]);
   const [longTermData, setLongTermData] = useState([]);
   
-  // Date range for Daily View
+  // Date range for Daily View - use local date (not UTC)
   const today = new Date();
   const tenDaysAgo = new Date(today);
   tenDaysAgo.setDate(today.getDate() - 10);
   
-  const [fromDate, setFromDate] = useState(tenDaysAgo.toISOString().split('T')[0]);
-  const [toDate, setToDate] = useState(today.toISOString().split('T')[0]);
+  // Format date as YYYY-MM-DD using local timezone
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fromDate, setFromDate] = useState(formatLocalDate(tenDaysAgo));
+  const [toDate, setToDate] = useState(formatLocalDate(today));
 
   // State for Daily View loading
   const [dailyLoading, setDailyLoading] = useState(false);
@@ -73,12 +81,20 @@ const CarbonFootprintPage = () => {
         setLoading(true);
         setError(null);
 
-        // Calculate initial date range
+        // Calculate initial date range using local timezone
         const today = new Date();
         const tenDaysAgo = new Date(today);
         tenDaysAgo.setDate(today.getDate() - 10);
-        const initialFromDate = tenDaysAgo.toISOString().split('T')[0];
-        const initialToDate = today.toISOString().split('T')[0];
+        
+        const formatLocalDate = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const initialFromDate = formatLocalDate(tenDaysAgo);
+        const initialToDate = formatLocalDate(today);
 
         // Fetch carbon intensity from Electricity Maps API
         const intensity = await ElectricityMapsService.getCurrentCarbonIntensity();
@@ -360,10 +376,15 @@ const CarbonFootprintPage = () => {
               onChange={(e) => setFromDate(e.target.value)}
               size="small"
               fullWidth
-              InputProps={{
-                sx: {
-                  bgcolor: 'white',
-                  fontFamily: 'DM Sans, sans-serif'
+              inputProps={{
+                max: formatLocalDate(new Date()) // 不能选择今天之后的日期
+              }}
+              slotProps={{
+                input: {
+                  sx: {
+                    bgcolor: 'white',
+                    fontFamily: 'DM Sans, sans-serif'
+                  }
                 }
               }}
             />
@@ -379,10 +400,15 @@ const CarbonFootprintPage = () => {
               onChange={(e) => setToDate(e.target.value)}
               size="small"
               fullWidth
-              InputProps={{
-                sx: {
-                  bgcolor: 'white',
-                  fontFamily: 'DM Sans, sans-serif'
+              inputProps={{
+                max: formatLocalDate(new Date()) // 不能选择今天之后的日期
+              }}
+              slotProps={{
+                input: {
+                  sx: {
+                    bgcolor: 'white',
+                    fontFamily: 'DM Sans, sans-serif'
+                  }
                 }
               }}
             />
