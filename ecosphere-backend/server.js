@@ -12,7 +12,19 @@ const electricityRoutes = require('./routes/electricityRoutes');
 const app = express();
 
 // Middleware
-app.use(cors());
+// CORS configuration for Vercel deployment
+app.use(cors({
+  origin: [
+    'http://localhost:5174',  // Local development
+    'http://localhost:5173',  // Alternative local port
+    'https://ecosphere-frontend-pied.vercel.app',  // Your production frontend
+    'https://ecosphere-frontend.vercel.app',  // Alternative frontend URL
+    // Add your custom domain here if you have one
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
 
 // Root route - Welcome message
