@@ -109,8 +109,10 @@ const ExportReportDialog = ({ open, onClose }) => {
       
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
-      const currentDate = new Date().toLocaleDateString('en-CA');
-      pdf.text(`Generated on: ${currentDate}`, 20, 30);
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+      const currentTime = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
+      pdf.text(`Generated on: ${currentDate} ${currentTime}`, 20, 30);
       
       // Add content image
       const imgData = canvas.toDataURL('image/png');
@@ -127,8 +129,9 @@ const ExportReportDialog = ({ open, onClose }) => {
         heightLeft -= pageHeight;
       }
 
-      // Generate filename
-      const filename = `Carbon_Footprint_Report_${currentDate}.pdf`;
+      // Generate filename with date and time
+      const timeForFilename = currentTime.replace(':', '-'); // Replace : with - for filename compatibility
+      const filename = `Carbon_Footprint_Report_${currentDate}_${timeForFilename}.pdf`;
       
       // Download PDF
       pdf.save(filename);
