@@ -36,10 +36,10 @@ const CarbonFootprintPage = () => {
   const [dailyData, setDailyData] = useState([]);
   const [longTermData, setLongTermData] = useState([]);
   
-  // Date range for Daily View - use local date (not UTC)
-  const today = new Date();
-  const tenDaysAgo = new Date(today);
-  tenDaysAgo.setDate(today.getDate() - 10);
+  // Date range for Daily View - use data's actual date range
+  // Since our mock data ends at 2025-12-02, we'll use that as the default end date
+  const dataEndDate = new Date('2025-12-02');
+  const dataStartDate = new Date('2025-11-22'); // 10 days before end date
   
   // Format date as YYYY-MM-DD using local timezone
   const formatLocalDate = (date) => {
@@ -49,8 +49,8 @@ const CarbonFootprintPage = () => {
     return `${year}-${month}-${day}`;
   };
   
-  const [fromDate, setFromDate] = useState(formatLocalDate(tenDaysAgo));
-  const [toDate, setToDate] = useState(formatLocalDate(today));
+  const [fromDate, setFromDate] = useState(formatLocalDate(dataStartDate));
+  const [toDate, setToDate] = useState(formatLocalDate(dataEndDate));
 
   // State for Daily View loading
   const [dailyLoading, setDailyLoading] = useState(false);
@@ -81,10 +81,9 @@ const CarbonFootprintPage = () => {
         setLoading(true);
         setError(null);
 
-        // Calculate initial date range using local timezone
-        const today = new Date();
-        const tenDaysAgo = new Date(today);
-        tenDaysAgo.setDate(today.getDate() - 10);
+        // Use data's actual date range for initial load
+        const dataEndDate = new Date('2025-12-02');
+        const dataStartDate = new Date('2025-11-22');
         
         const formatLocalDate = (date) => {
           const year = date.getFullYear();
@@ -93,8 +92,8 @@ const CarbonFootprintPage = () => {
           return `${year}-${month}-${day}`;
         };
         
-        const initialFromDate = formatLocalDate(tenDaysAgo);
-        const initialToDate = formatLocalDate(today);
+        const initialFromDate = formatLocalDate(dataStartDate);
+        const initialToDate = formatLocalDate(dataEndDate);
 
         // Fetch carbon intensity from Electricity Maps API
         const intensity = await ElectricityMapsService.getCurrentCarbonIntensity();

@@ -15,11 +15,11 @@ function generateElectricityData() {
   let seq = 1000000000; // Start sequence number
   
   // Start: 2024-01-01 00:00:00
-  // End: 2025-11-28 23:59:59
+  // End: 2025-12-02 12:00:00 (inclusive)
   const startDate = new Date('2024-01-01T00:00:00');
-  const endDate = new Date('2025-11-28T23:59:59');
+  const endDate = new Date('2025-12-02T12:00:00');
   
-  // Calculate total hours
+  // Calculate total hours (inclusive of end hour)
   const totalHours = Math.floor((endDate - startDate) / (1000 * 60 * 60)) + 1;
   
   console.log(`Generating ${totalHours} hourly records...`);
@@ -92,7 +92,7 @@ function generateElectricityData() {
 console.log('=== GBTAC Electricity Data Generator ===');
 console.log('Building: 3-story office building');
 console.log('Location: Calgary, Alberta');
-console.log('Time range: 2024-01-01 to 2025-11-28');
+console.log('Time range: 2024-01-01 to 2025-12-02');
 console.log('');
 
 const electricityData = generateElectricityData();
@@ -104,7 +104,7 @@ const output = {
     location: "SAIT, Calgary, Alberta, Canada",
     buildingType: "3-story office building",
     startDate: "2024-01-01",
-    endDate: "2025-11-28",
+    endDate: "2025-12-02",
     totalRecords: electricityData.length,
     interval: "hourly",
     unit: "W (Watts)",

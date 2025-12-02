@@ -18,10 +18,10 @@
       "permissions": []
     },
     {
-      "id": 5,
-      "firstName": "test",
+      "id": 6,
+      "firstName": "test2",
       "lastName": "test",
-      "email": "test.test@edu.sait.ca",
+      "email": "test2.test@edu.sait.ca",
       "password": "abcd1234",
       "role": "TeamMember",
       "permissions": [
@@ -32,20 +32,17 @@
       ]
     },
     {
-      "id": 6,
-      "firstName": "test2",
+      "id": 7,
+      "firstName": "test1",
       "lastName": "test",
-      "email": "test2.test@edu.sait.ca",
+      "email": "test1.test@edu.sait.ca",
       "password": "abcd1234",
       "role": "TeamMember",
       "permissions": [
         "electricity",
-        "water",
-        "thermal",
-        "3d-model",
         "carbon-footprint"
       ]
     }
   ],
-  "nextId": 7
+  "nextId": 8
 }
