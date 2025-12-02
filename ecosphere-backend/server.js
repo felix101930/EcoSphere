@@ -45,9 +45,13 @@ app.get('/', (req, res) => {
   });
 });
 
+// Import login log routes
+const loginLogRoutes = require('./routes/loginLogRoutes');
+
 // API Routes
 app.use('/api', userRoutes);
 app.use('/api/electricity', electricityRoutes);
+app.use('/api/login-logs', loginLogRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

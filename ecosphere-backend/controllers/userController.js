@@ -112,15 +112,61 @@ class UserController {
     try {
       const { email, password } = req.body;
       
+      console.log('🔐 Login attempt:', email);
+      
+      // Get client IP address
+      const ipAddress = req.ip || req.connection.remoteAddress || '127.0.0.1';
+      console.log('📍 IP Address:', ipAddress);
+      
+      // Import loginLogService
+      const loginLogService = require('../services/loginLogService');
+      
       const user = await UserService.authenticate(email, password);
       
       if (user) {
-        res.json(user);
+        console.log('✅ Authentication successful for:', email);
+        
+        // Log successful login
+        try {
+          const loginLog = await loginLogService.addLog({
+            email,
+            role: user.role,
+            status: 'success',
+            ipAddress
+          });
+          
+          console.log('📝 Login log created:', loginLog.id);
+          
+          // Add lastLoginId to user object for logout tracking
+          user.lastLoginId = loginLog.id;
+          
+          res.json(user);
+        } catch (logError) {
+          console.error('❌ Error creating login log:', logError);
+          // Still return user even if logging fails
+          res.json(user);
+        }
       } else {
+        console.log('❌ Authentication failed for:', email);
+        
+        // Log failed login
+        try {
+          await loginLogService.addLog({
+            email,
+            role: 'Unknown',
+            status: 'failed',
+            failureReason: 'Invalid email or password',
+            ipAddress
+          });
+          console.log('📝 Failed login logged');
+        } catch (logError) {
+          console.error('❌ Error logging failed login:', logError);
+        }
+        
         res.status(401).json({ error: 'Invalid credentials' });
       }
     } catch (error) {
-      console.error('Error in login:', error);
+      console.error('❌ Error in login:', error);
       res.status(500).json({ error: 'Login failed' });
     }
   }

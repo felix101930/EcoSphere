@@ -40,7 +40,8 @@
       "role": "TeamMember",
       "permissions": [
         "electricity",
-        "carbon-footprint"
+        "carbon-footprint",
+        "water"
       ]
     }
   ],

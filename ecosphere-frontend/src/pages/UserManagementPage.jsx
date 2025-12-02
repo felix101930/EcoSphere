@@ -2,11 +2,12 @@
 // This page is a CONTAINER component that orchestrates child components
 import { useState, useEffect } from 'react';
 import { Box, Button, Snackbar, Alert } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, History as HistoryIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import userService from '../services/UserService';
 import UserTable from '../components/UserManagement/UserTable';
 import UserDialog from '../components/UserManagement/UserDialog';
+import LoginLogDialog from '../components/UserManagement/LoginLogDialog';
 import PageHeader from '../components/Common/PageHeader';
 
 const UserManagementPage = () => {
@@ -225,20 +226,41 @@ const UserManagementPage = () => {
     }
   };
 
+  const [loginLogDialogOpen, setLoginLogDialogOpen] = useState(false);
+
   const addUserButton = (
-    <Button
-      variant="contained"
-      startIcon={<AddIcon />}
-      onClick={() => handleOpenDialog()}
-      sx={{ 
-        bgcolor: '#DA291C', 
-        '&:hover': { bgcolor: '#A6192E' },
-        fontFamily: 'Titillium Web, sans-serif',
-        fontWeight: 600
-      }}
-    >
-      Add User
-    </Button>
+    <Box sx={{ display: 'flex', gap: 2 }}>
+      <Button
+        variant="outlined"
+        startIcon={<HistoryIcon />}
+        onClick={() => setLoginLogDialogOpen(true)}
+        sx={{ 
+          borderColor: '#DA291C',
+          color: '#DA291C',
+          '&:hover': { 
+            borderColor: '#A6192E',
+            bgcolor: 'rgba(218, 41, 28, 0.04)'
+          },
+          fontFamily: 'Titillium Web, sans-serif',
+          fontWeight: 600
+        }}
+      >
+        Login Log
+      </Button>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => handleOpenDialog()}
+        sx={{ 
+          bgcolor: '#DA291C', 
+          '&:hover': { bgcolor: '#A6192E' },
+          fontFamily: 'Titillium Web, sans-serif',
+          fontWeight: 600
+        }}
+      >
+        Add User
+      </Button>
+    </Box>
   );
 
   return (
@@ -269,6 +291,12 @@ const UserManagementPage = () => {
         onChange={handleFormChange}
         isEditMode={!!editingUser}
         isEditingSelf={editingUser && editingUser.id === currentUser.id}
+      />
+
+      {/* Login Log Dialog */}
+      <LoginLogDialog
+        open={loginLogDialogOpen}
+        onClose={() => setLoginLogDialogOpen(false)}
       />
 
       {/* Snackbar Notification */}
