@@ -59,8 +59,8 @@ const PageHeader = ({
             startIcon={<FileDownloadIcon />}
             onClick={onExport}
             sx={{
-              bgcolor: '#6D2077',
-              '&:hover': { bgcolor: '#5A1A63' },
+              bgcolor: '#DA291C',
+              '&:hover': { bgcolor: '#A6192E' },
               fontFamily: 'Titillium Web, sans-serif',
               fontWeight: 600
             }}

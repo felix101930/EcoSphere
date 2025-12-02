@@ -232,7 +232,11 @@ const CustomCalculator = ({ emissionFactor }) => {
 
 
   return (
-    <Box sx={{ mb: 3, p: 3, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
+    <Box 
+      data-custom-calculator
+      data-has-content={showCustomChart ? 'true' : 'false'}
+      sx={{ mb: 3, p: 3, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}
+    >
       <Typography variant="h5" gutterBottom sx={{ color: '#666', mb: 3 }}>
         Custom Calculation (based on monthly electricity bills)
       </Typography>

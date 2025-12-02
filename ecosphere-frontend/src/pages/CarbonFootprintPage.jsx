@@ -1,9 +1,11 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
 import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { Line } from 'react-chartjs-2';
 import PageHeader from '../components/Common/PageHeader';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
+import ExportReportDialog from '../components/CarbonFootprint/ExportReportDialog';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -54,6 +56,9 @@ const CarbonFootprintPage = () => {
 
   // State for Daily View loading
   const [dailyLoading, setDailyLoading] = useState(false);
+  
+  // State for Export Dialog
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   // Function to load daily data by date range
   const loadDailyData = async () => {
@@ -122,9 +127,7 @@ const CarbonFootprintPage = () => {
   }, []); // Only load once on mount
 
   const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log('Exporting report...');
-    alert('Export functionality coming soon!');
+    setExportDialogOpen(true);
   };
 
   // Memoize emission factor calculation
@@ -301,13 +304,21 @@ const CarbonFootprintPage = () => {
 
   return (
     <>
+      {/* Export Report Dialog */}
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+      />
+      
       <PageHeader 
         title="Carbon Footprint Calculator" 
         subtitle="Monitor and analyze your carbon emissions"
         showExportButton={true}
         onExport={handleExport}
       />
-      <Box sx={{ px: 4, py: 3 }}>
+      
+      {/* Main content area for export */}
+      <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* API Status Card */}
       <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
         <Typography variant="h6" gutterBottom>
@@ -484,7 +495,7 @@ const CarbonFootprintPage = () => {
 
       {/* Custom Calculator */}
       <CustomCalculator emissionFactor={emissionFactor} />
-      </Box>
+      </Box> {/* End of data-export-content */}
     </>
   );
 };
