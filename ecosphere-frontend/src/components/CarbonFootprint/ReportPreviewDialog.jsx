@@ -71,7 +71,6 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 295; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
 
       const pdf = new jsPDF('p', 'mm', 'a4');
       
@@ -89,17 +88,26 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       
       // Add content image
       const imgData = canvas.toDataURL('image/png');
-      let position = 30; // Start below header
+      const headerHeight = 30; // Height reserved for header on first page
+      const availableHeightFirstPage = pageHeight - headerHeight; // Available height on first page
       
-      // Add image to PDF (handle multiple pages if needed)
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth - 20, imgHeight);
-      heightLeft -= pageHeight;
+      // Calculate the scaled image dimensions
+      const scaledImgWidth = imgWidth - 20; // 190mm (with 10mm margins on each side)
+      const scaledImgHeight = imgHeight;
       
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + 40;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth - 20, imgHeight);
-        heightLeft -= pageHeight;
+      // Add first page - show as much as fits
+      pdf.addImage(imgData, 'PNG', 10, headerHeight, scaledImgWidth, scaledImgHeight);
+      
+      // Only add subsequent pages if content is longer than first page
+      if (scaledImgHeight > availableHeightFirstPage) {
+        let yOffset = availableHeightFirstPage; // Start from where first page ended
+        
+        while (yOffset < scaledImgHeight) {
+          pdf.addPage();
+          // Position the image so the next section is visible
+          pdf.addImage(imgData, 'PNG', 10, -yOffset, scaledImgWidth, scaledImgHeight);
+          yOffset += pageHeight;
+        }
       }
 
       const timeForFilename = timeStr.replace(':', '-');
@@ -122,12 +130,13 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth="xl"
       fullWidth
       slotProps={{
         paper: {
           sx: {
-            maxHeight: '90vh'
+            maxHeight: '90vh',
+            width: '95vw'
           }
         }
       }}
@@ -144,8 +153,8 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
-        <Box data-report-preview-content>
+      <DialogContent sx={{ p: 4 }}>
+        <Box data-report-preview-content sx={{ maxWidth: '1400px', mx: 'auto' }}>
           {/* Data Source Info */}
           <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="h6" gutterBottom>
