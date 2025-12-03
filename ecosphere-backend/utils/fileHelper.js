@@ -1,36 +1,26 @@
 // File Helper - Handles file operations
-const fs = require('fs').promises;
+const fs = require('fs');
 
 class FileHelper {
   /**
-   * Read JSON file
+   * Read JSON file (synchronous)
    * @param {string} filePath - Path to the file
-   * @returns {Promise<Object>} - Parsed JSON data
+   * @returns {Object} - Parsed JSON data
    */
-  static async readJSON(filePath) {
-    try {
-      const data = await fs.readFile(filePath, 'utf8');
-      return JSON.parse(data);
-    } catch (error) {
-      console.error('Error reading file:', error);
-      throw error;
-    }
+  static readJSON(filePath) {
+    const data = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(data);
   }
 
   /**
-   * Write JSON file
+   * Write JSON file (synchronous)
    * @param {string} filePath - Path to the file
    * @param {Object} data - Data to write
-   * @returns {Promise<boolean>} - Success status
+   * @returns {boolean} - Success status
    */
-  static async writeJSON(filePath, data) {
-    try {
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
-      return true;
-    } catch (error) {
-      console.error('Error writing file:', error);
-      throw error;
-    }
+  static writeJSON(filePath, data) {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    return true;
   }
 }
 

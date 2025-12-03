@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Box, Typography, TextField, Button, Select, MenuItem, FormControl } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 
-const CustomCalculator = ({ emissionFactor }) => {
+const CustomCalculator = ({ emissionFactor, onDataChange }) => {
   // Get current year and month for validation (user's local time)
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth(); // 0-11
@@ -127,14 +127,35 @@ const CustomCalculator = ({ emissionFactor }) => {
     }
     
     // Create snapshot of current data for chart
-    setChartData(prepareCustomChartData(validEntries));
+    const chartDataSnapshot = prepareCustomChartData(validEntries);
+    setChartData(chartDataSnapshot);
     setShowCustomChart(true);
+    
+    // Notify parent component with custom calculation data
+    if (onDataChange) {
+      onDataChange({
+        hasData: true,
+        data: validEntries.map(entry => ({
+          ts: `${entry.year}-${String(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(entry.month) + 1).padStart(2, '0')}-01 00:00:00.0000000`,
+          value: parseFloat(entry.usage) * 1000, // Convert kWh to Wh to match other data format
+          year: entry.year,
+          month: entry.month,
+          usage: parseFloat(entry.usage)
+        })),
+        chartData: chartDataSnapshot
+      });
+    }
   };
 
   const handleClearCustomData = () => {
     setCustomEntries([{ id: 1, year: currentYear.toString(), month: 'January', usage: '' }]);
     setShowCustomChart(false);
     setChartData(null);
+    
+    // Notify parent component that custom data is cleared
+    if (onDataChange) {
+      onDataChange(null);
+    }
   };
 
   const prepareCustomChartData = (validEntries) => {

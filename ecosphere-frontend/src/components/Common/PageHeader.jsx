@@ -7,6 +7,8 @@ const PageHeader = ({
   subtitle, 
   showExportButton = false, 
   onExport,
+  showReportLogButton = false,
+  onReportLog,
   rightContent 
 }) => {
   return (
@@ -51,8 +53,26 @@ const PageHeader = ({
         )}
       </Box>
 
-      {/* Right: Export Button or Custom Content */}
-      <Box>
+      {/* Right: Buttons or Custom Content */}
+      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+        {showReportLogButton && (
+          <Button
+            variant="outlined"
+            onClick={onReportLog}
+            sx={{
+              borderColor: '#DA291C',
+              color: '#DA291C',
+              '&:hover': { 
+                borderColor: '#A6192E',
+                bgcolor: 'rgba(218, 41, 28, 0.04)'
+              },
+              fontFamily: 'Titillium Web, sans-serif',
+              fontWeight: 600
+            }}
+          >
+            Report Log
+          </Button>
+        )}
         {showExportButton && (
           <Button
             variant="contained"

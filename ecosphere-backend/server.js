@@ -25,7 +25,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' }));
 
 // Root route - Welcome message
 app.get('/', (req, res) => {
@@ -47,11 +47,13 @@ app.get('/', (req, res) => {
 
 // Import login log routes
 const loginLogRoutes = require('./routes/loginLogRoutes');
+const carbonFootprintReportRoutes = require('./routes/carbonFootprintReportRoutes');
 
 // API Routes
 app.use('/api', userRoutes);
 app.use('/api/electricity', electricityRoutes);
 app.use('/api/login-logs', loginLogRoutes);
+app.use('/api/carbon-footprint-reports', carbonFootprintReportRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

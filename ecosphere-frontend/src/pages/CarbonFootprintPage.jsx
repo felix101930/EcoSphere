@@ -2,10 +2,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import HistoryIcon from '@mui/icons-material/History';
 import { Line } from 'react-chartjs-2';
 import PageHeader from '../components/Common/PageHeader';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
 import ExportReportDialog from '../components/CarbonFootprint/ExportReportDialog';
+import ReportLogDialog from '../components/CarbonFootprint/ReportLogDialog';
+import ReportPreviewDialog from '../components/CarbonFootprint/ReportPreviewDialog';
+import CarbonFootprintReportService from '../services/CarbonFootprintReportService';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -59,6 +63,16 @@ const CarbonFootprintPage = () => {
   
   // State for Export Dialog
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  
+  // State for Report Log Dialog
+  const [reportLogOpen, setReportLogOpen] = useState(false);
+  
+  // State for Report Preview Dialog
+  const [reportPreviewOpen, setReportPreviewOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  
+  // State for Custom Calculator Data
+  const [customCalculatorData, setCustomCalculatorData] = useState(null);
 
   // Function to load daily data by date range
   const loadDailyData = async () => {
@@ -276,6 +290,8 @@ const CarbonFootprintPage = () => {
         <PageHeader 
           title="Carbon Footprint Calculator" 
           subtitle="Monitor and analyze your carbon emissions"
+          showReportLogButton={true}
+          onReportLog={() => setReportLogOpen(true)}
           showExportButton={true}
           onExport={handleExport}
         />
@@ -292,6 +308,8 @@ const CarbonFootprintPage = () => {
         <PageHeader 
           title="Carbon Footprint Calculator" 
           subtitle="Monitor and analyze your carbon emissions"
+          showReportLogButton={true}
+          onReportLog={() => setReportLogOpen(true)}
           showExportButton={true}
           onExport={handleExport}
         />
@@ -308,11 +326,67 @@ const CarbonFootprintPage = () => {
       <ExportReportDialog
         open={exportDialogOpen}
         onClose={() => setExportDialogOpen(false)}
+        reportData={{
+          parameters: {
+            dateRange: {
+              from: fromDate,
+              to: toDate
+            },
+            emissionFactor,
+            carbonIntensity
+          },
+          dataSnapshot: {
+            realTimeData,
+            dailyData,
+            longTermData,
+            customCalculation: customCalculatorData || {
+              hasData: false
+            }
+          },
+          metadata: {
+            description: 'Carbon Footprint Report'
+          }
+        }}
+        onReportSaved={(reportData) => {
+          // Save report to database after export
+          console.log('onReportSaved called with data:', reportData);
+          CarbonFootprintReportService.createReport(reportData)
+            .then((response) => {
+              console.log('Report saved successfully:', response);
+            })
+            .catch(err => {
+              console.error('Error saving report:', err);
+              console.error('Error details:', err.response?.data);
+            });
+        }}
+      />
+      
+      {/* Report Log Dialog */}
+      <ReportLogDialog
+        open={reportLogOpen}
+        onClose={() => setReportLogOpen(false)}
+        onPreviewReport={(report) => {
+          setSelectedReport(report);
+          setReportPreviewOpen(true);
+          setReportLogOpen(false);
+        }}
+      />
+      
+      {/* Report Preview Dialog */}
+      <ReportPreviewDialog
+        open={reportPreviewOpen}
+        onClose={() => {
+          setReportPreviewOpen(false);
+          setSelectedReport(null);
+        }}
+        reportData={selectedReport}
       />
       
       <PageHeader 
         title="Carbon Footprint Calculator" 
         subtitle="Monitor and analyze your carbon emissions"
+        showReportLogButton={true}
+        onReportLog={() => setReportLogOpen(true)}
         showExportButton={true}
         onExport={handleExport}
       />
@@ -494,7 +568,10 @@ const CarbonFootprintPage = () => {
       </Box>
 
       {/* Custom Calculator */}
-      <CustomCalculator emissionFactor={emissionFactor} />
+      <CustomCalculator 
+        emissionFactor={emissionFactor} 
+        onDataChange={setCustomCalculatorData}
+      />
       </Box> {/* End of data-export-content */}
     </>
   );

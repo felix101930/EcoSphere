@@ -16,7 +16,7 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const ExportReportDialog = ({ open, onClose }) => {
+const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -136,6 +136,28 @@ const ExportReportDialog = ({ open, onClose }) => {
       // Download PDF
       pdf.save(filename);
       
+      // Save report data to database if callback provided
+      console.log('Checking onReportSaved:', { 
+        hasCallback: !!onReportSaved, 
+        hasReportData: !!reportData 
+      });
+      
+      if (onReportSaved && reportData) {
+        console.log('Calling onReportSaved with reportData');
+        onReportSaved({
+          ...reportData,
+          metadata: {
+            ...reportData.metadata,
+            fileName: filename
+          }
+        });
+      } else {
+        console.warn('onReportSaved not called:', {
+          onReportSaved: !!onReportSaved,
+          reportData: !!reportData
+        });
+      }
+      
       // Close dialog after successful download
       setTimeout(() => {
         onClose();
@@ -167,9 +189,9 @@ const ExportReportDialog = ({ open, onClose }) => {
       }}
     >
       <DialogTitle sx={{ bgcolor: '#DA291C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6">
+        <Box component="span">
           {isPreviewMode ? 'Report Preview' : 'Export Carbon Footprint Report'}
-        </Typography>
+        </Box>
         <IconButton
           onClick={handleClose}
           sx={{ color: 'white' }}
