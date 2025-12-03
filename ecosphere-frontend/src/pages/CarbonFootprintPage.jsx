@@ -1,10 +1,11 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
 import { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, CircularProgress, Alert, TextField, Button } from '@mui/material';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import HistoryIcon from '@mui/icons-material/History';
-import { Line } from 'react-chartjs-2';
+import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
+import DataSourceCard from '../components/CarbonFootprint/DataSourceCard';
+import RealTimeView from '../components/CarbonFootprint/RealTimeView';
+import DailyView from '../components/CarbonFootprint/DailyView';
+import LongTermView from '../components/CarbonFootprint/LongTermView';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
 import ExportReportDialog from '../components/CarbonFootprint/ExportReportDialog';
 import ReportLogDialog from '../components/CarbonFootprint/ReportLogDialog';
@@ -393,185 +394,48 @@ const CarbonFootprintPage = () => {
       
       {/* Main content area for export */}
       <Box data-export-content sx={{ px: 4, py: 3 }}>
-        {/* API Status Card */}
-      <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="h6" gutterBottom>
-          📊 Data Source
-        </Typography>
-        <Typography variant="body2">
-          • Electricity Maps API
-        </Typography>
-        <Typography variant="body2">
-          • Location: Alberta, Calgary
-        </Typography>
-        <Typography variant="body2">
-          • Current Intensity: {carbonIntensity?.carbonIntensity || 'N/A'} g CO2/kWh
-        </Typography>
-        <Typography variant="body2">
-          • Last Updated: {carbonIntensity?.fetchedAt ? new Date(carbonIntensity.fetchedAt).toLocaleTimeString() : 'N/A'}
-        </Typography>
-        <Typography variant="body2">
-          • Status: {carbonIntensity?.isFallback ? '⚠️ Using Fallback' : '✅ Live Data'}
-        </Typography>
-      </Box>
+        {/* Data Source Card */}
+        <DataSourceCard carbonIntensity={carbonIntensity} />
 
-      {/* Real-time View */}
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="h5" gutterBottom>
-          Real-time View (Today)
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Records: {realTimeData.length} | 
-          Total Energy: {ElectricityService.calculateTotalEnergy(realTimeData).toFixed(2)} kWh | 
-          Carbon Footprint: {(ElectricityService.calculateTotalEnergy(realTimeData) * emissionFactor).toFixed(2)} kg CO2
-        </Typography>
-        <Box sx={{ height: 300, mt: 2 }}>
-          {realTimeData.length > 0 ? (
-            <Line data={realTimeChartData} options={chartOptions} />
-          ) : (
-            <Typography variant="body2" color="text.secondary">No data available</Typography>
-          )}
-        </Box>
-      </Box>
+        {/* Real-time View */}
+        <RealTimeView
+          data={realTimeData}
+          chartData={realTimeChartData}
+          chartOptions={chartOptions}
+          totalEnergy={ElectricityService.calculateTotalEnergy(realTimeData)}
+          carbonFootprint={ElectricityService.calculateTotalEnergy(realTimeData) * emissionFactor}
+        />
 
-      {/* Daily View */}
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="h5" gutterBottom>
-          Daily View
-        </Typography>
-        
-        {/* Date Range Selector */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 2, 
-          mb: 2,
-          p: 2,
-          bgcolor: '#F5F5F5',
-          borderRadius: 1
-        }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              From
-            </Typography>
-            <TextField
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              size="small"
-              fullWidth
-              inputProps={{
-                max: formatLocalDate(new Date()) // Cannot select future dates
-              }}
-              slotProps={{
-                input: {
-                  sx: {
-                    bgcolor: 'white',
-                    fontFamily: 'DM Sans, sans-serif'
-                  }
-                }
-              }}
-            />
-          </Box>
-          
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              To
-            </Typography>
-            <TextField
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              size="small"
-              fullWidth
-              inputProps={{
-                max: formatLocalDate(new Date()) // Cannot select future dates
-              }}
-              slotProps={{
-                input: {
-                  sx: {
-                    bgcolor: 'white',
-                    fontFamily: 'DM Sans, sans-serif'
-                  }
-                }
-              }}
-            />
-          </Box>
-          
-          <Box sx={{ alignSelf: 'flex-end' }}>
-            <Button
-              variant="contained"
-              onClick={handleGenerateDailyReport}
-              disabled={dailyLoading}
-              sx={{
-                bgcolor: '#DA291C',
-                color: 'white',
-                px: 4,
-                py: 1,
-                fontFamily: 'Titillium Web, sans-serif',
-                fontWeight: 600,
-                textTransform: 'none',
-                '&:hover': {
-                  bgcolor: '#A6192E'
-                },
-                '&:disabled': {
-                  bgcolor: '#CCC',
-                  color: '#666'
-                }
-              }}
-            >
-              {dailyLoading ? 'Generating...' : 'Generate'}
-            </Button>
-          </Box>
-        </Box>
-        
-        {/* Loading State for Daily View */}
-        {dailyLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, mt: 2 }}>
-            <CircularProgress sx={{ color: '#DA291C' }} />
-          </Box>
-        ) : (
-          <>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Records: {dailyData.length} | 
-              Total Energy: {ElectricityService.calculateTotalEnergy(dailyData).toFixed(2)} kWh | 
-              Carbon Footprint: {(ElectricityService.calculateTotalEnergy(dailyData) * emissionFactor).toFixed(2)} kg CO2
-            </Typography>
-            <Box sx={{ height: 300, mt: 2 }}>
-              {dailyData.length > 0 ? (
-                <Line data={dailyChartData} options={chartOptions} />
-              ) : (
-                <Typography variant="body2" color="text.secondary">No data available</Typography>
-              )}
-            </Box>
-          </>
-        )}
-      </Box>
+        {/* Daily View */}
+        <DailyView
+          data={dailyData}
+          chartData={dailyChartData}
+          chartOptions={chartOptions}
+          totalEnergy={ElectricityService.calculateTotalEnergy(dailyData)}
+          carbonFootprint={ElectricityService.calculateTotalEnergy(dailyData) * emissionFactor}
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onGenerate={handleGenerateDailyReport}
+          loading={dailyLoading}
+          maxDate={formatLocalDate(new Date())}
+        />
 
-      {/* Long-term View */}
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-        <Typography variant="h5" gutterBottom>
-          Long-term View (Last 12 Months)
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Records: {longTermData.length} | 
-          Total Energy: {ElectricityService.calculateTotalEnergy(longTermData).toFixed(2)} kWh | 
-          Carbon Footprint: {(ElectricityService.calculateTotalEnergy(longTermData) * emissionFactor).toFixed(2)} kg CO2
-        </Typography>
-        <Box sx={{ height: 300, mt: 2 }}>
-          {longTermData.length > 0 ? (
-            <Line data={longTermChartData} options={chartOptions} />
-          ) : (
-            <Typography variant="body2" color="text.secondary">No data available</Typography>
-          )}
-        </Box>
-      </Box>
+        {/* Long-term View */}
+        <LongTermView
+          data={longTermData}
+          chartData={longTermChartData}
+          chartOptions={chartOptions}
+          totalEnergy={ElectricityService.calculateTotalEnergy(longTermData)}
+          carbonFootprint={ElectricityService.calculateTotalEnergy(longTermData) * emissionFactor}
+        />
 
-      {/* Custom Calculator */}
-      <CustomCalculator 
-        emissionFactor={emissionFactor} 
-        onDataChange={setCustomCalculatorData}
-      />
+        {/* Custom Calculator */}
+        <CustomCalculator 
+          emissionFactor={emissionFactor} 
+          onDataChange={setCustomCalculatorData}
+        />
       </Box> {/* End of data-export-content */}
     </>
   );

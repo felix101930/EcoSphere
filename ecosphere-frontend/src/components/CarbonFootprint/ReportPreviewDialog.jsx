@@ -15,6 +15,14 @@ import DownloadIcon from '@mui/icons-material/Download';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Line } from 'react-chartjs-2';
+import { 
+  prepareRealTimeChartData, 
+  prepareDailyChartData, 
+  prepareLongTermChartData, 
+  prepareCustomChartData,
+  calculateTotalEnergy 
+} from '../../utils/chartDataPreparation';
+import { standardChartOptions, dualAxisChartOptions } from '../../utils/chartOptions';
 
 const ReportPreviewDialog = ({ open, onClose, reportData }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -22,292 +30,28 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
   if (!reportData) return null;
 
   const { parameters, dataSnapshot, generatedAt } = reportData;
-
-  // Prepare chart data from snapshot (for real-time view - hourly data)
-  const prepareRealTimeChartData = (data, label1, label2, emissionFactor) => {
-    if (!data || data.length === 0) return null;
-
-    const labels = data.map(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    });
-
-    const values = data.map(record => record.value / 1000); // Convert to kWh
-    const carbonValues = values.map(v => v * emissionFactor);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: label1,
-          data: values,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1
-        },
-        {
-          label: label2,
-          data: carbonValues,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          tension: 0.1
-        }
-      ]
-    };
-  };
-
-  // Prepare aggregated daily chart data (aggregate by day)
-  const prepareDailyChartData = (data, label1, label2, emissionFactor) => {
-    if (!data || data.length === 0) return null;
-
-    // Aggregate by day
-    const dailyMap = new Map();
-    data.forEach(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      const dateKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      
-      if (!dailyMap.has(dateKey)) {
-        dailyMap.set(dateKey, { date: dateKey, totalValue: 0 });
-      }
-      
-      dailyMap.get(dateKey).totalValue += record.value;
-    });
-
-    const aggregatedData = Array.from(dailyMap.values());
-    const labels = aggregatedData.map(d => d.date);
-    const values = aggregatedData.map(d => d.totalValue / 1000); // Convert to kWh
-    const carbonValues = values.map(v => v * emissionFactor);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: label1,
-          data: values,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        },
-        {
-          label: label2,
-          data: carbonValues,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          tension: 0.1,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }
-      ]
-    };
-  };
-
-  // Prepare aggregated long-term chart data (aggregate by month)
-  const prepareLongTermChartData = (data, label1, label2, emissionFactor) => {
-    if (!data || data.length === 0) return null;
-
-    // Aggregate by month
-    const monthlyMap = new Map();
-    data.forEach(record => {
-      const date = new Date(record.ts.replace(' ', 'T'));
-      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-      
-      if (!monthlyMap.has(monthKey)) {
-        monthlyMap.set(monthKey, { date: monthKey, totalValue: 0 });
-      }
-      
-      monthlyMap.get(monthKey).totalValue += record.value;
-    });
-
-    const aggregatedData = Array.from(monthlyMap.values());
-    const labels = aggregatedData.map(d => d.date);
-    const values = aggregatedData.map(d => d.totalValue / 1000); // Convert to kWh
-    const carbonValues = values.map(v => v * emissionFactor);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: label1,
-          data: values,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1,
-          pointRadius: 5,
-          pointHoverRadius: 7
-        },
-        {
-          label: label2,
-          data: carbonValues,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          tension: 0.1,
-          pointRadius: 5,
-          pointHoverRadius: 7
-        }
-      ]
-    };
-  };
-
-  // Prepare custom calculation chart data (monthly data with YY/M format)
-  const prepareCustomChartData = (data, label1, label2, emissionFactor) => {
-    if (!data || data.length === 0) return null;
-
-    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June', 
-                        'July', 'August', 'September', 'October', 'November', 'December'];
-    
-    // Sort data by year and month
-    const sortedData = [...data].sort((a, b) => {
-      if (a.year !== b.year) {
-        return parseInt(a.year) - parseInt(b.year);
-      }
-      return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
-    });
-
-    // Create labels in YY/M format
-    const labels = sortedData.map(entry => {
-      const monthIndex = monthOrder.indexOf(entry.month);
-      return `${entry.year.slice(2)}/${monthIndex + 1}`;
-    });
-
-    const values = sortedData.map(entry => entry.usage || (entry.value / 1000));
-    const carbonValues = values.map(v => v * emissionFactor);
-
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Consumption (kWh)',
-          data: values,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          tension: 0.1,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Carbon Footprint (kg CO₂e)',
-          data: carbonValues,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          tension: 0.1,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          yAxisID: 'y1'
-        }
-      ]
-    };
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: false,
-          boxWidth: 50,
-          boxHeight: 2,
-          padding: 15
-        }
-      },
-      title: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true
-      }
-    }
-  };
-
-  const customChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: false,
-          boxWidth: 50,
-          boxHeight: 2,
-          padding: 15
-        }
-      },
-      title: {
-        display: false,
-      },
-    },
-    scales: {
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Consumption (kWh)'
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Carbon Footprint (kg CO₂e)'
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
-      },
-    }
-  };
-
   const emissionFactor = parameters?.emissionFactor || 0.65;
 
-  // Helper function to calculate total energy
-  const calculateTotalEnergy = (data) => {
-    if (!data || data.length === 0) return 0;
-    return data.reduce((sum, record) => sum + (record.value / 1000), 0);
-  };
-
+  // Prepare chart data using utility functions
   const realTimeChartData = prepareRealTimeChartData(
     dataSnapshot?.realTimeData,
     'Energy Consumption (kWh)',
     'Carbon Footprint (kg CO2)',
     emissionFactor
   );
-
   const dailyChartData = prepareDailyChartData(
     dataSnapshot?.dailyData,
     'Energy Consumption (kWh)',
     'Carbon Footprint (kg CO2)',
     emissionFactor
   );
-
   const longTermChartData = prepareLongTermChartData(
     dataSnapshot?.longTermData,
     'Energy Consumption (kWh)',
     'Carbon Footprint (kg CO2)',
     emissionFactor
   );
-
-  const customChartData = prepareCustomChartData(
-    dataSnapshot?.customCalculation?.data,
-    'Energy Consumption (kWh)',
-    'Carbon Footprint (kg CO2)',
-    emissionFactor
-  );
+  const customChartData = prepareCustomChartData(dataSnapshot?.customCalculation?.data, emissionFactor);
 
   const downloadPDF = async () => {
     setIsGenerating(true);
@@ -334,18 +78,18 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       // Add GBTAC header
       pdf.setFontSize(20);
       pdf.setTextColor(218, 41, 28);
-      pdf.text('GBTAC - Carbon Footprint Report', 20, 20);
+      pdf.text('GBTAC - Carbon Footprint Report', 20, 10);
       
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       const date = new Date(generatedAt);
       const dateStr = date.toLocaleDateString('en-CA');
       const timeStr = date.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
-      pdf.text(`Generated on: ${dateStr} ${timeStr}`, 20, 30);
+      pdf.text(`Generated on: ${dateStr} ${timeStr}`, 20, 20);
       
       // Add content image
       const imgData = canvas.toDataURL('image/png');
-      let position = 40; // Start below header
+      let position = 30; // Start below header
       
       // Add image to PDF (handle multiple pages if needed)
       pdf.addImage(imgData, 'PNG', 10, position, imgWidth - 20, imgHeight);
@@ -380,9 +124,11 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       onClose={onClose}
       maxWidth="lg"
       fullWidth
-      PaperProps={{
-        sx: {
-          maxHeight: '90vh'
+      slotProps={{
+        paper: {
+          sx: {
+            maxHeight: '90vh'
+          }
         }
       }}
     >
@@ -425,7 +171,7 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
                 </Typography>
               )}
               <Box sx={{ height: 300, mt: 2 }}>
-                <Line data={realTimeChartData} options={chartOptions} />
+                <Line data={realTimeChartData} options={standardChartOptions} />
               </Box>
             </Box>
           )}
@@ -444,7 +190,7 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
                 </Typography>
               )}
               <Box sx={{ height: 300, mt: 2 }}>
-                <Line data={dailyChartData} options={chartOptions} />
+                <Line data={dailyChartData} options={standardChartOptions} />
               </Box>
             </Box>
           )}
@@ -463,7 +209,7 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
                 </Typography>
               )}
               <Box sx={{ height: 300, mt: 2 }}>
-                <Line data={longTermChartData} options={chartOptions} />
+                <Line data={longTermChartData} options={standardChartOptions} />
               </Box>
             </Box>
           )}
@@ -501,7 +247,7 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
 
               {/* Chart */}
               <Box sx={{ height: 300, mt: 2 }}>
-                <Line data={customChartData} options={customChartOptions} />
+                <Line data={customChartData} options={dualAxisChartOptions} />
               </Box>
             </Box>
           )}

@@ -34,9 +34,20 @@ class CarbonFootprintReportService {
     const endIndex = startIndex + limit;
     const paginatedReports = userReports.slice(startIndex, endIndex);
     
-    // Remove dataSnapshot from list view to reduce data size
+    // Remove large dataSnapshot arrays but keep customCalculation metadata
     const reportsWithoutSnapshot = paginatedReports.map(r => {
       const { dataSnapshot, ...reportWithoutData } = r;
+      
+      // Keep customCalculation metadata for display
+      if (dataSnapshot?.customCalculation) {
+        reportWithoutData.dataSnapshot = {
+          customCalculation: {
+            hasData: dataSnapshot.customCalculation.hasData || false,
+            dataCount: dataSnapshot.customCalculation.data?.length || 0
+          }
+        };
+      }
+      
       return reportWithoutData;
     });
     

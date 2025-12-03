@@ -156,7 +156,8 @@ const ReportLogDialog = ({ open, onClose, onPreviewReport }) => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {report.dataSnapshot?.customCalculation?.hasData ? (
+                      {(report.dataSnapshot?.customCalculation?.hasData || 
+                        report.dataSnapshot?.customCalculation?.dataCount > 0) ? (
                         <Chip label="Yes" size="small" color="success" />
                       ) : (
                         <Chip label="No" size="small" />
