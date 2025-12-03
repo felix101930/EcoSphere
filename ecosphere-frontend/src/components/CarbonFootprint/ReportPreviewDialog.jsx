@@ -361,6 +361,11 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       const timeForFilename = timeStr.replace(':', '-');
       const filename = `Carbon_Footprint_Report_${dateStr}_${timeForFilename}.pdf`;
       pdf.save(filename);
+      
+      // Close dialog after successful download
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
