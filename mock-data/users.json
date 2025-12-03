@@ -27,7 +27,6 @@
       "permissions": [
         "electricity",
         "carbon-footprint",
-        "water",
         "thermal"
       ]
     },

@@ -8,8 +8,16 @@ It simulates the real SQL Server database that will be used in production.
 
 ## Contents
 - `users.json` - User accounts (Admin and TeamMember)
-- `electricity.json` - Electricity consumption sensor data (coming soon)
-- `carbonFootprint.json` - Carbon footprint historical records (coming soon)
+- `electricity.json` - Electricity consumption sensor data (16,838 records, 2024-01-01 to 2025-12-03)
+- `carbonFootprint.json` - Carbon footprint historical records
+- `carbonFootprintReports.json` - Carbon footprint report history
+- `loginLogs.json` - User login history
+
+## Data Update Tools
+- `update-electricity-data.bat` - **Windows batch file to update electricity data** (double-click to run)
+- `update-electricity-data.js` - Node.js script to append new hourly data
+- `generate-electricity-data.js` - Original script to generate complete dataset
+- `UPDATE_DATA_README.md` - Detailed documentation for update tools
 
 ## Usage
 The backend API (`ecosphere-backend`) reads these JSON files to simulate database queries.
