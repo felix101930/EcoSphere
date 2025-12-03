@@ -91,11 +91,14 @@ const ReportLogDialog = ({ open, onClose, onPreviewReport }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: {
-          minHeight: '70vh'
+      maxWidth={false}
+      slotProps={{
+        paper: {
+          sx: {
+            minHeight: '70vh',
+            width: '85vw',
+            maxWidth: '85vw'
+          }
         }
       }}
     >
@@ -111,7 +114,7 @@ const ReportLogDialog = ({ open, onClose, onPreviewReport }) => {
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ p: 3 }}>
+      <DialogContent sx={{ p: 4 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
             <CircularProgress />

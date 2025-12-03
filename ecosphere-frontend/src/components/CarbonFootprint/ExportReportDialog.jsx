@@ -180,11 +180,16 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth={isPreviewMode ? 'lg' : 'sm'}
-      fullWidth
-      PaperProps={{
-        sx: {
-          minHeight: isPreviewMode ? '80vh' : '300px'
+      maxWidth={isPreviewMode ? false : 'sm'}
+      slotProps={{
+        paper: {
+          sx: {
+            minHeight: isPreviewMode ? '80vh' : '300px',
+            ...(isPreviewMode && {
+              width: '85vw',
+              maxWidth: '85vw'
+            })
+          }
         }
       }}
     >

@@ -130,13 +130,13 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="xl"
-      fullWidth
+      maxWidth={false}
       slotProps={{
         paper: {
           sx: {
             maxHeight: '90vh',
-            width: '95vw'
+            width: '85vw',
+            maxWidth: '85vw'
           }
         }
       }}
@@ -154,7 +154,7 @@ const ReportPreviewDialog = ({ open, onClose, reportData }) => {
       </DialogTitle>
 
       <DialogContent sx={{ p: 4 }}>
-        <Box data-report-preview-content sx={{ maxWidth: '1400px', mx: 'auto' }}>
+        <Box data-report-preview-content>
           {/* Data Source Info */}
           <Box sx={{ mb: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
             <Typography variant="h6" gutterBottom>
