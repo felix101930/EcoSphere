@@ -1,14 +1,22 @@
-// AuthContext - Manages authentication state and user session
-// Implements UI class pattern using React Context API
+// src/contexts/AuthContext.jsx
 import { createContext, useState, useEffect, useCallback } from 'react';
-import userService from '../services/UserService';
+import { useNavigate } from 'react-router-dom'; // Add this import
+import { 
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail
+} from 'firebase/auth';
+import { auth } from '../firebase/config';
 import LoginLogService from '../services/LoginLogService';
 
 const AuthContext = createContext(null);
 
-// Helper function to load user from session storage
+// Helper to load user from session
 const loadUserFromSession = () => {
-  const storedUser = sessionStorage.getItem('ecosphere_current_user');
+  const storedUser = sessionStorage.getItem('ecosphere_user');
   if (storedUser) {
     try {
       return JSON.parse(storedUser);
@@ -20,45 +28,263 @@ const loadUserFromSession = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // Initialize state from session storage using lazy initialization
+  const navigate = useNavigate(); // Add this hook
   const [currentUser, setCurrentUser] = useState(() => loadUserFromSession());
-  const [isLoading] = useState(false);
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Login function
-  const login = async (email, password) => {
-    try {
-      const user = await userService.authenticate(email, password);
+  // Firebase Auth State Observer
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setFirebaseUser(user);
       
       if (user) {
-        setCurrentUser(user);
-        
-        // Save to session storage
-        sessionStorage.setItem('ecosphere_current_user', JSON.stringify(user));
-        
-        return { success: true, user };
+        try {
+          // Get Firebase ID token
+          const token = await user.getIdToken();
+          
+          // Call backend to sync/get user data with roles
+          const response = await fetch('http://localhost:3001/api/auth/firebase-login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              email: user.email,
+              uid: user.uid,
+              token: token
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const backendUser = data.user;
+            
+            setCurrentUser(backendUser);
+            sessionStorage.setItem('ecosphere_user', JSON.stringify(backendUser));
+            sessionStorage.setItem('ecosphere_token', token);
+            
+            // Redirect based on role
+            const pathname = window.location.pathname;
+            
+            // If on login page, redirect to appropriate dashboard
+            if (pathname === '/login') {
+              if (backendUser.role === 'Admin' || backendUser.role === 'SuperAdmin') {
+                navigate('/users'); // Admins go to user management
+              } else {
+                navigate('/dashboard'); // Team members go to dashboard
+              }
+            }
+            
+          } else {
+            console.error('Backend sync failed');
+            // Sign out if backend sync fails
+            await signOut(auth);
+          }
+        } catch (error) {
+          console.error('Auth sync error:', error);
+          await signOut(auth);
+        }
       } else {
-        return { success: false, error: 'Invalid email or password' };
+        // No user logged in
+        setCurrentUser(null);
+        sessionStorage.removeItem('ecosphere_user');
+        sessionStorage.removeItem('ecosphere_token');
+        
+        // Redirect to login if not already there
+        if (window.location.pathname !== '/login') {
+          navigate('/login');
+        }
       }
+      
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  // Firebase Sign Up
+  const signup = async (email, password, userData) => {
+    try {
+      setIsLoading(true);
+      
+      // 1. Create user in Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // 2. Send email verification (optional)
+      await sendEmailVerification(user);
+      
+      // 3. Get Firebase token
+      const token = await user.getIdToken();
+      
+      // 4. Register user in your backend with role
+      const response = await fetch('http://localhost:3001/api/auth/firebase-signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...userData,
+          email: user.email,
+          uid: user.uid,
+          token: token
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to register user in backend');
+      }
+
+      const result = await response.json();
+      
+      return { 
+        success: true, 
+        user: result.user,
+        message: 'Account created! Please verify your email.' 
+      };
+      
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Login failed' };
+      console.error('Signup error:', error);
+      
+      let errorMessage = 'Signup failed';
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'Email already registered';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
+          break;
+      }
+      
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Logout function - Defined early to avoid hoisting issues
-  const logout = useCallback(async () => {
-    // Update logout in login log
-    if (currentUser && currentUser.lastLoginId) {
-      try {
-        await LoginLogService.updateLogout(currentUser.lastLoginId);
-      } catch (error) {
-        console.error('Error updating logout:', error);
+  // Firebase Login
+  const login = async (email, password) => {
+    try {
+      setIsLoading(true);
+      
+      // Get IP address for logging
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      const ipAddress = ipData.ip || '127.0.0.1';
+      
+      // Firebase authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Check if email is verified (optional requirement)
+      if (!user.emailVerified) {
+        console.log('Email not verified');
+        // You can choose to allow login anyway or require verification
       }
+      
+      // Get Firebase token
+      const token = await user.getIdToken();
+      
+      // Call backend to log login and get user data
+      // Send token in BODY, not Authorization header
+      const response = await fetch('http://localhost:3001/api/auth/firebase-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email: user.email,
+          uid: user.uid,
+          token: token,  // Add token to body
+          ipAddress 
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Backend login failed');
+      }
+
+      const data = await response.json();
+      
+      setCurrentUser(data.user);
+      sessionStorage.setItem('ecosphere_user', JSON.stringify(data.user));
+      sessionStorage.setItem('ecosphere_token', token);
+      
+      // Redirect based on role after successful login
+      if (data.user.role === 'Admin' || data.user.role === 'SuperAdmin') {
+        navigate('/users');
+      } else {
+        navigate('/dashboard');
+      }
+      
+      return { success: true, user: data.user };
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      let errorMessage = 'Login failed';
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = 'Invalid email or password';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many attempts. Try again later.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'Account disabled';
+          break;
+      }
+      
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
     }
-    
-    setCurrentUser(null);
-    sessionStorage.removeItem('ecosphere_current_user');
-  }, [currentUser]);
+  };
+
+  // Firebase Logout
+  const logout = useCallback(async () => {
+    try {
+      // Update logout in login log
+      if (currentUser && currentUser.lastLoginId) {
+        try {
+          await LoginLogService.updateLogout(currentUser.lastLoginId);
+        } catch (logError) {
+          console.error('Error updating logout:', logError);
+        }
+      }
+      
+      // Sign out from Firebase
+      await signOut(auth);
+      
+      // Clear local state
+      setCurrentUser(null);
+      sessionStorage.removeItem('ecosphere_user');
+      sessionStorage.removeItem('ecosphere_token');
+      
+      // Redirect to login
+      navigate('/login');
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }, [currentUser, navigate]);
+
+  // Password Reset
+  const resetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true, message: 'Password reset email sent' };
+    } catch (error) {
+      console.error('Password reset error:', error);
+      return { success: false, error: 'Failed to send reset email' };
+    }
+  };
 
   // Session timeout (30 minutes)
   useEffect(() => {
@@ -89,48 +315,23 @@ export const AuthProvider = ({ children }) => {
     };
   }, [currentUser, logout]);
 
-  // Handle browser close/refresh
-  useEffect(() => {
-    if (!currentUser || !currentUser.lastLoginId) return;
-
-    const handleBeforeUnload = () => {
-      // Use sendBeacon for reliable logout on page unload
-      const url = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/login-logs/${currentUser.lastLoginId}/logout`;
-      
-      // Send empty request body
-      navigator.sendBeacon(url, new Blob([JSON.stringify({})], { type: 'application/json' }));
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [currentUser]);
-
-  // Check if user is authenticated
-  const isAuthenticated = () => {
-    return currentUser !== null;
-  };
-
-  // Check if user is admin
-  const isAdmin = () => {
-    return currentUser && currentUser.role === 'Admin';
-  };
-
-  // Check if user is team member
-  const isTeamMember = () => {
-    return currentUser && currentUser.role === 'TeamMember';
-  };
-
   const value = {
     currentUser,
+    firebaseUser,
     isLoading,
+    signup,
     login,
     logout,
-    isAuthenticated,
-    isAdmin,
-    isTeamMember
+    resetPassword,
+    isAuthenticated: () => currentUser !== null,
+    isAdmin: () => currentUser && (currentUser.role === 'Admin' || currentUser.role === 'SuperAdmin'),
+    isSuperAdmin: () => currentUser && currentUser.role === 'SuperAdmin',
+    isTeamMember: () => currentUser && currentUser.role === 'TeamMember',
+    hasPermission: (permission) => {
+      if (!currentUser) return false;
+      if (currentUser.role === 'Admin' || currentUser.role === 'SuperAdmin') return true;
+      return currentUser.permissions?.includes(permission) || false;
+    }
   };
 
   return (
