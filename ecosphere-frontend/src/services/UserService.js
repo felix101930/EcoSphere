@@ -1,133 +1,123 @@
-// UserService - Handles all user-related operations
-// Now uses Express backend API (preparation for SQL Server)
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+// services/UserService.js - Updated version
+import { auth } from "../firebase/config";
 
 class UserService {
-  constructor() {
-    this.users = [];
-  }
-
-  // Get all users
+  // Get all users from backend
   async getAllUsers() {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
-      if (!response.ok) throw new Error('Failed to fetch users');
-      this.users = await response.json();
-      return this.users;
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch("http://localhost:3001/api/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+      return [];
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       return [];
     }
   }
 
-  // Get user by ID
-  async getUserById(id) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch user');
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      return null;
-    }
-  }
-
-  // Get user by email (client-side filter)
-  async getUserByEmail(email) {
-    const users = await this.getAllUsers();
-    return users.find(user => user.email === email);
-  }
-
-  // Authenticate user (login)
-  async authenticate(email, password) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      if (!response.ok) {
-        return null;
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error authenticating user:', error);
-      return null;
-    }
-  }
-
-  // Add new user (Admin only)
+  // Add user (Admin function - uses new endpoint)
   async addUser(userData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-      
+      const token = await auth.currentUser.getIdToken();
+
+      const response = await fetch(
+        "http://localhost:3001/api/users/admin-create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
+            password: userData.password,
+            role: userData.role,
+            permissions: userData.permissions || [],
+          }),
+        }
+      );
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add user');
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create user");
       }
-      
-      const newUser = await response.json();
-      return newUser;
+
+      return await response.json();
     } catch (error) {
-      console.error('Error adding user:', error);
-      throw error;
+      console.error("Error adding user:", error);
+      throw new Error(error.message || "Failed to add user");
     }
   }
 
   // Update user
-  async updateUser(id, userData) {
+  async updateUser(userId, userData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update user');
-      
+      const token = await auth.currentUser.getIdToken();
+
+      const response = await fetch(
+        `http://localhost:3001/api/users/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
+            role: userData.role,
+            permissions: userData.permissions || [],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update user");
+      }
+
       return await response.json();
     } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
+      console.error("Error updating user:", error);
+      throw new Error(error.message || "Failed to update user");
     }
   }
 
   // Delete user
-  async deleteUser(id) {
+  async deleteUser(userId) {
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete user');
-      
+      const token = await auth.currentUser.getIdToken();
+
+      const response = await fetch(
+        `http://localhost:3001/api/users/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete user");
+      }
+
       return await response.json();
     } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
+      console.error("Error deleting user:", error);
+      throw new Error(error.message || "Failed to delete user");
     }
-  }
-
-  // Update user permissions
-  async updateUserPermissions(userId, permissions) {
-    return await this.updateUser(userId, { permissions });
   }
 }
 
-// Create singleton instance
-const userService = new UserService();
-
-export default userService;
+export default new UserService();

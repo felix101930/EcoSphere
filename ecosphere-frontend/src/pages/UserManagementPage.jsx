@@ -60,31 +60,42 @@ const UserManagementPage = () => {
 
   // Check if current user can edit a specific user
   const canEditUser = (user) => {
-    // Super Admin (ID=1) can edit everyone except themselves (role change)
-    // Regular Admin can edit TeamMembers and themselves (except role change)
-    // Cannot edit Super Admin if you're not Super Admin
-    if (user.id === 1 && currentUser.id !== 1) {
-      return false; // Cannot edit Super Admin
+    // Super Admin (ID=1) can edit everyone
+    if (currentUser.role === 'SuperAdmin') {
+      return true;
     }
-    return true;
+    // Regular Admin can edit TeamMembers and themselves
+    if (currentUser.role === 'Admin') {
+      if (user.id === 1) return false; // Cannot edit Super Admin
+      if (user.role === 'SuperAdmin') return false; // Cannot edit any Super Admin
+      if (user.role === 'Admin' && user.id !== currentUser.id) return false; // Cannot edit other Admins
+      return true;
+    }
+    
+    return false; // TeamMembers cannot edit anyone
   };
 
   // Check if current user can delete a specific user
   const canDeleteUser = (user) => {
-    // Cannot delete yourself
-    if (user.id === currentUser.id) {
-      return false;
-    }
-    // Only Super Admin can delete other Admins
-    if (user.role === 'Admin' && currentUser.id !== 1) {
-      return false;
-    }
-    // Cannot delete Super Admin
-    if (user.id === 1) {
-      return false;
-    }
-    return true;
-  };
+  // Cannot delete yourself
+  if (user.id === currentUser.id) {
+    return false;
+  }
+  
+  // Super Admin can delete anyone except themselves
+  if (currentUser.role === 'SuperAdmin') {
+    return user.id !== currentUser.id;
+  }
+  
+  // Regular Admin can only delete TeamMembers
+  if (currentUser.role === 'Admin') {
+    if (user.id === 1) return false; // Cannot delete Super Admin
+    if (user.role === 'SuperAdmin' || user.role === 'Admin') return false; // Cannot delete other Admins
+    return user.role === 'TeamMember'; // Can delete TeamMembers
+  }
+  
+  return false; // TeamMembers cannot delete anyone
+};
 
   // Dialog operations
   const handleOpenDialog = (user = null) => {
@@ -128,73 +139,70 @@ const UserManagementPage = () => {
   };
 
   // CRUD operations
-  const handleSubmit = async () => {
-    // Validation
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      showSnackbar('Please fill in all required fields', 'error');
-      return;
-    }
+  // UserManagementPage.jsx - Update handleSubmit method
+const handleSubmit = async () => {
+  // Validation
+  if (!formData.firstName || !formData.lastName || !formData.email) {
+    showSnackbar('Please fill in all required fields', 'error');
+    return;
+  }
 
-    if (!formData.role) {
-      showSnackbar('Please select a role', 'error');
-      return;
-    }
+  if (!formData.role) {
+    showSnackbar('Please select a role', 'error');
+    return;
+  }
 
-    if (!editingUser && !formData.password) {
-      showSnackbar('Password is required for new users', 'error');
-      return;
-    }
+  if (!editingUser && !formData.password) {
+    showSnackbar('Password is required for new users', 'error');
+    return;
+  }
 
-    try {
-      if (editingUser) {
-        // Update existing user
-        const updateData = {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email
-        };
-        
-        // Only allow role change if NOT editing yourself
-        if (editingUser.id !== currentUser.id) {
-          updateData.role = formData.role;
-        }
-        
-        if (formData.password) {
-          updateData.password = formData.password;
-        }
-        
-        // Include permissions for TeamMember role
-        if (formData.role === 'TeamMember') {
-          updateData.permissions = formData.permissions || [];
-        }
-        
-        await userService.updateUser(editingUser.id, updateData);
-        showSnackbar('User updated successfully', 'success');
-      } else {
-        // Add new user - include permissions for TeamMember
-        const newUserData = {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
-        };
-        
-        // Include permissions for TeamMember role
-        if (formData.role === 'TeamMember') {
-          newUserData.permissions = formData.permissions || [];
-        }
-        
-        await userService.addUser(newUserData);
-        showSnackbar('User added successfully', 'success');
+  try {
+    if (editingUser) {
+      // Update existing user - NO PASSWORD IN UPDATE
+      const updateData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email
+      };
+      
+      // Only allow role change if NOT editing yourself
+      if (editingUser.id !== currentUser.id) {
+        updateData.role = formData.role;
       }
       
-      await loadUsers();
-      handleCloseDialog();
-    } catch (error) {
-      showSnackbar(error.message || 'Operation failed', 'error');
+      // Include permissions for TeamMember role
+      if (formData.role === 'TeamMember') {
+        updateData.permissions = formData.permissions || [];
+      }
+      
+      await userService.updateUser(editingUser.id, updateData);
+      showSnackbar('User updated successfully', 'success');
+    } else {
+      // Add new user - include permissions for TeamMember
+      const newUserData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password, // Only for new users
+        role: formData.role
+      };
+      
+      // Include permissions for TeamMember role
+      if (formData.role === 'TeamMember') {
+        newUserData.permissions = formData.permissions || [];
+      }
+      
+      await userService.addUser(newUserData);
+      showSnackbar('User added successfully', 'success');
     }
-  };
+    
+    await loadUsers();
+    handleCloseDialog();
+  } catch (error) {
+    showSnackbar(error.message || 'Operation failed', 'error');
+  }
+};
 
   const handleDelete = async (userId) => {
     const userToDelete = users.find(u => u.id === userId);

@@ -7,7 +7,7 @@ import logo from '../../assets/sait-logo_vert.svg';
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isAdmin, isSuperAdmin, hasPermission } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -17,59 +17,121 @@ const Sidebar = () => {
   // Menu structure matching Figma design
   const menuStructure = [
     {
-      category: 'Dashboards',
+      category: 'DASHBOARDS',
       items: [
-        { text: 'Overview', path: '/dashboard', roles: ['Admin', 'TeamMember'], permission: null },
-        { text: 'Electricity', path: '/electricity', roles: ['Admin', 'TeamMember'], permission: 'electricity', comingSoon: true },
-        { text: 'Water', path: '/water', roles: ['Admin', 'TeamMember'], permission: 'water', comingSoon: true },
-        { text: 'Thermal', path: '/thermal', roles: ['Admin', 'TeamMember'], permission: 'thermal', comingSoon: true }
+        { 
+          text: 'Overview', 
+          path: '/dashboard', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: null 
+        },
+        { 
+          text: 'Electricity', 
+          path: '/electricity', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: 'electricity', 
+          comingSoon: true 
+        },
+        { 
+          text: 'Water', 
+          path: '/water', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: 'water', 
+          comingSoon: true 
+        },
+        { 
+          text: 'Thermal', 
+          path: '/thermal', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: 'thermal', 
+          comingSoon: true 
+        }
       ]
     },
     {
-      category: 'Advanced',
+      category: 'ADVANCED',
       items: [
-        { text: '3D Model', path: '/3d-model', roles: ['Admin', 'TeamMember'], permission: '3d-model', comingSoon: true }
+        { 
+          text: '3D Model', 
+          path: '/3d-model', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: '3d-model', 
+          comingSoon: true 
+        }
       ]
     },
     {
-      category: 'Calculator',
+      category: 'CALCULATOR',
       items: [
-        { text: 'Carbon Footprint', path: '/carbon-footprint', roles: ['Admin', 'TeamMember'], permission: 'carbon-footprint', comingSoon: true }
+        { 
+          text: 'Carbon Footprint', 
+          path: '/carbon-footprint', 
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+          permission: 'carbon-footprint'
+        }
       ]
     },
     {
-      category: 'Management',
+      category: 'MANAGEMENT',
       items: [
-        { text: 'User Management', path: '/users', roles: ['Admin'], permission: null },
-        { text: 'Dashboard Management', path: '/dashboard-management', roles: ['Admin'], permission: null, comingSoon: true },
-        { text: 'Quiz Management', path: '/quiz-management', roles: ['Admin'], permission: null, comingSoon: true }
+        { 
+          text: 'User Management', 
+          path: '/users', 
+          roles: ['SuperAdmin', 'Admin'], 
+          permission: null 
+        },
+        { 
+          text: 'Dashboard Management', 
+          path: '/dashboard-management', 
+          roles: ['SuperAdmin', 'Admin'], 
+          permission: null, 
+          comingSoon: true 
+        },
+        { 
+          text: 'Quiz Management', 
+          path: '/quiz-management', 
+          roles: ['SuperAdmin', 'Admin'], 
+          permission: null, 
+          comingSoon: true 
+        }
       ]
     }
   ];
 
-  // Check if user has permission to access a menu item
-  const hasPermission = (item) => {
-    // Admin has all permissions
-    if (currentUser?.role === 'Admin') {
-      return true;
-    }
+  // Check if user can see a menu item
+  const canSeeMenuItem = (item) => {
+    if (!currentUser) return false;
+    
+    // Check if user has the required role
+    const hasRole = item.roles.includes(currentUser.role);
+    if (!hasRole) return false;
     
     // If no specific permission required, allow access
     if (!item.permission) {
       return true;
     }
     
-    // Check if TeamMember has the required permission
-    return currentUser?.permissions && currentUser.permissions.includes(item.permission);
+    // SuperAdmin and Admin have all permissions
+    if (isSuperAdmin() || isAdmin()) {
+      return true;
+    }
+    
+    // TeamMember needs specific permission
+    return hasPermission(item.permission);
   };
 
   // Filter menu items based on user role and permissions
   const visibleMenuStructure = menuStructure.map(section => ({
     ...section,
-    items: section.items.filter(item => 
-      item.roles.includes(currentUser?.role) && hasPermission(item)
-    )
+    items: section.items.filter(item => canSeeMenuItem(item))
   })).filter(section => section.items.length > 0);
+
+  // Display role with SuperAdmin special case
+  const getRoleDisplay = () => {
+    if (!currentUser) return '';
+    if (currentUser.role === 'SuperAdmin') return 'Super Admin';
+    return currentUser.role;
+  };
 
   return (
     <Box
@@ -168,7 +230,8 @@ const Sidebar = () => {
             sx={{ 
               width: 32, 
               height: 32, 
-              bgcolor: '#6D2077',
+              bgcolor: currentUser?.role === 'SuperAdmin' ? '#6D2077' : 
+                       currentUser?.role === 'Admin' ? '#00A3E0' : '#666',
               fontSize: '14px',
               fontWeight: 600
             }}
@@ -199,7 +262,7 @@ const Sidebar = () => {
                 whiteSpace: 'nowrap'
               }}
             >
-              {currentUser?.email}
+              {getRoleDisplay()}
             </Typography>
           </Box>
         </Box>

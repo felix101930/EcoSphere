@@ -1,5 +1,6 @@
 // UserForm - Form for adding/editing users
 import PropTypes from 'prop-types';
+import { useAuth } from '../../hooks/useAuth'; // Add this import
 import { Box, TextField, Select, MenuItem, FormControl, InputLabel, Typography, FormGroup, FormControlLabel, Checkbox, Paper } from '@mui/material';
 
 const AVAILABLE_PERMISSIONS = [
@@ -11,6 +12,8 @@ const AVAILABLE_PERMISSIONS = [
 ];
 
 const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
+  const { currentUser } = useAuth(); // Get current user from auth context
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     onChange({ ...formData, [name]: value });
@@ -58,37 +61,38 @@ const UserForm = ({ formData, onChange, isEditMode, isEditingSelf }) => {
         fullWidth
       />
       <TextField
-        label={isEditMode ? 'Password (leave blank to keep current)' : 'Password'}
+        label={isEditMode ? 'New Password (leave blank to keep current)' : 'Password *'}
         name="password"
         type="password"
         value={formData.password}
         onChange={handleChange}
-        placeholder={isEditMode ? 'Leave blank to keep current' : 'Enter password'}
+        placeholder={isEditMode ? 'Enter new password or leave blank' : 'Enter password'}
         required={!isEditMode}
         fullWidth
       />
+      
+      {/* Role Select - Fixed */}
       <FormControl fullWidth required>
-        <InputLabel>Role *</InputLabel>
-        <Select
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          label="Role *"
-          disabled={isEditingSelf}
-          displayEmpty
-        >
-          <MenuItem value="" disabled>
-            <em>- Select a role -</em>
-          </MenuItem>
-          <MenuItem value="Admin">Admin</MenuItem>
-          <MenuItem value="TeamMember">Team Member</MenuItem>
-        </Select>
-        {isEditingSelf && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-            You cannot change your own role
-          </Typography>
-        )}
-      </FormControl>
+  <InputLabel>Role *</InputLabel>
+  <Select
+    name="role"
+    value={formData.role}
+    onChange={handleChange}
+    label="Role *"
+    disabled={isEditingSelf}
+  >
+    {currentUser?.role === 'SuperAdmin' && (
+      <MenuItem value="SuperAdmin">Super Admin</MenuItem>
+    )}
+    <MenuItem value="Admin">Admin</MenuItem>
+    <MenuItem value="TeamMember">Team Member</MenuItem>
+  </Select>
+  {isEditingSelf && (
+    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+      You cannot change your own role
+    </Typography>
+  )}
+</FormControl>
 
       {/* Permissions Section - Only show for Team Members */}
       {isTeamMember && (

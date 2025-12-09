@@ -1,3 +1,4 @@
+// src/pages/LoginPage.js
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, TextField, Button, Checkbox, FormControlLabel, Typography, Paper, Alert } from '@mui/material';
@@ -23,8 +24,9 @@ function LoginPage() {
       const result = await login(email, password);
       
       if (result.success) {
-        // Redirect based on role
-        if (result.user.role === 'Admin') {
+        // Navigation is handled by AuthContext's onAuthStateChanged
+        // But we can show a success message or redirect based on role
+        if (result.user && result.user.role === 'Admin') {
           navigate('/users');
         } else {
           navigate('/dashboard');
@@ -63,14 +65,7 @@ function LoginPage() {
         },
       }}
     >
-      {/* Login Form Card */}
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 2,
-          marginRight: 8,
-        }}
-      >
+      <Box sx={{ position: 'relative', zIndex: 2, marginRight: 8 }}>
         <Paper
           elevation={0}
           sx={{
@@ -104,7 +99,6 @@ function LoginPage() {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit}>
-            {/* Email Field */}
             <Box sx={{ mb: 2 }}>
               <Typography 
                 variant="body2" 
@@ -115,7 +109,7 @@ function LoginPage() {
               <TextField
                 fullWidth
                 type="email"
-                placeholder="michael.jones@edu.sait.ca"
+                placeholder="your.email@edu.sait.ca"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -127,7 +121,6 @@ function LoginPage() {
               />
             </Box>
 
-            {/* Password Field */}
             <Box sx={{ mb: 2 }}>
               <Typography 
                 variant="body2" 
@@ -150,7 +143,6 @@ function LoginPage() {
               />
             </Box>
 
-            {/* Remember Me Checkbox */}
             <Box sx={{ mb: 3 }}>
               <FormControlLabel
                 control={
@@ -168,7 +160,6 @@ function LoginPage() {
               />
             </Box>
 
-            {/* Sign In Button */}
             <Button
               type="submit"
               fullWidth
@@ -189,6 +180,19 @@ function LoginPage() {
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
+
+            {/* Demo Accounts Info */}
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                mt: 3, 
+                textAlign: 'center', 
+                color: '#666',
+                fontSize: '12px'
+              }}
+            >
+              Demo: admin@ecosphere.com / password123
+            </Typography>
           </form>
         </Paper>
       </Box>

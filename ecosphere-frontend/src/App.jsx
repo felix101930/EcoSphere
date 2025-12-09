@@ -136,37 +136,37 @@ function App() {
 
           {/* Protected Routes - Management (Admin Only, NO AI Chatbot) */}
           <Route
-            path="/users"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <MainLayout showAIChatbot={false}>
-                  <UserManagementPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+  path="/users"
+  element={
+    <ProtectedRoute adminOnly={true}>
+      <MainLayout showAIChatbot={false}>
+        <UserManagementPage />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
 
           <Route
-            path="/dashboard-management"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <MainLayout showAIChatbot={false}>
-                  <ComingSoonPage featureName="Dashboard Management" />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+  path="/dashboard-management"
+  element={
+    <ProtectedRoute adminOnly={true}>
+      <MainLayout showAIChatbot={false}>
+        <ComingSoonPage featureName="Dashboard Management" />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
 
           <Route
-            path="/quiz-management"
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <MainLayout showAIChatbot={false}>
-                  <ComingSoonPage featureName="Quiz Management" />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+  path="/quiz-management"
+  element={
+    <ProtectedRoute adminOnly={true}>
+      <MainLayout showAIChatbot={false}>
+        <ComingSoonPage featureName="Quiz Management" />
+      </MainLayout>
+    </ProtectedRoute>
+  }
+/>
 
           {/* Default Route */}
           <Route path="/" element={<Navigate to="/login" replace />} />

@@ -29,6 +29,576 @@
       "failureReason": null,
       "ipAddress": "::1",
       "logoutTimestamp": null
+    },
+    {
+      "id": 4,
+      "timestamp": "2025-12-04 09:48:22",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Unknown",
+      "status": "failed",
+      "failureReason": "Invalid email or password",
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 5,
+      "timestamp": "2025-12-04 09:49:16",
+      "email": "admin.admin@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 09:51:42"
+    },
+    {
+      "id": 6,
+      "timestamp": "2025-12-04 09:51:54",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 10:21:55"
+    },
+    {
+      "id": 7,
+      "timestamp": "2025-12-04 11:10:25",
+      "email": "member@ecosphere.com",
+      "role": "Unknown",
+      "status": "failed",
+      "failureReason": "token is not defined",
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 8,
+      "timestamp": "2025-12-04 11:10:25",
+      "email": "member@ecosphere.com",
+      "role": "Unknown",
+      "status": "failed",
+      "failureReason": "token is not defined",
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 9,
+      "timestamp": "2025-12-04 11:42:58",
+      "email": "member@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 10,
+      "timestamp": "2025-12-04 11:48:11",
+      "email": "member@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 11,
+      "timestamp": "2025-12-04 11:48:23",
+      "email": "member@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 11:48:56"
+    },
+    {
+      "id": 12,
+      "timestamp": "2025-12-04 11:49:11",
+      "email": "admin@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 13,
+      "timestamp": "2025-12-04 11:49:11",
+      "email": "admin@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 14,
+      "timestamp": "2025-12-04 12:12:08",
+      "email": "admin@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 15,
+      "timestamp": "2025-12-04 12:12:44",
+      "email": "admin@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 16,
+      "timestamp": "2025-12-04 12:16:23",
+      "email": "admin@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 17,
+      "timestamp": "2025-12-04 12:56:25",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 18,
+      "timestamp": "2025-12-04 12:56:25",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 19,
+      "timestamp": "2025-12-04 12:56:25",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 20,
+      "timestamp": "2025-12-04 12:56:31",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 21,
+      "timestamp": "2025-12-04 12:56:33",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 22,
+      "timestamp": "2025-12-04 12:56:34",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 23,
+      "timestamp": "2025-12-04 12:56:35",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 24,
+      "timestamp": "2025-12-04 13:03:23",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 25,
+      "timestamp": "2025-12-04 13:03:23",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 26,
+      "timestamp": "2025-12-04 13:04:57",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 27,
+      "timestamp": "2025-12-04 13:04:57",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 28,
+      "timestamp": "2025-12-04 13:05:04",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 29,
+      "timestamp": "2025-12-04 13:05:04",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 13:05:09"
+    },
+    {
+      "id": 30,
+      "timestamp": "2025-12-04 13:05:09",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 31,
+      "timestamp": "2025-12-04 13:05:27",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 32,
+      "timestamp": "2025-12-04 13:05:27",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 33,
+      "timestamp": "2025-12-04 13:05:27",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 34,
+      "timestamp": "2025-12-04 13:05:27",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 35,
+      "timestamp": "2025-12-04 13:05:31",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 36,
+      "timestamp": "2025-12-04 13:05:32",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 37,
+      "timestamp": "2025-12-04 13:05:33",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 38,
+      "timestamp": "2025-12-04 13:09:36",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 39,
+      "timestamp": "2025-12-04 13:09:36",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 40,
+      "timestamp": "2025-12-04 13:16:41",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 41,
+      "timestamp": "2025-12-04 13:16:41",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 13:22:36"
+    },
+    {
+      "id": 42,
+      "timestamp": "2025-12-04 13:23:00",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 43,
+      "timestamp": "2025-12-04 13:23:00",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 44,
+      "timestamp": "2025-12-04 13:23:00",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 45,
+      "timestamp": "2025-12-04 13:23:03",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 46,
+      "timestamp": "2025-12-04 13:23:04",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 47,
+      "timestamp": "2025-12-04 13:24:25",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 48,
+      "timestamp": "2025-12-04 13:24:49",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 49,
+      "timestamp": "2025-12-04 13:24:51",
+      "email": "sanbirsingh@edu.sait.ca",
+      "role": "Admin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 13:24:54"
+    },
+    {
+      "id": 50,
+      "timestamp": "2025-12-04 13:25:07",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 51,
+      "timestamp": "2025-12-04 13:25:07",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 52,
+      "timestamp": "2025-12-04 13:25:07",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 53,
+      "timestamp": "2025-12-04 13:25:11",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 54,
+      "timestamp": "2025-12-04 13:25:11",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 55,
+      "timestamp": "2025-12-04 13:25:12",
+      "email": "test2@ecosphere.com",
+      "role": "TeamMember",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": "2025-12-04 13:25:13"
+    },
+    {
+      "id": 56,
+      "timestamp": "2025-12-04 13:25:30",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 57,
+      "timestamp": "2025-12-04 13:25:30",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 58,
+      "timestamp": "2025-12-04 13:25:30",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 59,
+      "timestamp": "2025-12-04 13:26:32",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 60,
+      "timestamp": "2025-12-04 13:26:33",
+      "email": "superadmin@ecosphere.com",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "::1",
+      "logoutTimestamp": null
     }
   ]
 }
