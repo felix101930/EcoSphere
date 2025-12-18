@@ -52,6 +52,7 @@ app.get("/", (req, res) => {
 // Import login log routes
 const loginLogRoutes = require("./routes/loginLogRoutes");
 const carbonFootprintReportRoutes = require("./routes/carbonFootprintReportRoutes");
+const databaseTestRoutes = require("./routes/databaseTestRoutes");
 
 // API Routes
 app.use("/api", userRoutes);
@@ -59,6 +60,7 @@ app.use("/api/electricity", electricityRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/carbon-footprint-reports", carbonFootprintReportRoutes);
 app.use("/api/auth", firebaseAuthRoutes);
+app.use("/api/db", databaseTestRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
