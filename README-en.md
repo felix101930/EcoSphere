@@ -25,7 +25,35 @@ npm install
 cd ..
 ```
 
-### 3. Update Data
+### 3. Configure Database Connection
+
+Edit `ecosphere-backend/.env` file to configure your SQL Server database:
+
+```env
+# SQL Server Configuration
+DB_SERVER=localhost          # Database server address
+DB_DATABASE=TestSlimDB       # Database name
+
+# If using SQL Server Authentication, uncomment and fill in:
+# DB_USER=your_username
+# DB_PASSWORD=your_password
+
+# If using Windows Authentication (default), no need to set username and password
+```
+
+**Important Notes**:
+- Default uses **Windows Authentication** (no username/password needed)
+- If your database uses SQL Server Authentication, set `DB_USER` and `DB_PASSWORD`
+- Ensure SQL Server is running and accessible
+- Table name format: `SaitSolarLab_<sensor_id>` (e.g., `SaitSolarLab_20004_TL2`)
+
+**Test Database Connection**:
+```bash
+# Test connection in command line
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+```
+
+### 4. Update Data
 
 **In the project root directory**, double-click to run:
 
@@ -35,7 +63,7 @@ update-electricity-data.bat
 
 This will update electricity data to the current time.
 
-### 4. Start the Application
+### 5. Start the Application
 
 **In the project root directory**, double-click to run:
 
@@ -45,9 +73,13 @@ start.bat
 
 This will automatically start both backend and frontend servers.
 
-### 5. Access the Application
+### 6. Access the Application
 
 Open in browser: **http://localhost:5174**
+
+**Login Credentials**:
+- Email: `super.admin@edu.sait.ca`
+- Password: `abcd1234`
 
 ---
 
@@ -332,6 +364,55 @@ npm install
 1. Right-click the `.bat` file
 2. Select "Run as administrator"
 3. Or run in command line to see error messages
+
+---
+
+### Issue 7: Database Connection Failed
+
+**Error Message**: `Cannot open database` or `Login failed`
+
+**Solution**:
+
+**Step 1: Check if SQL Server is Running**
+```bash
+# Check SQL Server service status
+sc query MSSQLSERVER
+```
+
+**Step 2: Test Database Connection**
+```bash
+# Test with Windows Authentication
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT @@VERSION"
+
+# Test with SQL Server Authentication
+sqlcmd -S localhost -U your_username -P your_password -d TestSlimDB -Q "SELECT @@VERSION"
+```
+
+**Step 3: Verify Database Configuration**
+- Open `ecosphere-backend/.env`
+- Confirm `DB_SERVER` and `DB_DATABASE` are correct
+- If using SQL Server Authentication, confirm `DB_USER` and `DB_PASSWORD` are correct
+
+**Step 4: Check Database Tables**
+```bash
+# List all tables
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
+
+# Check if sensor table exists
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+```
+
+**Common Issues**:
+- **Wrong database name**: Confirm your database name is `TestSlimDB`
+- **Wrong table name**: Sensor table format must be `SaitSolarLab_<sensor_id>`
+- **Port issue**: If SQL Server uses non-default port, set `DB_SERVER=localhost,1434` in `.env`
+- **Firewall**: Ensure firewall allows SQL Server connections
+
+**Test API Endpoint**:
+```bash
+# After starting backend, test sensor data API
+curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
+```
 
 ---
 

@@ -25,7 +25,35 @@ npm install
 cd ..
 ```
 
-### 3. 更新数据
+### 3. 配置数据库连接
+
+编辑 `ecosphere-backend/.env` 文件，配置你的 SQL Server 数据库：
+
+```env
+# SQL Server Configuration
+DB_SERVER=localhost          # 数据库服务器地址
+DB_DATABASE=TestSlimDB       # 数据库名称
+
+# 如果使用 SQL Server 认证，取消注释并填写：
+# DB_USER=your_username
+# DB_PASSWORD=your_password
+
+# 如果使用 Windows 认证（默认），不需要设置用户名和密码
+```
+
+**重要说明**：
+- 默认使用 **Windows 认证**（不需要用户名密码）
+- 如果你的数据库使用 SQL Server 认证，需要设置 `DB_USER` 和 `DB_PASSWORD`
+- 确保 SQL Server 正在运行并且可以访问
+- 数据库表名格式：`SaitSolarLab_<sensor_id>`（例如：`SaitSolarLab_20004_TL2`）
+
+**测试数据库连接**：
+```bash
+# 在命令行测试连接
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+```
+
+### 4. 更新数据
 
 **在项目根目录**，双击运行：
 
@@ -35,7 +63,7 @@ update-electricity-data.bat
 
 这会将电力数据更新到当前时间。
 
-### 4. 启动应用
+### 5. 启动应用
 
 **在项目根目录**，双击运行：
 
@@ -45,9 +73,13 @@ start.bat
 
 这会自动启动后端和前端服务器。
 
-### 5. 访问应用
+### 6. 访问应用
 
 在浏览器中打开: **http://localhost:5174**
+
+**登录凭据**：
+- 邮箱：`super.admin@edu.sait.ca`
+- 密码：`abcd1234`
 
 ---
 
@@ -332,6 +364,55 @@ npm install
 1. 右键点击 `.bat` 文件
 2. 选择"以管理员身份运行"
 3. 或在命令行中运行查看错误信息
+
+---
+
+### 问题7: 数据库连接失败
+
+**错误信息**: `Cannot open database` 或 `Login failed`
+
+**解决方案**:
+
+**步骤1: 检查 SQL Server 是否运行**
+```bash
+# 检查 SQL Server 服务状态
+sc query MSSQLSERVER
+```
+
+**步骤2: 测试数据库连接**
+```bash
+# 使用 Windows 认证测试
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT @@VERSION"
+
+# 使用 SQL Server 认证测试
+sqlcmd -S localhost -U your_username -P your_password -d TestSlimDB -Q "SELECT @@VERSION"
+```
+
+**步骤3: 检查数据库配置**
+- 打开 `ecosphere-backend/.env`
+- 确认 `DB_SERVER` 和 `DB_DATABASE` 正确
+- 如果使用 SQL Server 认证，确认 `DB_USER` 和 `DB_PASSWORD` 正确
+
+**步骤4: 检查数据库表**
+```bash
+# 列出所有表
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
+
+# 检查传感器表是否存在
+sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+```
+
+**常见问题**:
+- **数据库名称不对**: 确认你的数据库名称是 `TestSlimDB`
+- **表名不对**: 传感器表格式必须是 `SaitSolarLab_<sensor_id>`
+- **端口问题**: 如果 SQL Server 使用非默认端口，在 `.env` 中设置 `DB_SERVER=localhost,1434`
+- **防火墙**: 确保防火墙允许 SQL Server 连接
+
+**测试 API 端点**:
+```bash
+# 启动后端后，测试传感器数据 API
+curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
+```
 
 ---
 
