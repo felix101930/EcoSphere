@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UserManagementPage from './pages/UserManagementPage';
 import CarbonFootprintPage from './pages/CarbonFootprintPage';
+import ThermalPage from './pages/ThermalPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
@@ -104,7 +105,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <MainLayout showAIChatbot={true}>
-                  <ComingSoonPage featureName="Thermal Dashboard" />
+                  <ThermalPage />
                 </MainLayout>
               </ProtectedRoute>
             }

@@ -52,6 +52,7 @@ app.get("/", (req, res) => {
 const loginLogRoutes = require("./routes/loginLogRoutes");
 const carbonFootprintReportRoutes = require("./routes/carbonFootprintReportRoutes");
 const databaseTestRoutes = require("./routes/databaseTestRoutes");
+const thermalRoutes = require("./routes/thermalRoutes");
 
 // API Routes
 app.use("/api", userRoutes); // This includes /api/auth/login
@@ -59,6 +60,7 @@ app.use("/api/electricity", electricityRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/carbon-footprint-reports", carbonFootprintReportRoutes);
 app.use("/api/db", databaseTestRoutes);
+app.use("/api/thermal", thermalRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
