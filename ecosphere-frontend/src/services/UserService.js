@@ -1,16 +1,9 @@
-// services/UserService.js - Updated version
-import { auth } from "../firebase/config";
-
+// services/UserService.js - Simple version without Firebase
 class UserService {
   // Get all users from backend
   async getAllUsers() {
     try {
-      const token = await auth.currentUser.getIdToken();
-      const response = await fetch("http://localhost:3001/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch("http://localhost:3001/api/users");
       if (response.ok) {
         return await response.json();
       }
@@ -21,18 +14,15 @@ class UserService {
     }
   }
 
-  // Add user (Admin function - uses new endpoint)
+  // Add user (Admin function)
   async addUser(userData) {
     try {
-      const token = await auth.currentUser.getIdToken();
-
       const response = await fetch(
         "http://localhost:3001/api/users/admin-create",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             firstName: userData.firstName,
@@ -60,15 +50,12 @@ class UserService {
   // Update user
   async updateUser(userId, userData) {
     try {
-      const token = await auth.currentUser.getIdToken();
-
       const response = await fetch(
         `http://localhost:3001/api/users/${userId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             firstName: userData.firstName,
@@ -95,15 +82,10 @@ class UserService {
   // Delete user
   async deleteUser(userId) {
     try {
-      const token = await auth.currentUser.getIdToken();
-
       const response = await fetch(
         `http://localhost:3001/api/users/${userId}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 

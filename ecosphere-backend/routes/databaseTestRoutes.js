@@ -1,45 +1,22 @@
 // Database Test Routes
 const express = require('express');
 const router = express.Router();
-const { testConnection, getAllSensors } = require('../db/queries');
+const { querySensorData } = require('../db/sqlcmdQuery');
 
 // Test database connection
 router.get('/test-connection', async (req, res) => {
   try {
-    const isConnected = await testConnection();
-    if (isConnected) {
-      res.json({ 
-        success: true, 
-        message: 'Database connection successful' 
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        message: 'Database connection failed' 
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error testing connection',
-      error: error.message 
-    });
-  }
-});
-
-// Test query sensor data
-router.get('/test-sensors', async (req, res) => {
-  try {
-    const sensors = await getAllSensors();
+    // Simple test query
+    const testData = await querySensorData('20004_TL2', 1);
     res.json({ 
       success: true, 
-      count: sensors.length,
-      data: sensors 
+      message: 'Database connection successful',
+      sampleData: testData[0] || null
     });
   } catch (error) {
     res.status(500).json({ 
       success: false, 
-      message: 'Error fetching sensors',
+      message: 'Database connection failed',
       error: error.message 
     });
   }

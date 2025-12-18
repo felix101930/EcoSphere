@@ -9,7 +9,6 @@ const bodyParser = require("body-parser");
 const config = require("./config/config");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
-const firebaseAuthRoutes = require("./routes/firebaseAuthRoutes");
 
 const app = express();
 
@@ -55,11 +54,10 @@ const carbonFootprintReportRoutes = require("./routes/carbonFootprintReportRoute
 const databaseTestRoutes = require("./routes/databaseTestRoutes");
 
 // API Routes
-app.use("/api", userRoutes);
+app.use("/api", userRoutes); // This includes /api/auth/login
 app.use("/api/electricity", electricityRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/carbon-footprint-reports", carbonFootprintReportRoutes);
-app.use("/api/auth", firebaseAuthRoutes);
 app.use("/api/db", databaseTestRoutes);
 
 // Health check

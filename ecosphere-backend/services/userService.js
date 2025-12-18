@@ -225,6 +225,57 @@ class UserService {
       throw new Error(`Failed to delete user from Firebase: ${error.message}`);
     }
   }
+
+  /**
+   * Authenticate user (simple password check)
+   */
+  static async authenticateUser(email, password) {
+    const data = await FileHelper.readJSON(config.usersFile);
+    const user = data.users.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (!user) {
+      return null;
+    }
+
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  /**
+   * Add user (simple version without Firebase)
+   */
+  static async addUserSimple(userData) {
+    const data = await FileHelper.readJSON(config.usersFile);
+
+    // Check if email already exists
+    const existingUser = data.users.find((u) => u.email === userData.email);
+    if (existingUser) {
+      throw new Error("Email already exists");
+    }
+
+    const newUser = {
+      id: data.nextId,
+      firstName: userData.firstName || "",
+      lastName: userData.lastName || "",
+      email: userData.email,
+      password: userData.password, // Store password in plain text (for prototype only!)
+      role: userData.role || "TeamMember",
+      permissions: userData.permissions || [],
+      createdAt: new Date().toISOString(),
+    };
+
+    data.users.push(newUser);
+    data.nextId++;
+
+    await FileHelper.writeJSON(config.usersFile, data);
+
+    // Return user without password
+    const { password: _, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
+  }
 }
 
 module.exports = UserService;
