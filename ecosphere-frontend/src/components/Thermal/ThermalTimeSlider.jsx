@@ -100,7 +100,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime 
         </IconButton>
 
         <Typography variant="body1" sx={{ ml: 2, fontWeight: 'bold' }}>
-          Current Time: {currentTime}
+          Time: {currentTime}
         </Typography>
       </Box>
 

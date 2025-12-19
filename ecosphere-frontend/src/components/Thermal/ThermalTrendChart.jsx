@@ -107,7 +107,7 @@ const ThermalTrendChart = ({ data, onTimeClick }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        📈 Temperature Trend (Daily Overview)
+        📈 Temperature Trend (15-Min Overview)
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Records: {recordCount} | Click on the chart to jump to that time
