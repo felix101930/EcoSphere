@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
+import ExportReportDialog from '../components/Common/ExportReportDialog';
 import ThermalControlPanel from '../components/Thermal/ThermalControlPanel';
 import ThermalChartSection from '../components/Thermal/ThermalChartSection';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
@@ -20,6 +21,9 @@ const ThermalPage = () => {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [dateRangeError, setDateRangeError] = useState(null);
+  
+  // Export dialog state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   // Custom hooks for data management (pass selectedFloor)
   const {
@@ -171,6 +175,8 @@ const ThermalPage = () => {
         <PageHeader 
           title="Thermal Dashboard" 
           subtitle="Monitor and analyze building temperature"
+          showExportButton={true}
+          onExport={() => setExportDialogOpen(true)}
         />
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', px: 4 }}>
           <CircularProgress />
@@ -186,6 +192,8 @@ const ThermalPage = () => {
         <PageHeader 
           title="Thermal Dashboard" 
           subtitle="Monitor and analyze building temperature"
+          showExportButton={true}
+          onExport={() => setExportDialogOpen(true)}
         />
         <Box sx={{ px: 4, mt: 4 }}>
           <Alert severity="error">Error loading data: {error}</Alert>
@@ -196,12 +204,22 @@ const ThermalPage = () => {
 
   return (
     <>
+      {/* Export Report Dialog */}
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        reportType="thermal"
+        reportTitle="Thermal Report"
+      />
+      
       <PageHeader 
         title="Thermal Dashboard" 
         subtitle="Monitor and analyze building temperature"
+        showExportButton={true}
+        onExport={() => setExportDialogOpen(true)}
       />
       
-      <Box sx={{ px: 4, py: 3 }}>
+      <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Control Panel */}
         <ThermalControlPanel
           selectedFloor={selectedFloor}
