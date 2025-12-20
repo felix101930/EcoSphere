@@ -80,12 +80,14 @@ const ThermalPage = () => {
         const dateObj = new Date(lastDate + 'T00:00:00');
         setSelectedDate(dateObj);
 
-        // Load data for that date
-        const data = await ThermalService.getMultipleSensorsDailyData(lastDate, sensorIds);
+        // Load data for that date using initial floor (basement)
+        const initialSensorIds = floorConfigs['basement'].sensorIds;
+        const data = await ThermalService.getMultipleSensorsDailyData(lastDate, initialSensorIds);
         setDailyData(data);
 
         // Set to last time index
-        const recordCount = data['20004_TL2']?.length || 0;
+        const firstSensorId = initialSensorIds[0];
+        const recordCount = data[firstSensorId]?.length || 0;
         setCurrentTimeIndex(recordCount > 0 ? recordCount - 1 : 0);
 
         setLoading(false);
@@ -97,7 +99,7 @@ const ThermalPage = () => {
     };
 
     loadInitialData();
-  }, [sensorIds]);
+  }, [floorConfigs]); // Only run once on mount
 
   // Handle floor change
   const handleFloorChange = async (event, newFloor) => {
@@ -291,7 +293,8 @@ const ThermalPage = () => {
 
   // Get current time string (Single Day mode)
   const getCurrentTime = () => {
-    const sensorData = dailyData['20004_TL2'];
+    const firstSensorId = sensorIds[0];
+    const sensorData = dailyData[firstSensorId];
     if (sensorData && sensorData[currentTimeIndex]) {
       return ThermalService.parseTime(sensorData[currentTimeIndex].ts);
     }
@@ -318,7 +321,7 @@ const ThermalPage = () => {
     setCurrentDateIndex(index);
   };
 
-  const maxTimeIndex = (dailyData['20004_TL2']?.length || 1) - 1;
+  const maxTimeIndex = sensorIds[0] && dailyData[sensorIds[0]] ? (dailyData[sensorIds[0]].length - 1) : 0;
   const maxDateIndex = (Object.keys(aggregatedData).length || 1) - 1;
 
   if (loading && !selectedDate) {
