@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 
-const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single' }) => {
+const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [] }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Auto-play functionality
@@ -23,7 +23,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         }
         return prev + 1;
       });
-    }, mode === 'single' ? 500 : 1000); // Slower for date mode
+    }, mode === 'single' ? 500 : 900); // 900ms for multiple days (15 min real-time equivalent)
 
     return () => clearInterval(interval);
   }, [isPlaying, maxIndex, onIndexChange, mode]);
@@ -58,15 +58,25 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         { value: 95, label: '23:45' }
       ];
     } else {
-      // For multiple days mode, show marks at intervals
+      // For multiple days mode, show actual dates
+      if (dateList.length === 0) return [];
+      
       const marks = [];
       const step = Math.max(1, Math.floor(maxIndex / 5));
+      
       for (let i = 0; i <= maxIndex; i += step) {
-        marks.push({ value: i, label: `Day ${i + 1}` });
+        const date = new Date(dateList[i] + 'T00:00:00');
+        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        marks.push({ value: i, label });
       }
+      
+      // Always add the last date if not already included
       if (marks[marks.length - 1].value !== maxIndex) {
-        marks.push({ value: maxIndex, label: `Day ${maxIndex + 1}` });
+        const date = new Date(dateList[maxIndex] + 'T00:00:00');
+        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        marks.push({ value: maxIndex, label });
       }
+      
       return marks;
     }
   };
@@ -137,6 +147,11 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
               const minutes = (value % 4) * 15;
               return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
             } else {
+              // Show actual date in tooltip
+              if (dateList.length > 0 && dateList[value]) {
+                const date = new Date(dateList[value] + 'T00:00:00');
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              }
               return `Day ${value + 1}`;
             }
           }}

@@ -534,6 +534,7 @@ const ThermalPage = () => {
           onIndexChange={viewMode === 'single' ? setCurrentTimeIndex : setCurrentDateIndex}
           currentTime={viewMode === 'single' ? getCurrentTime() : getCurrentDate()}
           mode={viewMode}
+          dateList={viewMode === 'multiple' ? Object.keys(aggregatedData).sort() : []}
         />
       </Box>
     </>
