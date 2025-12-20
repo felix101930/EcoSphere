@@ -1,45 +1,15 @@
 // Thermal Page - Main thermal dashboard
 import { useState } from 'react';
-import { Box, CircularProgress, Alert, ToggleButton, ToggleButtonGroup, Typography, Button } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
-import ThermalTrendChart from '../components/Thermal/ThermalTrendChart';
-import ThermalCandlestickChart from '../components/Thermal/ThermalCandlestickChart';
+import ThermalControlPanel from '../components/Thermal/ThermalControlPanel';
+import ThermalChartSection from '../components/Thermal/ThermalChartSection';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
 import ThermalTimeSlider from '../components/Thermal/ThermalTimeSlider';
-import {
-  FLOOR_CONFIGS,
-  VIEW_MODES,
-  VIEW_MODE_LABELS,
-  DATE_CONFIG,
-  UI_CONFIG
-} from '../lib/constants/thermal';
+import { VIEW_MODES } from '../lib/constants/thermal';
 import { useThermalData } from '../lib/hooks/useThermalData';
 import { useFloorManagement } from '../lib/hooks/useFloorManagement';
 import { useTimeControl } from '../lib/hooks/useTimeControl';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const ThermalPage = () => {
   // View mode state
@@ -195,169 +165,32 @@ const ThermalPage = () => {
       />
       
       <Box sx={{ px: 4, py: 3 }}>
-        {/* View Mode Toggle and Date Selection */}
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-            {/* Floor Selection */}
-            <Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Floor
-              </Typography>
-              <ToggleButtonGroup
-                value={selectedFloor}
-                exclusive
-                onChange={handleFloorChange}
-                aria-label="floor selection"
-                size="small"
-              >
-                <ToggleButton value="basement" aria-label="basement">
-                  {FLOOR_CONFIGS.basement.displayName}
-                </ToggleButton>
-                <ToggleButton value="level1" aria-label="level 1">
-                  {FLOOR_CONFIGS.level1.displayName}
-                </ToggleButton>
-                <ToggleButton value="level2" aria-label="level 2">
-                  {FLOOR_CONFIGS.level2.displayName}
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
+        {/* Control Panel */}
+        <ThermalControlPanel
+          selectedFloor={selectedFloor}
+          onFloorChange={handleFloorChange}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          selectedDate={selectedDate}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateChange={handleDateChange}
+          onDateFromChange={setDateFrom}
+          onDateToChange={setDateTo}
+          shouldDisableDate={shouldDisableDate}
+          onGenerateChart={handleGenerateChart}
+          dateRangeError={dateRangeError}
+          loading={loading}
+        />
 
-            {/* View Mode Toggle */}
-            <Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                View Mode
-              </Typography>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={handleViewModeChange}
-                aria-label="view mode"
-                size="small"
-              >
-                <ToggleButton value={VIEW_MODES.SINGLE} aria-label="single day">
-                  {VIEW_MODE_LABELS[VIEW_MODES.SINGLE]}
-                </ToggleButton>
-                <ToggleButton value={VIEW_MODES.MULTIPLE} aria-label="multiple days">
-                  {VIEW_MODE_LABELS[VIEW_MODES.MULTIPLE]}
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-
-            {/* Date Picker(s) */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              {viewMode === VIEW_MODES.SINGLE ? (
-                <Box>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Select Date
-                  </Typography>
-                  <DatePicker
-                    value={selectedDate}
-                    onChange={handleDateChange}
-                    shouldDisableDate={shouldDisableDate}
-                    minDate={new Date(DATE_CONFIG.MIN_DATE)}
-                    maxDate={new Date(DATE_CONFIG.MAX_DATE)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        sx: { width: 200 }
-                      }
-                    }}
-                  />
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      From Date
-                    </Typography>
-                    <DatePicker
-                      value={dateFrom}
-                      onChange={setDateFrom}
-                      shouldDisableDate={shouldDisableDate}
-                      minDate={new Date(DATE_CONFIG.MIN_DATE)}
-                      maxDate={dateTo || new Date(DATE_CONFIG.MAX_DATE)}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          sx: { width: 180 }
-                        }
-                      }}
-                    />
-                  </Box>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      To Date
-                    </Typography>
-                    <DatePicker
-                      value={dateTo}
-                      onChange={setDateTo}
-                      shouldDisableDate={shouldDisableDate}
-                      minDate={dateFrom || new Date(DATE_CONFIG.MIN_DATE)}
-                      maxDate={new Date(DATE_CONFIG.MAX_DATE)}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          sx: { width: 180 }
-                        }
-                      }}
-                    />
-                  </Box>
-                  <Button
-                    variant="contained"
-                    startIcon={<TrendingUpIcon />}
-                    onClick={handleGenerateChart}
-                    disabled={loading}
-                    sx={{ height: 40 }}
-                  >
-                    Generate Chart
-                  </Button>
-                </Box>
-              )}
-            </LocalizationProvider>
-          </Box>
-
-          {/* Date Range Error */}
-          {dateRangeError && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              {dateRangeError}
-            </Alert>
-          )}
-
-          {/* Info Text */}
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-            {viewMode === VIEW_MODES.SINGLE 
-              ? 'View 15-minute interval data for a single day'
-              : `View daily data for up to ${DATE_CONFIG.MAX_DATE_RANGE_DAYS} days`}
-          </Typography>
-        </Box>
-
-        {/* Chart - Show different chart based on view mode */}
-        {viewMode === VIEW_MODES.SINGLE ? (
-          <ThermalTrendChart 
-            data={dailyData}
-            onTimeClick={handleTimeClick}
-          />
-        ) : (
-          Object.keys(aggregatedData).length > 0 ? (
-            <ThermalCandlestickChart 
-              data={aggregatedData}
-              onDateClick={handleDateClick}
-            />
-          ) : (
-            <Box sx={{ 
-              p: 4, 
-              bgcolor: 'white', 
-              borderRadius: 1, 
-              boxShadow: 1, 
-              textAlign: 'center',
-              mb: 3
-            }}>
-              <Typography variant="body1" color="text.secondary">
-                {UI_CONFIG.ERROR_MESSAGES.NO_DATA}
-              </Typography>
-            </Box>
-          )
-        )}
+        {/* Chart Section */}
+        <ThermalChartSection
+          viewMode={viewMode}
+          dailyData={dailyData}
+          aggregatedData={aggregatedData}
+          onTimeClick={handleTimeClick}
+          onDateClick={handleDateClick}
+        />
 
         {/* Floor Plan */}
         <ThermalFloorPlan 
