@@ -1,20 +1,38 @@
 // Thermal Floor Plan - Display floor plan with temperature overlays
 import { Box, Typography } from '@mui/material';
 import basementPlan from '../../assets/floorplan/basement.png';
+import level1Plan from '../../assets/floorplan/level1.png';
 import ThermalService from '../../services/ThermalService';
 
-const ThermalFloorPlan = ({ currentData }) => {
-  // Get temperature values
-  const temp20004 = currentData['20004_TL2'] || null;
-  const temp20005 = currentData['20005_TL2'] || null;
-  const temp20006 = currentData['20006_TL2'] || null;
-
-  // Sensor positions (adjust these based on actual floor plan)
-  const sensorPositions = {
-    '20004': { top: '18%', right: '8%', width: '180px', height: '100px' },
-    '20005': { top: '48%', left: '12%', width: '280px', height: '180px' },
-    '20006': { top: '52%', right: '20%', width: '240px', height: '140px' }
+const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
+  // Floor configurations
+  const floorConfigs = {
+    basement: {
+      name: 'Basement',
+      image: basementPlan,
+      sensorIds: ['20004', '20005', '20006'],
+      positions: {
+        '20004': { top: '18%', right: '8%', width: '180px', height: '100px' },
+        '20005': { top: '48%', left: '12%', width: '280px', height: '180px' },
+        '20006': { top: '52%', right: '20%', width: '240px', height: '140px' }
+      }
+    },
+    level1: {
+      name: 'Level 1',
+      image: level1Plan,
+      sensorIds: ['20007', '20008', '20009', '20010', '20011'],
+      positions: {
+        '20007': { top: '42%', left: '8%', width: '200px', height: '120px' },
+        '20008': { top: '68%', left: '8%', width: '200px', height: '120px' },
+        '20009': { top: '68%', left: '42%', width: '200px', height: '120px' },
+        '20010': { top: '30%', right: '8%', width: '200px', height: '120px' },
+        '20011': { top: '12%', left: '42%', width: '200px', height: '120px' }
+      }
+    }
   };
+
+  const currentFloor = floorConfigs[floor];
+  const sensorPositions = currentFloor.positions;
 
   const renderSensorBox = (sensorId, temp, position) => {
     const color = ThermalService.getColorByTemp(temp);
@@ -69,10 +87,10 @@ const ThermalFloorPlan = ({ currentData }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        🏢 Basement Floor Plan
+        🏢 {currentFloor.name} Floor Plan
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Temperature distribution across basement sensors
+        Temperature distribution across {currentFloor.name.toLowerCase()} sensors
       </Typography>
       
       {/* Floor plan container */}
@@ -87,8 +105,8 @@ const ThermalFloorPlan = ({ currentData }) => {
       >
         {/* Background floor plan image */}
         <img 
-          src={basementPlan} 
-          alt="Basement Floor Plan"
+          src={currentFloor.image} 
+          alt={`${currentFloor.name} Floor Plan`}
           style={{ 
             width: '100%', 
             height: 'auto', 
@@ -98,9 +116,10 @@ const ThermalFloorPlan = ({ currentData }) => {
         />
         
         {/* Temperature overlay boxes */}
-        {renderSensorBox('20004', temp20004, sensorPositions['20004'])}
-        {renderSensorBox('20005', temp20005, sensorPositions['20005'])}
-        {renderSensorBox('20006', temp20006, sensorPositions['20006'])}
+        {currentFloor.sensorIds.map(sensorId => {
+          const temp = currentData[`${sensorId}_TL2`] || null;
+          return renderSensorBox(sensorId, temp, sensorPositions[sensorId]);
+        })}
       </Box>
 
       {/* Color legend */}

@@ -26,17 +26,37 @@ ChartJS.register(
 );
 
 const ThermalCandlestickChart = ({ data, onDateClick }) => {
+  // Define colors for sensors (SAIT colors + additional colors)
+  const sensorColors = {
+    '20004_TL2': { rgb: '218, 41, 28', name: 'Sensor 20004' },      // Red
+    '20005_TL2': { rgb: '0, 94, 184', name: 'Sensor 20005' },       // Blue
+    '20006_TL2': { rgb: '109, 32, 119', name: 'Sensor 20006' },     // Purple
+    '20007_TL2': { rgb: '0, 166, 81', name: 'Sensor 20007' },       // Green
+    '20008_TL2': { rgb: '255, 105, 0', name: 'Sensor 20008' },      // Orange
+    '20009_TL2': { rgb: '255, 193, 7', name: 'Sensor 20009' },      // Yellow
+    '20010_TL2': { rgb: '156, 39, 176', name: 'Sensor 20010' },     // Magenta
+    '20011_TL2': { rgb: '0, 188, 212', name: 'Sensor 20011' }       // Cyan
+  };
+
   // Extract dates and prepare chart data
   const dates = Object.keys(data).sort();
   
-  // Prepare datasets for each sensor - High/Low range + Average line
-  const datasets = [
-    // Sensor 20004 - Low boundary (draw first)
-    {
-      label: 'Sensor 20004 Low',
-      data: dates.map(date => data[date]['20004_TL2']?.low || null),
-      borderColor: 'rgba(218, 41, 28, 0.3)',
-      backgroundColor: 'rgba(218, 41, 28, 0)',
+  // Get available sensor IDs from first date
+  const availableSensorIds = dates.length > 0 ? Object.keys(data[dates[0]]) : [];
+  
+  // Create datasets dynamically for each sensor
+  const datasets = [];
+  
+  availableSensorIds.forEach(sensorId => {
+    const colorInfo = sensorColors[sensorId] || { rgb: '128, 128, 128', name: `Sensor ${sensorId}` };
+    const rgb = colorInfo.rgb;
+    
+    // Low boundary (draw first)
+    datasets.push({
+      label: `${colorInfo.name} Low`,
+      data: dates.map(date => data[date][sensorId]?.low || null),
+      borderColor: `rgba(${rgb}, 0.3)`,
+      backgroundColor: `rgba(${rgb}, 0)`,
       borderWidth: 1,
       borderDash: [2, 2],
       pointRadius: 0,
@@ -44,13 +64,14 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       tension: 0.3,
       fill: false,
       order: 3
-    },
-    // Sensor 20004 - High boundary (fill down to Low)
-    {
-      label: 'Sensor 20004 High',
-      data: dates.map(date => data[date]['20004_TL2']?.high || null),
-      borderColor: 'rgba(218, 41, 28, 0.3)',
-      backgroundColor: 'rgba(218, 41, 28, 0.15)',
+    });
+    
+    // High boundary (fill down to Low)
+    datasets.push({
+      label: `${colorInfo.name} High`,
+      data: dates.map(date => data[date][sensorId]?.high || null),
+      borderColor: `rgba(${rgb}, 0.3)`,
+      backgroundColor: `rgba(${rgb}, 0.15)`,
       borderWidth: 1,
       borderDash: [2, 2],
       pointRadius: 0,
@@ -58,105 +79,22 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       tension: 0.3,
       fill: '-1', // Fill to previous dataset (Low)
       order: 3
-    },
-    // Sensor 20004 - Average line
-    {
-      label: 'Sensor 20004 Avg',
-      data: dates.map(date => data[date]['20004_TL2']?.avg || null),
-      borderColor: 'rgb(218, 41, 28)',
-      backgroundColor: 'rgb(218, 41, 28)',
-      borderWidth: 2.5,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.3,
-      fill: false,
-      order: 1
-    },
+    });
     
-    // Sensor 20005 - Low boundary
-    {
-      label: 'Sensor 20005 Low',
-      data: dates.map(date => data[date]['20005_TL2']?.low || null),
-      borderColor: 'rgba(0, 94, 184, 0.3)',
-      backgroundColor: 'rgba(0, 94, 184, 0)',
-      borderWidth: 1,
-      borderDash: [2, 2],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.3,
-      fill: false,
-      order: 3
-    },
-    // Sensor 20005 - High boundary
-    {
-      label: 'Sensor 20005 High',
-      data: dates.map(date => data[date]['20005_TL2']?.high || null),
-      borderColor: 'rgba(0, 94, 184, 0.3)',
-      backgroundColor: 'rgba(0, 94, 184, 0.15)',
-      borderWidth: 1,
-      borderDash: [2, 2],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.3,
-      fill: '-1',
-      order: 3
-    },
-    // Sensor 20005 - Average line
-    {
-      label: 'Sensor 20005 Avg',
-      data: dates.map(date => data[date]['20005_TL2']?.avg || null),
-      borderColor: 'rgb(0, 94, 184)',
-      backgroundColor: 'rgb(0, 94, 184)',
+    // Average line
+    datasets.push({
+      label: `${colorInfo.name} Avg`,
+      data: dates.map(date => data[date][sensorId]?.avg || null),
+      borderColor: `rgb(${rgb})`,
+      backgroundColor: `rgb(${rgb})`,
       borderWidth: 2.5,
       pointRadius: 4,
       pointHoverRadius: 6,
       tension: 0.3,
       fill: false,
       order: 1
-    },
-    
-    // Sensor 20006 - Low boundary
-    {
-      label: 'Sensor 20006 Low',
-      data: dates.map(date => data[date]['20006_TL2']?.low || null),
-      borderColor: 'rgba(109, 32, 119, 0.3)',
-      backgroundColor: 'rgba(109, 32, 119, 0)',
-      borderWidth: 1,
-      borderDash: [2, 2],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.3,
-      fill: false,
-      order: 3
-    },
-    // Sensor 20006 - High boundary
-    {
-      label: 'Sensor 20006 High',
-      data: dates.map(date => data[date]['20006_TL2']?.high || null),
-      borderColor: 'rgba(109, 32, 119, 0.3)',
-      backgroundColor: 'rgba(109, 32, 119, 0.15)',
-      borderWidth: 1,
-      borderDash: [2, 2],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0.3,
-      fill: '-1',
-      order: 3
-    },
-    // Sensor 20006 - Average line
-    {
-      label: 'Sensor 20006 Avg',
-      data: dates.map(date => data[date]['20006_TL2']?.avg || null),
-      borderColor: 'rgb(109, 32, 119)',
-      backgroundColor: 'rgb(109, 32, 119)',
-      borderWidth: 2.5,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.3,
-      fill: false,
-      order: 1
-    }
-  ];
+    });
+  });
 
   const chartData = {
     labels: dates.map(date => {
@@ -169,7 +107,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    onClick: (event, elements) => {
+    onClick: (_event, elements) => {
       if (elements.length > 0 && onDateClick) {
         const index = elements[0].index;
         onDateClick(index);
@@ -193,15 +131,15 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
             return item.text.includes('Avg');
           }
         },
-        onClick: function(e, legendItem, legend) {
+        onClick: function(_e, legendItem, legend) {
           const chart = legend.chart;
           const clickedLabel = legendItem.text; // e.g., "Sensor 20004 Avg"
           
-          // Extract sensor identifier (e.g., "20004")
-          let sensorId = '';
-          if (clickedLabel.includes('20004')) sensorId = '20004';
-          else if (clickedLabel.includes('20005')) sensorId = '20005';
-          else if (clickedLabel.includes('20006')) sensorId = '20006';
+          // Extract sensor identifier from label
+          const match = clickedLabel.match(/Sensor (\d+)/);
+          if (!match) return;
+          
+          const sensorNumber = match[1];
           
           // Get the current visibility state of the Avg line (the clicked item)
           const avgDatasetIndex = chart.data.datasets.findIndex(ds => ds.label === clickedLabel);
@@ -210,7 +148,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
           
           // Apply the same state to all datasets of this sensor
           chart.data.datasets.forEach((dataset, index) => {
-            if (dataset.label.includes(sensorId)) {
+            if (dataset.label.includes(`Sensor ${sensorNumber}`)) {
               const meta = chart.getDatasetMeta(index);
               meta.hidden = newHiddenState;
             }
@@ -229,16 +167,21 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
           },
           label: function(context) {
             const datasetLabel = context.dataset.label;
-            const value = context.parsed.y;
             
             // Only show tooltip for Average lines
             if (datasetLabel.includes('Avg')) {
               const sensorName = datasetLabel.replace(' Avg', '');
               const dateIndex = context.dataIndex;
               const date = dates[dateIndex];
-              const sensorId = sensorName.includes('20004') ? '20004_TL2' : 
-                              sensorName.includes('20005') ? '20005_TL2' : '20006_TL2';
+              
+              // Extract sensor ID from label
+              const match = sensorName.match(/Sensor (\d+)/);
+              if (!match) return null;
+              
+              const sensorId = `${match[1]}_TL2`;
               const sensorData = data[date][sensorId];
+              
+              if (!sensorData) return null;
               
               return [
                 `${sensorName}:`,

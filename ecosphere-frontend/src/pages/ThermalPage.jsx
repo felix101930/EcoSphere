@@ -37,6 +37,7 @@ const ThermalPage = () => {
   const [error, setError] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
   const [viewMode, setViewMode] = useState('single'); // 'single' or 'multiple'
+  const [selectedFloor, setSelectedFloor] = useState('basement'); // 'basement' or 'level1'
   const [selectedDate, setSelectedDate] = useState(null);
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
@@ -46,8 +47,20 @@ const ThermalPage = () => {
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [dateRangeError, setDateRangeError] = useState(null);
 
-  // Sensor IDs - use useMemo to maintain stable reference
-  const sensorIds = useMemo(() => ['20004_TL2', '20005_TL2', '20006_TL2'], []);
+  // Floor configurations
+  const floorConfigs = useMemo(() => ({
+    basement: {
+      name: 'Basement',
+      sensorIds: ['20004_TL2', '20005_TL2', '20006_TL2']
+    },
+    level1: {
+      name: 'Level 1',
+      sensorIds: ['20007_TL2', '20008_TL2', '20009_TL2', '20010_TL2', '20011_TL2']
+    }
+  }), []);
+
+  // Get current sensor IDs based on selected floor
+  const sensorIds = useMemo(() => floorConfigs[selectedFloor].sensorIds, [selectedFloor, floorConfigs]);
 
   // Load initial data
   useEffect(() => {
@@ -85,6 +98,58 @@ const ThermalPage = () => {
 
     loadInitialData();
   }, [sensorIds]);
+
+  // Handle floor change
+  const handleFloorChange = async (event, newFloor) => {
+    if (newFloor !== null && newFloor !== selectedFloor) {
+      setSelectedFloor(newFloor);
+      
+      // Reload data for new floor
+      if (viewMode === 'single' && selectedDate) {
+        try {
+          setLoading(true);
+          const year = selectedDate.getFullYear();
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+          const day = String(selectedDate.getDate()).padStart(2, '0');
+          const dateStr = `${year}-${month}-${day}`;
+          
+          const newSensorIds = floorConfigs[newFloor].sensorIds;
+          const data = await ThermalService.getMultipleSensorsDailyData(dateStr, newSensorIds);
+          setDailyData(data);
+          setCurrentTimeIndex(0);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error loading floor data:', err);
+          setError(err.message);
+          setLoading(false);
+        }
+      } else if (viewMode === 'multiple' && dateFrom && dateTo) {
+        // Regenerate chart for new floor if dates are selected
+        try {
+          setLoading(true);
+          const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          };
+
+          const dateFromStr = formatDate(dateFrom);
+          const dateToStr = formatDate(dateTo);
+          const newSensorIds = floorConfigs[newFloor].sensorIds;
+
+          const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, newSensorIds);
+          setAggregatedData(data);
+          setCurrentDateIndex(0);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error loading floor data:', err);
+          setError(err.message);
+          setLoading(false);
+        }
+      }
+    }
+  };
 
   // Handle view mode change
   const handleViewModeChange = (event, newMode) => {
@@ -168,7 +233,7 @@ const ThermalPage = () => {
       const dateFromStr = formatDate(dateFrom);
       const dateToStr = formatDate(dateTo);
 
-      // Load aggregated data
+      // Load aggregated data using current floor's sensor IDs
       const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, sensorIds);
       setAggregatedData(data);
 
@@ -295,6 +360,27 @@ const ThermalPage = () => {
         {/* View Mode Toggle and Date Selection */}
         <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            {/* Floor Selection */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Floor
+              </Typography>
+              <ToggleButtonGroup
+                value={selectedFloor}
+                exclusive
+                onChange={handleFloorChange}
+                aria-label="floor selection"
+                size="small"
+              >
+                <ToggleButton value="basement" aria-label="basement">
+                  Basement
+                </ToggleButton>
+                <ToggleButton value="level1" aria-label="level 1">
+                  Level 1
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
             {/* View Mode Toggle */}
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -435,6 +521,7 @@ const ThermalPage = () => {
         {/* Floor Plan */}
         <ThermalFloorPlan 
           currentData={getCurrentData()}
+          floor={selectedFloor}
         />
 
         {/* Time/Date Slider */}
