@@ -99,9 +99,55 @@ const getMultipleSensorsDailyData = async (req, res) => {
   }
 };
 
+// Get aggregated data for multiple sensors (date range)
+const getMultipleSensorsAggregatedData = async (req, res) => {
+  try {
+    const { dateFrom, dateTo } = req.params;
+    const sensorIds = req.query.sensors ? req.query.sensors.split(',') : ['20004_TL2', '20005_TL2', '20006_TL2'];
+    
+    if (!dateFrom || !dateTo) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing dateFrom or dateTo parameter'
+      });
+    }
+    
+    // Calculate date difference
+    const from = new Date(dateFrom);
+    const to = new Date(dateTo);
+    const diffDays = Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Limit to 30 days
+    if (diffDays > 30) {
+      return res.status(400).json({
+        success: false,
+        error: 'Date range cannot exceed 30 days'
+      });
+    }
+    
+    const data = await ThermalService.getMultipleSensorsAggregatedData(sensorIds, dateFrom, dateTo);
+    
+    res.json({
+      success: true,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      days: diffDays,
+      sensors: sensorIds,
+      data: data
+    });
+  } catch (error) {
+    console.error('Error in getMultipleSensorsAggregatedData:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch aggregated data'
+    });
+  }
+};
+
 module.exports = {
   getAvailableDates,
   getLastCompleteDate,
   getDailyData,
-  getMultipleSensorsDailyData
+  getMultipleSensorsDailyData,
+  getMultipleSensorsAggregatedData
 };

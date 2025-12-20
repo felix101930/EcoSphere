@@ -103,6 +103,98 @@ class ThermalService {
   }
 
   /**
+   * Get aggregated data for multiple days (High/Low/Avg/Open/Close per day)
+   */
+  static async getAggregatedData(sensorId, dateFrom, dateTo) {
+    const fullTableName = sensorId.startsWith('SaitSolarLab_') 
+      ? sensorId 
+      : `SaitSolarLab_${sensorId}`;
+    
+    // Get aggregated data with open (00:00) and close (23:45)
+    const query = `SELECT CONVERT(varchar, ts, 23) as date, MAX(value) as high, MIN(value) as low, AVG(value) as avg, MIN(CASE WHEN DATEPART(hour, ts) = 0 AND DATEPART(minute, ts) = 0 THEN value END) as [open], MAX(CASE WHEN DATEPART(hour, ts) = 23 AND DATEPART(minute, ts) = 45 THEN value END) as [close] FROM [${fullTableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY CONVERT(varchar, ts, 23) ORDER BY date`;
+    
+    let authParams = '-E';
+    if (DB_USER && DB_PASSWORD) {
+      authParams = `-U ${DB_USER} -P ${DB_PASSWORD}`;
+    }
+    
+    const command = `sqlcmd -S ${DB_SERVER} ${authParams} -d ${DB_DATABASE} -Q "${query}" -s "," -W -h -1`;
+    
+    try {
+      const { stdout } = await execPromise(command);
+      
+      const lines = stdout.trim().split('\n').filter(line => {
+        const trimmed = line.trim();
+        return trimmed && 
+               !trimmed.includes('rows affected') && 
+               !trimmed.includes('Msg ') &&
+               !trimmed.startsWith('(');
+      });
+      
+      const results = lines.map(line => {
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length >= 6) {
+          const open = parts[4] === 'NULL' ? null : parseFloat(parts[4]);
+          const close = parts[5] === 'NULL' ? null : parseFloat(parts[5]);
+          return {
+            date: parts[0],
+            high: parseFloat(parts[1]),
+            low: parseFloat(parts[2]),
+            avg: parseFloat(parts[3]),
+            open: open !== null ? open : parseFloat(parts[2]), // fallback to low if no 00:00 reading
+            close: close !== null ? close : parseFloat(parts[1]) // fallback to high if no 23:45 reading
+          };
+        }
+        return null;
+      }).filter(item => item !== null);
+      
+      return results;
+    } catch (error) {
+      console.error('Error getting aggregated data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get aggregated data for multiple sensors
+   */
+  static async getMultipleSensorsAggregatedData(sensorIds, dateFrom, dateTo) {
+    try {
+      const dataPromises = sensorIds.map(sensorId => 
+        this.getAggregatedData(sensorId, dateFrom, dateTo).catch(err => {
+          console.error(`Error for sensor ${sensorId}:`, err.message);
+          return [];
+        })
+      );
+      
+      const results = await Promise.all(dataPromises);
+      
+      // Organize data by date
+      const dataByDate = {};
+      
+      sensorIds.forEach((sensorId, index) => {
+        results[index].forEach(dayData => {
+          if (!dataByDate[dayData.date]) {
+            dataByDate[dayData.date] = {};
+          }
+          dataByDate[dayData.date][sensorId] = {
+            high: dayData.high,
+            low: dayData.low,
+            avg: dayData.avg,
+            open: dayData.open,
+            close: dayData.close
+          };
+        });
+      });
+      
+      return dataByDate;
+    } catch (error) {
+      console.error('Error getting multiple sensors aggregated data:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Get the last available date with complete data
    */
   static async getLastCompleteDate(sensorId = '20004_TL2') {

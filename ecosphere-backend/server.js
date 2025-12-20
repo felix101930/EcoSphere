@@ -100,6 +100,7 @@ if (process.env.NODE_ENV !== "production") {
     );
     console.log(`📁 Users file: ${config.usersFile}`);
     console.log(`🌍 Environment: ${config.env}`);
+    console.log(`🔧 Thermal routes loaded: /api/thermal/*`);
   });
 }
 

@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 
-const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime }) => {
+const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Auto-play functionality
@@ -23,10 +23,10 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime 
         }
         return prev + 1;
       });
-    }, 500); // Move forward every 0.5 seconds
+    }, mode === 'single' ? 500 : 1000); // Slower for date mode
 
     return () => clearInterval(interval);
-  }, [isPlaying, maxIndex, onIndexChange]);
+  }, [isPlaying, maxIndex, onIndexChange, mode]);
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -47,19 +47,36 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime 
     onIndexChange(newValue);
   };
 
-  // Generate time marks
-  const marks = [
-    { value: 0, label: '00:00' },
-    { value: 24, label: '06:00' },
-    { value: 48, label: '12:00' },
-    { value: 72, label: '18:00' },
-    { value: 95, label: '23:45' }
-  ];
+  // Generate marks based on mode
+  const generateMarks = () => {
+    if (mode === 'single') {
+      return [
+        { value: 0, label: '00:00' },
+        { value: 24, label: '06:00' },
+        { value: 48, label: '12:00' },
+        { value: 72, label: '18:00' },
+        { value: 95, label: '23:45' }
+      ];
+    } else {
+      // For multiple days mode, show marks at intervals
+      const marks = [];
+      const step = Math.max(1, Math.floor(maxIndex / 5));
+      for (let i = 0; i <= maxIndex; i += step) {
+        marks.push({ value: i, label: `Day ${i + 1}` });
+      }
+      if (marks[marks.length - 1].value !== maxIndex) {
+        marks.push({ value: maxIndex, label: `Day ${maxIndex + 1}` });
+      }
+      return marks;
+    }
+  };
+
+  const marks = generateMarks();
 
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h6" gutterBottom>
-        ⏱️ Time Control
+        {mode === 'single' ? '⏱️ Time Control' : '📅 Date Control'}
       </Typography>
       
       {/* Control buttons */}
@@ -100,7 +117,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime 
         </IconButton>
 
         <Typography variant="body1" sx={{ ml: 2, fontWeight: 'bold' }}>
-          Time: {currentTime}
+          {mode === 'single' ? `Time: ${currentTime}` : `Date: ${currentTime}`}
         </Typography>
       </Box>
 
@@ -115,9 +132,13 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime 
           onChange={handleSliderChange}
           valueLabelDisplay="auto"
           valueLabelFormat={(value) => {
-            const hours = Math.floor(value / 4);
-            const minutes = (value % 4) * 15;
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            if (mode === 'single') {
+              const hours = Math.floor(value / 4);
+              const minutes = (value % 4) * 15;
+              return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            } else {
+              return `Day ${value + 1}`;
+            }
           }}
           sx={{
             '& .MuiSlider-thumb': {

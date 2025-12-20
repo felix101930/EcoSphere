@@ -55,6 +55,24 @@ class ThermalService {
   }
 
   /**
+   * Get aggregated data for multiple sensors (date range)
+   */
+  async getAggregatedData(dateFrom, dateTo, sensorIds = ['20004_TL2', '20005_TL2', '20006_TL2']) {
+    try {
+      const sensorsParam = encodeURIComponent(sensorIds.join(','));
+      const response = await fetch(`${API_BASE_URL}/aggregated/${dateFrom}/${dateTo}?sensors=${sensorsParam}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch aggregated data');
+      }
+      const result = await response.json();
+      return result.data || {};
+    } catch (error) {
+      console.error('Error fetching aggregated data:', error);
+      return {};
+    }
+  }
+
+  /**
    * Format temperature to 1 decimal place
    */
   formatTemperature(temp) {

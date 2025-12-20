@@ -5,7 +5,8 @@ const {
   getAvailableDates,
   getLastCompleteDate,
   getDailyData,
-  getMultipleSensorsDailyData
+  getMultipleSensorsDailyData,
+  getMultipleSensorsAggregatedData
 } = require('../controllers/thermalController');
 
 // Get available dates
@@ -19,5 +20,8 @@ router.get('/daily/:sensorId/:date', getDailyData);
 
 // Get daily data for multiple sensors
 router.get('/daily-multiple/:date', getMultipleSensorsDailyData);
+
+// Get aggregated data for multiple sensors (date range)
+router.get('/aggregated/:dateFrom/:dateTo', getMultipleSensorsAggregatedData);
 
 module.exports = router;

@@ -1,10 +1,12 @@
 // Thermal Page - Main thermal dashboard
-import { useState, useEffect } from 'react';
-import { Box, CircularProgress, Alert, TextField } from '@mui/material';
+import { useState, useEffect, useMemo } from 'react';
+import { Box, CircularProgress, Alert, TextField, ToggleButton, ToggleButtonGroup, Typography, Button } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PageHeader from '../components/Common/PageHeader';
 import ThermalTrendChart from '../components/Thermal/ThermalTrendChart';
+import ThermalCandlestickChart from '../components/Thermal/ThermalCandlestickChart';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
 import ThermalTimeSlider from '../components/Thermal/ThermalTimeSlider';
 import ThermalService from '../services/ThermalService';
@@ -34,12 +36,18 @@ const ThermalPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
+  const [viewMode, setViewMode] = useState('single'); // 'single' or 'multiple'
   const [selectedDate, setSelectedDate] = useState(null);
+  const [dateFrom, setDateFrom] = useState(null);
+  const [dateTo, setDateTo] = useState(null);
   const [dailyData, setDailyData] = useState({});
+  const [aggregatedData, setAggregatedData] = useState({});
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
+  const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  const [dateRangeError, setDateRangeError] = useState(null);
 
-  // Sensor IDs
-  const sensorIds = ['20004_TL2', '20005_TL2', '20006_TL2'];
+  // Sensor IDs - use useMemo to maintain stable reference
+  const sensorIds = useMemo(() => ['20004_TL2', '20005_TL2', '20006_TL2'], []);
 
   // Load initial data
   useEffect(() => {
@@ -76,9 +84,26 @@ const ThermalPage = () => {
     };
 
     loadInitialData();
-  }, []);
+  }, [sensorIds]);
 
-  // Load data when date changes
+  // Handle view mode change
+  const handleViewModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setViewMode(newMode);
+      setDateRangeError(null);
+      
+      // Reset data when switching modes
+      if (newMode === 'single') {
+        setDateFrom(null);
+        setDateTo(null);
+        setAggregatedData({});
+      } else {
+        setDailyData({});
+      }
+    }
+  };
+
+  // Load data when date changes (Single Day mode)
   const handleDateChange = async (newDate) => {
     if (!newDate) return;
 
@@ -107,6 +132,57 @@ const ThermalPage = () => {
     }
   };
 
+  // Generate chart for Multiple Days mode
+  const handleGenerateChart = async () => {
+    // Validate both dates are selected
+    if (!dateFrom || !dateTo) {
+      setDateRangeError('Please select both From and To dates');
+      return;
+    }
+
+    // Validate date range
+    const daysDiff = Math.ceil((dateTo - dateFrom) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff < 0) {
+      setDateRangeError('From date must be before To date');
+      return;
+    }
+    
+    if (daysDiff > 30) {
+      setDateRangeError('Date range cannot exceed 30 days');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setDateRangeError(null);
+
+      // Format dates as YYYY-MM-DD
+      const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      const dateFromStr = formatDate(dateFrom);
+      const dateToStr = formatDate(dateTo);
+
+      // Load aggregated data
+      const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, sensorIds);
+      setAggregatedData(data);
+
+      // Reset to first date index
+      setCurrentDateIndex(0);
+
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading aggregated data:', err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
   // Check if date should be disabled
   const shouldDisableDate = (date) => {
     const year = date.getFullYear();
@@ -116,21 +192,39 @@ const ThermalPage = () => {
     return !availableDates.includes(dateStr);
   };
 
-  // Get current data for the selected time index
+  // Get current data for the selected time index (Single Day mode)
   const getCurrentData = () => {
-    const currentData = {};
-    sensorIds.forEach(sensorId => {
-      const sensorData = dailyData[sensorId];
-      if (sensorData && sensorData[currentTimeIndex]) {
-        currentData[sensorId] = sensorData[currentTimeIndex].value;
-      } else {
-        currentData[sensorId] = null;
+    if (viewMode === 'single') {
+      const currentData = {};
+      sensorIds.forEach(sensorId => {
+        const sensorData = dailyData[sensorId];
+        if (sensorData && sensorData[currentTimeIndex]) {
+          currentData[sensorId] = sensorData[currentTimeIndex].value;
+        } else {
+          currentData[sensorId] = null;
+        }
+      });
+      return currentData;
+    } else {
+      // Multiple Days mode - show average for selected date
+      const dates = Object.keys(aggregatedData).sort();
+      if (dates.length > 0 && dates[currentDateIndex]) {
+        const selectedDateData = aggregatedData[dates[currentDateIndex]];
+        const currentData = {};
+        sensorIds.forEach(sensorId => {
+          if (selectedDateData[sensorId]) {
+            currentData[sensorId] = selectedDateData[sensorId].avg;
+          } else {
+            currentData[sensorId] = null;
+          }
+        });
+        return currentData;
       }
-    });
-    return currentData;
+      return {};
+    }
   };
 
-  // Get current time string
+  // Get current time string (Single Day mode)
   const getCurrentTime = () => {
     const sensorData = dailyData['20004_TL2'];
     if (sensorData && sensorData[currentTimeIndex]) {
@@ -139,12 +233,28 @@ const ThermalPage = () => {
     return '00:00';
   };
 
-  // Handle time click from chart
+  // Get current date string (Multiple Days mode)
+  const getCurrentDate = () => {
+    const dates = Object.keys(aggregatedData).sort();
+    if (dates.length > 0 && dates[currentDateIndex]) {
+      const date = new Date(dates[currentDateIndex] + 'T00:00:00');
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    return '';
+  };
+
+  // Handle time click from chart (Single Day mode)
   const handleTimeClick = (index) => {
     setCurrentTimeIndex(index);
   };
 
-  const maxIndex = (dailyData['20004_TL2']?.length || 1) - 1;
+  // Handle date click from chart (Multiple Days mode)
+  const handleDateClick = (index) => {
+    setCurrentDateIndex(index);
+  };
+
+  const maxTimeIndex = (dailyData['20004_TL2']?.length || 1) - 1;
+  const maxDateIndex = (Object.keys(aggregatedData).length || 1) - 1;
 
   if (loading && !selectedDate) {
     return (
@@ -182,44 +292,158 @@ const ThermalPage = () => {
       />
       
       <Box sx={{ px: 4, py: 3 }}>
-        {/* Date Picker */}
+        {/* View Mode Toggle and Date Selection */}
         <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Select Date"
-              value={selectedDate}
-              onChange={handleDateChange}
-              shouldDisableDate={shouldDisableDate}
-              minDate={new Date('2019-01-01')}
-              maxDate={new Date('2020-11-07')}
-              renderInput={(params) => <TextField {...params} />}
-              slotProps={{
-                textField: {
-                  fullWidth: false,
-                  sx: { maxWidth: 300 }
-                }
-              }}
-            />
-          </LocalizationProvider>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+            {/* View Mode Toggle */}
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                View Mode
+              </Typography>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                aria-label="view mode"
+                size="small"
+              >
+                <ToggleButton value="single" aria-label="single day">
+                  Single Day
+                </ToggleButton>
+                <ToggleButton value="multiple" aria-label="multiple days">
+                  Multiple Days
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
+            {/* Date Picker(s) */}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              {viewMode === 'single' ? (
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Select Date
+                  </Typography>
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    shouldDisableDate={shouldDisableDate}
+                    minDate={new Date('2019-01-01')}
+                    maxDate={new Date('2020-11-07')}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        sx: { width: 200 }
+                      }
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      From Date
+                    </Typography>
+                    <DatePicker
+                      value={dateFrom}
+                      onChange={setDateFrom}
+                      shouldDisableDate={shouldDisableDate}
+                      minDate={new Date('2019-01-01')}
+                      maxDate={dateTo || new Date('2020-11-07')}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          sx: { width: 180 }
+                        }
+                      }}
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      To Date
+                    </Typography>
+                    <DatePicker
+                      value={dateTo}
+                      onChange={setDateTo}
+                      shouldDisableDate={shouldDisableDate}
+                      minDate={dateFrom || new Date('2019-01-01')}
+                      maxDate={new Date('2020-11-07')}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          sx: { width: 180 }
+                        }
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    startIcon={<TrendingUpIcon />}
+                    onClick={handleGenerateChart}
+                    disabled={loading}
+                    sx={{ height: 40 }}
+                  >
+                    Generate Chart
+                  </Button>
+                </Box>
+              )}
+            </LocalizationProvider>
+          </Box>
+
+          {/* Date Range Error */}
+          {dateRangeError && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              {dateRangeError}
+            </Alert>
+          )}
+
+          {/* Info Text */}
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+            {viewMode === 'single' 
+              ? 'View 15-minute interval data for a single day'
+              : 'View daily Open/High/Low/Close candlestick chart for up to 30 days'}
+          </Typography>
         </Box>
 
-        {/* Trend Chart */}
-        <ThermalTrendChart 
-          data={dailyData}
-          onTimeClick={handleTimeClick}
-        />
+        {/* Chart - Show different chart based on view mode */}
+        {viewMode === 'single' ? (
+          <ThermalTrendChart 
+            data={dailyData}
+            onTimeClick={handleTimeClick}
+          />
+        ) : (
+          Object.keys(aggregatedData).length > 0 ? (
+            <ThermalCandlestickChart 
+              data={aggregatedData}
+              onDateClick={handleDateClick}
+            />
+          ) : (
+            <Box sx={{ 
+              p: 4, 
+              bgcolor: 'white', 
+              borderRadius: 1, 
+              boxShadow: 1, 
+              textAlign: 'center',
+              mb: 3
+            }}>
+              <Typography variant="body1" color="text.secondary">
+                Select date range and click "Generate Chart" to view data
+              </Typography>
+            </Box>
+          )
+        )}
 
         {/* Floor Plan */}
         <ThermalFloorPlan 
           currentData={getCurrentData()}
         />
 
-        {/* Time Slider */}
+        {/* Time/Date Slider */}
         <ThermalTimeSlider
-          currentIndex={currentTimeIndex}
-          maxIndex={maxIndex}
-          onIndexChange={setCurrentTimeIndex}
-          currentTime={getCurrentTime()}
+          currentIndex={viewMode === 'single' ? currentTimeIndex : currentDateIndex}
+          maxIndex={viewMode === 'single' ? maxTimeIndex : maxDateIndex}
+          onIndexChange={viewMode === 'single' ? setCurrentTimeIndex : setCurrentDateIndex}
+          currentTime={viewMode === 'single' ? getCurrentTime() : getCurrentDate()}
+          mode={viewMode}
         />
       </Box>
     </>
