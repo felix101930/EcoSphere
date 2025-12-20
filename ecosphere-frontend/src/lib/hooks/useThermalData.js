@@ -26,20 +26,24 @@ export const useThermalData = (selectedFloor) => {
         setLoading(true);
         setError(null);
 
-        // Get last complete date
-        const lastDate = await ThermalService.getLastCompleteDate();
-        
-        // Get available dates
+        // Get available dates first
         const dates = await ThermalService.getAvailableDates();
         setAvailableDates(dates);
 
-        // Set selected date
-        const dateObj = new Date(lastDate + 'T00:00:00');
+        if (dates.length === 0) {
+          throw new Error('No available dates found');
+        }
+
+        // Use the last available date as default
+        const lastDateStr = dates[dates.length - 1];
+        
+        // Create date object
+        const dateObj = new Date(lastDateStr + 'T00:00:00');
         setSelectedDate(dateObj);
 
         // Load data for that date using initial floor
         const initialSensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
-        const data = await ThermalService.getMultipleSensorsDailyData(lastDate, initialSensorIds);
+        const data = await ThermalService.getMultipleSensorsDailyData(lastDateStr, initialSensorIds);
         setDailyData(data);
 
         setLoading(false);

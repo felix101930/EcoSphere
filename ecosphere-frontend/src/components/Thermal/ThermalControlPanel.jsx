@@ -96,8 +96,6 @@ const ThermalControlPanel = ({
                 value={selectedDate}
                 onChange={onDateChange}
                 shouldDisableDate={shouldDisableDate}
-                minDate={new Date(DATE_CONFIG.MIN_DATE)}
-                maxDate={new Date(DATE_CONFIG.MAX_DATE)}
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -116,8 +114,7 @@ const ThermalControlPanel = ({
                   value={dateFrom}
                   onChange={onDateFromChange}
                   shouldDisableDate={shouldDisableDate}
-                  minDate={new Date(DATE_CONFIG.MIN_DATE)}
-                  maxDate={dateTo || new Date(DATE_CONFIG.MAX_DATE)}
+                  maxDate={dateTo || undefined}
                   slotProps={{
                     textField: {
                       size: 'small',
@@ -134,8 +131,7 @@ const ThermalControlPanel = ({
                   value={dateTo}
                   onChange={onDateToChange}
                   shouldDisableDate={shouldDisableDate}
-                  minDate={dateFrom || new Date(DATE_CONFIG.MIN_DATE)}
-                  maxDate={new Date(DATE_CONFIG.MAX_DATE)}
+                  minDate={dateFrom || undefined}
                   slotProps={{
                     textField: {
                       size: 'small',

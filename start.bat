@@ -14,10 +14,10 @@ if %errorlevel% equ 0 (
 )
 timeout /t 1 /nobreak >nul
 
-REM Clean up ports (optional - kills any process using ports 3001 and 5174)
-echo [2/4] Cleaning up ports 3001 and 5174...
+REM Clean up ports (optional - kills any process using ports 3001 and 5173)
+echo [2/4] Cleaning up ports 3001 and 5173...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3001') do taskkill /F /PID %%a >nul 2>&1
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5174') do taskkill /F /PID %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173') do taskkill /F /PID %%a >nul 2>&1
 echo Ports cleaned
 timeout /t 1 /nobreak >nul
 
@@ -38,7 +38,7 @@ echo ========================================
 echo   Services Starting...
 echo ========================================
 echo Backend:  http://localhost:3001
-echo Frontend: http://localhost:5174
+echo Frontend: http://localhost:5173
 echo.
 echo Login Credentials:
 echo   Email:    super.admin@edu.sait.ca

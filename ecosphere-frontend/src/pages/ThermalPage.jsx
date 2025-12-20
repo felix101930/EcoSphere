@@ -14,7 +14,9 @@ import { useTimeControl } from '../lib/hooks/useTimeControl';
 const ThermalPage = () => {
   // View mode state
   const [viewMode, setViewMode] = useState(VIEW_MODES.SINGLE);
-  const [selectedFloor, setSelectedFloor] = useState('basement'); // Move floor state here
+  const [selectedFloor, setSelectedFloor] = useState('basement');
+  
+  // Multiple Days mode state (separate from Single Day)
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [dateRangeError, setDateRangeError] = useState(null);
@@ -32,11 +34,8 @@ const ThermalPage = () => {
     loadSingleDayData,
     loadMultipleDaysData,
     validateDateRange,
-    clearMultipleDaysData,
-    clearSingleDayData
+    setSelectedDate
   } = useThermalData(selectedFloor);
-
-  // Time control hook
   const timeControl = useTimeControl(
     viewMode,
     dailyData,
@@ -72,18 +71,55 @@ const ThermalPage = () => {
   const { handleFloorChange } = floorManagement;
 
   // Handle view mode change
-  const handleViewModeChange = (_event, newMode) => {
+  const handleViewModeChange = async (_event, newMode) => {
     if (newMode !== null) {
       setViewMode(newMode);
       setDateRangeError(null);
       
-      // Reset data when switching modes
       if (newMode === VIEW_MODES.SINGLE) {
-        setDateFrom(null);
-        setDateTo(null);
-        clearMultipleDaysData();
+        // Switching to Single Day - selectedDate already has the last selected date
+        // Just reload the data if needed
+        if (selectedDate && sensorIds) {
+          try {
+            await loadSingleDayData(selectedDate, sensorIds);
+            resetTimeIndex();
+          } catch {
+            // Error already handled in hook
+          }
+        }
       } else {
-        clearSingleDayData();
+        // Switching to Multiple Days - set default range if not set
+        if (!dateFrom || !dateTo) {
+          if (availableDates.length > 0) {
+            // Get the last available date
+            const lastDateStr = availableDates[availableDates.length - 1];
+            const lastDate = new Date(lastDateStr + 'T00:00:00');
+            
+            // Calculate 5 days before (or use earliest available date)
+            const daysToGoBack = Math.min(4, availableDates.length - 1);
+            const fromDateStr = availableDates[availableDates.length - 1 - daysToGoBack];
+            const fromDate = new Date(fromDateStr + 'T00:00:00');
+            
+            setDateFrom(fromDate);
+            setDateTo(lastDate);
+            
+            // Auto-load data for the default range
+            try {
+              await loadMultipleDaysData(fromDate, lastDate, sensorIds);
+              resetTimeIndex();
+            } catch {
+              // Error already handled in hook
+            }
+          }
+        } else {
+          // Reload Multiple Days data with saved range
+          try {
+            await loadMultipleDaysData(dateFrom, dateTo, sensorIds);
+            resetTimeIndex();
+          } catch {
+            // Error already handled in hook
+          }
+        }
       }
     }
   };
@@ -94,6 +130,7 @@ const ThermalPage = () => {
 
     try {
       await loadSingleDayData(newDate, sensorIds);
+      setSelectedDate(newDate);
       resetTimeIndex();
     } catch {
       // Error already handled in hook
@@ -171,7 +208,7 @@ const ThermalPage = () => {
           onFloorChange={handleFloorChange}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          selectedDate={selectedDate}
+          selectedDate={viewMode === VIEW_MODES.SINGLE ? selectedDate : null}
           dateFrom={dateFrom}
           dateTo={dateTo}
           onDateChange={handleDateChange}
