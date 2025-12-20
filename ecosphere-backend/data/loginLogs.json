@@ -699,6 +699,16 @@
       "failureReason": null,
       "ipAddress": "154.84.135.6",
       "logoutTimestamp": null
+    },
+    {
+      "id": 71,
+      "timestamp": "2025-12-20 11:10:15",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "34.0.34.252",
+      "logoutTimestamp": null
     }
   ]
 }
