@@ -7,6 +7,7 @@ import {
   SkipNext as NextIcon
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
+import { TIME_CONTROL_CONFIG, UI_CONFIG } from '../../lib/constants/thermal';
 
 const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [], detailData = {}, sensorIds = [], loading = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -23,7 +24,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         }
         return prev + 1;
       });
-    }, 500); // Same speed for both modes (15-min intervals)
+    }, TIME_CONTROL_CONFIG.ANIMATION_SPEED_SINGLE); // Same speed for both modes
 
     return () => clearInterval(interval);
   }, [isPlaying, maxIndex, onIndexChange]);
@@ -50,13 +51,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
   // Generate marks based on mode
   const generateMarks = () => {
     if (mode === 'single') {
-      return [
-        { value: 0, label: '00:00' },
-        { value: 24, label: '06:00' },
-        { value: 48, label: '12:00' },
-        { value: 72, label: '18:00' },
-        { value: 95, label: '23:45' }
-      ];
+      return TIME_CONTROL_CONFIG.SINGLE_DAY_MARKS;
     } else {
       // For multiple days mode, show date marks at day boundaries
       if (dateList.length === 0 || Object.keys(detailData).length === 0) return [];

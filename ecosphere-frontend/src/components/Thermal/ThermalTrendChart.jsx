@@ -2,25 +2,9 @@
 import { Box, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import ThermalService from '../../services/ThermalService';
+import { SENSOR_COLORS, getSensorColor, getSensorName } from '../../lib/constants/thermal';
 
 const ThermalTrendChart = ({ data, onTimeClick }) => {
-  // Define colors for sensors (SAIT colors + additional colors)
-  const sensorColors = {
-    '20004_TL2': { border: 'rgb(218, 41, 28)', bg: 'rgba(218, 41, 28, 0.1)' },      // Red
-    '20005_TL2': { border: 'rgb(0, 94, 184)', bg: 'rgba(0, 94, 184, 0.1)' },        // Blue
-    '20006_TL2': { border: 'rgb(109, 32, 119)', bg: 'rgba(109, 32, 119, 0.1)' },    // Purple
-    '20007_TL2': { border: 'rgb(0, 166, 81)', bg: 'rgba(0, 166, 81, 0.1)' },        // Green
-    '20008_TL2': { border: 'rgb(255, 105, 0)', bg: 'rgba(255, 105, 0, 0.1)' },      // Orange
-    '20009_TL2': { border: 'rgb(255, 193, 7)', bg: 'rgba(255, 193, 7, 0.1)' },      // Yellow
-    '20010_TL2': { border: 'rgb(156, 39, 176)', bg: 'rgba(156, 39, 176, 0.1)' },    // Magenta
-    '20011_TL2': { border: 'rgb(0, 188, 212)', bg: 'rgba(0, 188, 212, 0.1)' },      // Cyan
-    '20012_TL2': { border: 'rgb(233, 30, 99)', bg: 'rgba(233, 30, 99, 0.1)' },      // Pink
-    '20013_TL2': { border: 'rgb(103, 58, 183)', bg: 'rgba(103, 58, 183, 0.1)' },    // Deep Purple
-    '20014_TL2': { border: 'rgb(63, 81, 181)', bg: 'rgba(63, 81, 181, 0.1)' },      // Indigo
-    '20015_TL2': { border: 'rgb(0, 150, 136)', bg: 'rgba(0, 150, 136, 0.1)' },      // Teal
-    '20016_TL2': { border: 'rgb(205, 220, 57)', bg: 'rgba(205, 220, 57, 0.1)' }     // Lime
-  };
-
   // Get available sensor IDs from data
   const availableSensorIds = Object.keys(data).filter(key => data[key] && data[key].length > 0);
   
@@ -31,13 +15,13 @@ const ThermalTrendChart = ({ data, onTimeClick }) => {
   // Create datasets dynamically
   const datasets = availableSensorIds.map(sensorId => {
     const sensorNumber = sensorId.replace('_TL2', '');
-    const colors = sensorColors[sensorId] || { border: 'rgb(128, 128, 128)', bg: 'rgba(128, 128, 128, 0.1)' };
+    const rgb = getSensorColor(sensorId, 'rgb');
     
     return {
       label: `${sensorNumber} Temperature`,
       data: data[sensorId].map(record => record.value),
-      borderColor: colors.border,
-      backgroundColor: colors.bg,
+      borderColor: `rgb(${rgb})`,
+      backgroundColor: `rgba(${rgb}, 0.1)`,
       tension: 0.4,
       pointRadius: 2,
       pointHoverRadius: 5

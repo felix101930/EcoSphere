@@ -4,48 +4,20 @@ import basementPlan from '../../assets/floorplan/basement.png';
 import level1Plan from '../../assets/floorplan/level1.png';
 import level2Plan from '../../assets/floorplan/level2.png';
 import ThermalService from '../../services/ThermalService';
+import { FLOOR_CONFIGS, SENSOR_POSITIONS, TEMPERATURE_CONFIG } from '../../lib/constants/thermal';
 
 const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
-  // Floor configurations
-  const floorConfigs = {
-    basement: {
-      name: 'Basement',
-      image: basementPlan,
-      sensorIds: ['20004', '20005', '20006'],
-      positions: {
-        '20004': { top: '18%', right: '8%', width: '180px', height: '100px' },
-        '20005': { top: '48%', left: '12%', width: '280px', height: '180px' },
-        '20006': { top: '52%', right: '20%', width: '240px', height: '140px' }
-      }
-    },
-    level1: {
-      name: 'Level 1',
-      image: level1Plan,
-      sensorIds: ['20007', '20008', '20009', '20010', '20011'],
-      positions: {
-        '20007': { top: '42%', left: '8%', width: '200px', height: '120px' },
-        '20008': { top: '68%', left: '8%', width: '200px', height: '120px' },
-        '20009': { top: '68%', left: '42%', width: '200px', height: '120px' },
-        '20010': { top: '30%', right: '8%', width: '200px', height: '120px' },
-        '20011': { top: '12%', left: '42%', width: '200px', height: '120px' }
-      }
-    },
-    level2: {
-      name: 'Level 2',
-      image: level2Plan,
-      sensorIds: ['20012', '20013', '20014', '20015', '20016'],
-      positions: {
-        '20012': { top: '35%', left: '8%', width: '200px', height: '120px' },
-        '20013': { top: '15%', left: '42%', width: '200px', height: '120px' },
-        '20014': { top: '35%', right: '8%', width: '200px', height: '120px' },
-        '20015': { top: '65%', left: '42%', width: '200px', height: '120px' },
-        '20016': { top: '65%', left: '15%', width: '200px', height: '120px' }
-      }
-    }
+  // Floor image mapping
+  const floorImages = {
+    basement: basementPlan,
+    level1: level1Plan,
+    level2: level2Plan
   };
 
-  const currentFloor = floorConfigs[floor];
-  const sensorPositions = currentFloor.positions;
+  // Get current floor configuration
+  const currentFloor = FLOOR_CONFIGS[floor];
+  const sensorPositions = SENSOR_POSITIONS[floor];
+  const floorImage = floorImages[floor];
 
   const renderSensorBox = (sensorId, temp, position) => {
     const color = ThermalService.getColorByTemp(temp);
@@ -91,7 +63,7 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
             textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
           }}
         >
-          {displayTemp}°C
+          {displayTemp}{TEMPERATURE_CONFIG.UNIT}
         </Typography>
       </Box>
     );
@@ -100,10 +72,10 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        🏢 {currentFloor.name} Floor Plan
+        🏢 {currentFloor.displayName} Floor Plan
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Temperature distribution across {currentFloor.name.toLowerCase()} sensors
+        Temperature distribution across {currentFloor.displayName.toLowerCase()} sensors
       </Typography>
       
       {/* Floor plan container */}
@@ -118,8 +90,8 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
       >
         {/* Background floor plan image */}
         <img 
-          src={currentFloor.image} 
-          alt={`${currentFloor.name} Floor Plan`}
+          src={floorImage} 
+          alt={`${currentFloor.displayName} Floor Plan`}
           style={{ 
             width: '100%', 
             height: 'auto', 
@@ -130,37 +102,20 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
         
         {/* Temperature overlay boxes */}
         {currentFloor.sensorIds.map(sensorId => {
-          const temp = currentData[`${sensorId}_TL2`] || null;
-          return renderSensorBox(sensorId, temp, sensorPositions[sensorId]);
+          const sensorNumber = sensorId.replace('_TL2', '');
+          const temp = currentData[sensorId] || null;
+          return renderSensorBox(sensorNumber, temp, sensorPositions[sensorNumber]);
         })}
       </Box>
 
       {/* Color legend */}
       <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#0066FF', border: '1px solid #333' }} />
-          <Typography variant="caption">&lt; 20°C</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#00CCFF', border: '1px solid #333' }} />
-          <Typography variant="caption">20-22°C</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#00FF00', border: '1px solid #333' }} />
-          <Typography variant="caption">22-23°C</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#FFFF00', border: '1px solid #333' }} />
-          <Typography variant="caption">23-24°C</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#FF9900', border: '1px solid #333' }} />
-          <Typography variant="caption">24-25°C</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 20, height: 20, bgcolor: '#FF3300', border: '1px solid #333' }} />
-          <Typography variant="caption">&gt; 25°C</Typography>
-        </Box>
+        {TEMPERATURE_CONFIG.RANGES.map((range, index) => (
+          <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ width: 20, height: 20, bgcolor: range.color, border: '1px solid #333' }} />
+            <Typography variant="caption">{range.label}</Typography>
+          </Box>
+        ))}
       </Box>
     </Box>
   );

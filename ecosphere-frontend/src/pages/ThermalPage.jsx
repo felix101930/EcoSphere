@@ -11,6 +11,14 @@ import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
 import ThermalTimeSlider from '../components/Thermal/ThermalTimeSlider';
 import ThermalService from '../services/ThermalService';
 import {
+  FLOOR_CONFIGS,
+  VIEW_MODES,
+  VIEW_MODE_LABELS,
+  DATE_CONFIG,
+  DEFAULTS,
+  UI_CONFIG
+} from '../lib/constants/thermal';
+import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -36,37 +44,21 @@ const ThermalPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
-  const [viewMode, setViewMode] = useState('single'); // 'single' or 'multiple'
-  const [selectedFloor, setSelectedFloor] = useState('basement'); // 'basement' or 'level1'
+  const [viewMode, setViewMode] = useState(DEFAULTS.VIEW_MODE);
+  const [selectedFloor, setSelectedFloor] = useState(DEFAULTS.FLOOR);
   const [selectedDate, setSelectedDate] = useState(null);
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [dailyData, setDailyData] = useState({});
   const [aggregatedData, setAggregatedData] = useState({});
-  const [multipleDaysDetailData, setMultipleDaysDetailData] = useState({}); // Store detailed 15-min data for multiple days
-  const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
+  const [multipleDaysDetailData, setMultipleDaysDetailData] = useState({});
+  const [currentTimeIndex, setCurrentTimeIndex] = useState(DEFAULTS.TIME_INDEX);
   // eslint-disable-next-line no-unused-vars
-  const [currentDateIndex, setCurrentDateIndex] = useState(0); // Used for date click in chart
+  const [currentDateIndex, setCurrentDateIndex] = useState(DEFAULTS.DATE_INDEX);
   const [dateRangeError, setDateRangeError] = useState(null);
 
-  // Floor configurations
-  const floorConfigs = useMemo(() => ({
-    basement: {
-      name: 'Basement',
-      sensorIds: ['20004_TL2', '20005_TL2', '20006_TL2']
-    },
-    level1: {
-      name: 'Level 1',
-      sensorIds: ['20007_TL2', '20008_TL2', '20009_TL2', '20010_TL2', '20011_TL2']
-    },
-    level2: {
-      name: 'Level 2',
-      sensorIds: ['20012_TL2', '20013_TL2', '20014_TL2', '20015_TL2', '20016_TL2']
-    }
-  }), []);
-
   // Get current sensor IDs based on selected floor
-  const sensorIds = useMemo(() => floorConfigs[selectedFloor].sensorIds, [selectedFloor, floorConfigs]);
+  const sensorIds = useMemo(() => FLOOR_CONFIGS[selectedFloor].sensorIds, [selectedFloor]);
 
   // Load initial data
   useEffect(() => {
@@ -87,7 +79,7 @@ const ThermalPage = () => {
         setSelectedDate(dateObj);
 
         // Load data for that date using initial floor (basement)
-        const initialSensorIds = floorConfigs['basement'].sensorIds;
+        const initialSensorIds = FLOOR_CONFIGS[DEFAULTS.FLOOR].sensorIds;
         const data = await ThermalService.getMultipleSensorsDailyData(lastDate, initialSensorIds);
         setDailyData(data);
 
@@ -105,7 +97,7 @@ const ThermalPage = () => {
     };
 
     loadInitialData();
-  }, [floorConfigs]); // Only run once on mount
+  }, []); // Only run once on mount
 
   // Handle floor change
   const handleFloorChange = async (event, newFloor) => {
@@ -113,7 +105,7 @@ const ThermalPage = () => {
       setSelectedFloor(newFloor);
       
       // Reload data for new floor
-      if (viewMode === 'single' && selectedDate) {
+      if (viewMode === VIEW_MODES.SINGLE && selectedDate) {
         try {
           setLoading(true);
           const year = selectedDate.getFullYear();
@@ -121,7 +113,7 @@ const ThermalPage = () => {
           const day = String(selectedDate.getDate()).padStart(2, '0');
           const dateStr = `${year}-${month}-${day}`;
           
-          const newSensorIds = floorConfigs[newFloor].sensorIds;
+          const newSensorIds = FLOOR_CONFIGS[newFloor].sensorIds;
           const data = await ThermalService.getMultipleSensorsDailyData(dateStr, newSensorIds);
           setDailyData(data);
           setCurrentTimeIndex(0);
@@ -131,7 +123,7 @@ const ThermalPage = () => {
           setError(err.message);
           setLoading(false);
         }
-      } else if (viewMode === 'multiple' && dateFrom && dateTo) {
+      } else if (viewMode === VIEW_MODES.MULTIPLE && dateFrom && dateTo) {
         // Regenerate chart for new floor if dates are selected
         try {
           setLoading(true);
@@ -144,7 +136,7 @@ const ThermalPage = () => {
 
           const dateFromStr = formatDate(dateFrom);
           const dateToStr = formatDate(dateTo);
-          const newSensorIds = floorConfigs[newFloor].sensorIds;
+          const newSensorIds = FLOOR_CONFIGS[newFloor].sensorIds;
 
           const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, newSensorIds);
           setAggregatedData(data);
@@ -181,7 +173,7 @@ const ThermalPage = () => {
       setDateRangeError(null);
       
       // Reset data when switching modes
-      if (newMode === 'single') {
+      if (newMode === VIEW_MODES.SINGLE) {
         setDateFrom(null);
         setDateTo(null);
         setAggregatedData({});
@@ -225,7 +217,7 @@ const ThermalPage = () => {
   const handleGenerateChart = async () => {
     // Validate both dates are selected
     if (!dateFrom || !dateTo) {
-      setDateRangeError('Please select both From and To dates');
+      setDateRangeError(UI_CONFIG.ERROR_MESSAGES.NO_DATES);
       return;
     }
 
@@ -233,12 +225,12 @@ const ThermalPage = () => {
     const daysDiff = Math.ceil((dateTo - dateFrom) / (1000 * 60 * 60 * 24));
     
     if (daysDiff < 0) {
-      setDateRangeError('From date must be before To date');
+      setDateRangeError(UI_CONFIG.ERROR_MESSAGES.INVALID_RANGE);
       return;
     }
     
-    if (daysDiff > 30) {
-      setDateRangeError('Date range cannot exceed 30 days');
+    if (daysDiff > DATE_CONFIG.MAX_DATE_RANGE_DAYS) {
+      setDateRangeError(UI_CONFIG.ERROR_MESSAGES.RANGE_TOO_LARGE);
       return;
     }
 
@@ -471,13 +463,13 @@ const ThermalPage = () => {
                 size="small"
               >
                 <ToggleButton value="basement" aria-label="basement">
-                  Basement
+                  {FLOOR_CONFIGS.basement.displayName}
                 </ToggleButton>
                 <ToggleButton value="level1" aria-label="level 1">
-                  Level 1
+                  {FLOOR_CONFIGS.level1.displayName}
                 </ToggleButton>
                 <ToggleButton value="level2" aria-label="level 2">
-                  Level 2
+                  {FLOOR_CONFIGS.level2.displayName}
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
@@ -494,18 +486,18 @@ const ThermalPage = () => {
                 aria-label="view mode"
                 size="small"
               >
-                <ToggleButton value="single" aria-label="single day">
-                  Single Day
+                <ToggleButton value={VIEW_MODES.SINGLE} aria-label="single day">
+                  {VIEW_MODE_LABELS[VIEW_MODES.SINGLE]}
                 </ToggleButton>
-                <ToggleButton value="multiple" aria-label="multiple days">
-                  Multiple Days
+                <ToggleButton value={VIEW_MODES.MULTIPLE} aria-label="multiple days">
+                  {VIEW_MODE_LABELS[VIEW_MODES.MULTIPLE]}
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
 
             {/* Date Picker(s) */}
             <LocalizationProvider dateAdapter={AdapterDateFns}>
-              {viewMode === 'single' ? (
+              {viewMode === VIEW_MODES.SINGLE ? (
                 <Box>
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     Select Date
@@ -514,8 +506,8 @@ const ThermalPage = () => {
                     value={selectedDate}
                     onChange={handleDateChange}
                     shouldDisableDate={shouldDisableDate}
-                    minDate={new Date('2019-01-01')}
-                    maxDate={new Date('2020-11-07')}
+                    minDate={new Date(DATE_CONFIG.MIN_DATE)}
+                    maxDate={new Date(DATE_CONFIG.MAX_DATE)}
                     slotProps={{
                       textField: {
                         size: 'small',
@@ -534,8 +526,8 @@ const ThermalPage = () => {
                       value={dateFrom}
                       onChange={setDateFrom}
                       shouldDisableDate={shouldDisableDate}
-                      minDate={new Date('2019-01-01')}
-                      maxDate={dateTo || new Date('2020-11-07')}
+                      minDate={new Date(DATE_CONFIG.MIN_DATE)}
+                      maxDate={dateTo || new Date(DATE_CONFIG.MAX_DATE)}
                       slotProps={{
                         textField: {
                           size: 'small',
@@ -552,8 +544,8 @@ const ThermalPage = () => {
                       value={dateTo}
                       onChange={setDateTo}
                       shouldDisableDate={shouldDisableDate}
-                      minDate={dateFrom || new Date('2019-01-01')}
-                      maxDate={new Date('2020-11-07')}
+                      minDate={dateFrom || new Date(DATE_CONFIG.MIN_DATE)}
+                      maxDate={new Date(DATE_CONFIG.MAX_DATE)}
                       slotProps={{
                         textField: {
                           size: 'small',
@@ -585,14 +577,14 @@ const ThermalPage = () => {
 
           {/* Info Text */}
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-            {viewMode === 'single' 
+            {viewMode === VIEW_MODES.SINGLE 
               ? 'View 15-minute interval data for a single day'
-              : 'View daily data for up to 30 days'}
+              : `View daily data for up to ${DATE_CONFIG.MAX_DATE_RANGE_DAYS} days`}
           </Typography>
         </Box>
 
         {/* Chart - Show different chart based on view mode */}
-        {viewMode === 'single' ? (
+        {viewMode === VIEW_MODES.SINGLE ? (
           <ThermalTrendChart 
             data={dailyData}
             onTimeClick={handleTimeClick}
@@ -613,7 +605,7 @@ const ThermalPage = () => {
               mb: 3
             }}>
               <Typography variant="body1" color="text.secondary">
-                Select date range and click "Generate Chart" to view data
+                {UI_CONFIG.ERROR_MESSAGES.NO_DATA}
               </Typography>
             </Box>
           )
@@ -627,13 +619,13 @@ const ThermalPage = () => {
 
         {/* Time/Date Slider */}
         <ThermalTimeSlider
-          currentIndex={viewMode === 'single' ? currentTimeIndex : currentTimeIndex}
-          maxIndex={viewMode === 'single' ? maxTimeIndex : maxMultipleDaysTimeIndex}
+          currentIndex={viewMode === VIEW_MODES.SINGLE ? currentTimeIndex : currentTimeIndex}
+          maxIndex={viewMode === VIEW_MODES.SINGLE ? maxTimeIndex : maxMultipleDaysTimeIndex}
           onIndexChange={setCurrentTimeIndex}
           currentTime={getCurrentTime()}
           mode={viewMode}
-          dateList={viewMode === 'multiple' ? Object.keys(aggregatedData).sort() : []}
-          detailData={viewMode === 'multiple' ? multipleDaysDetailData : {}}
+          dateList={viewMode === VIEW_MODES.MULTIPLE ? Object.keys(aggregatedData).sort() : []}
+          detailData={viewMode === VIEW_MODES.MULTIPLE ? multipleDaysDetailData : {}}
           sensorIds={sensorIds}
           loading={loading}
         />

@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { SENSOR_COLORS } from '../../lib/constants/thermal';
 
 // Register Chart.js components
 ChartJS.register(
@@ -26,23 +27,6 @@ ChartJS.register(
 );
 
 const ThermalCandlestickChart = ({ data, onDateClick }) => {
-  // Define colors for sensors (SAIT colors + additional colors)
-  const sensorColors = {
-    '20004_TL2': { rgb: '218, 41, 28', name: 'Sensor 20004' },      // Red
-    '20005_TL2': { rgb: '0, 94, 184', name: 'Sensor 20005' },       // Blue
-    '20006_TL2': { rgb: '109, 32, 119', name: 'Sensor 20006' },     // Purple
-    '20007_TL2': { rgb: '0, 166, 81', name: 'Sensor 20007' },       // Green
-    '20008_TL2': { rgb: '255, 105, 0', name: 'Sensor 20008' },      // Orange
-    '20009_TL2': { rgb: '255, 193, 7', name: 'Sensor 20009' },      // Yellow
-    '20010_TL2': { rgb: '156, 39, 176', name: 'Sensor 20010' },     // Magenta
-    '20011_TL2': { rgb: '0, 188, 212', name: 'Sensor 20011' },      // Cyan
-    '20012_TL2': { rgb: '233, 30, 99', name: 'Sensor 20012' },      // Pink
-    '20013_TL2': { rgb: '103, 58, 183', name: 'Sensor 20013' },     // Deep Purple
-    '20014_TL2': { rgb: '63, 81, 181', name: 'Sensor 20014' },      // Indigo
-    '20015_TL2': { rgb: '0, 150, 136', name: 'Sensor 20015' },      // Teal
-    '20016_TL2': { rgb: '205, 220, 57', name: 'Sensor 20016' }      // Lime
-  };
-
   // Extract dates and prepare chart data
   const dates = Object.keys(data).sort();
   
@@ -53,12 +37,13 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
   const datasets = [];
   
   availableSensorIds.forEach(sensorId => {
-    const colorInfo = sensorColors[sensorId] || { rgb: '128, 128, 128', name: `Sensor ${sensorId}` };
-    const rgb = colorInfo.rgb;
+    const colorInfo = SENSOR_COLORS[sensorId];
+    const rgb = colorInfo ? colorInfo.rgb : '128, 128, 128';
+    const name = colorInfo ? colorInfo.name : `Sensor ${sensorId}`;
     
     // Low boundary (draw first)
     datasets.push({
-      label: `${colorInfo.name} Low`,
+      label: `${name} Low`,
       data: dates.map(date => data[date][sensorId]?.low || null),
       borderColor: `rgba(${rgb}, 0.3)`,
       backgroundColor: `rgba(${rgb}, 0)`,
@@ -73,7 +58,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
     
     // High boundary (fill down to Low)
     datasets.push({
-      label: `${colorInfo.name} High`,
+      label: `${name} High`,
       data: dates.map(date => data[date][sensorId]?.high || null),
       borderColor: `rgba(${rgb}, 0.3)`,
       backgroundColor: `rgba(${rgb}, 0.15)`,
@@ -88,7 +73,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
     
     // Average line
     datasets.push({
-      label: `${colorInfo.name} Avg`,
+      label: `${name} Avg`,
       data: dates.map(date => data[date][sensorId]?.avg || null),
       borderColor: `rgb(${rgb})`,
       backgroundColor: `rgb(${rgb})`,
