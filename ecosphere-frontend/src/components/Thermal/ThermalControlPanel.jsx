@@ -39,7 +39,7 @@ const ThermalControlPanel = ({
 }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 15, flexWrap: 'wrap' }}>
         {/* Floor Selection */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom>
