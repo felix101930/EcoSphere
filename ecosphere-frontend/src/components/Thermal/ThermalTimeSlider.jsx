@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 
-const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [] }) => {
+const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [], detailData = {}, sensorIds = [] }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Auto-play functionality
@@ -23,10 +23,10 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         }
         return prev + 1;
       });
-    }, mode === 'single' ? 500 : 900); // 900ms for multiple days (15 min real-time equivalent)
+    }, 500); // Same speed for both modes (15-min intervals)
 
     return () => clearInterval(interval);
-  }, [isPlaying, maxIndex, onIndexChange, mode]);
+  }, [isPlaying, maxIndex, onIndexChange]);
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -58,24 +58,24 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         { value: 95, label: '23:45' }
       ];
     } else {
-      // For multiple days mode, show actual dates
-      if (dateList.length === 0) return [];
+      // For multiple days mode, show date marks at day boundaries
+      if (dateList.length === 0 || Object.keys(detailData).length === 0) return [];
       
       const marks = [];
-      const step = Math.max(1, Math.floor(maxIndex / 5));
+      let cumulativeIndex = 0;
       
-      for (let i = 0; i <= maxIndex; i += step) {
-        const date = new Date(dateList[i] + 'T00:00:00');
-        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        marks.push({ value: i, label });
-      }
-      
-      // Always add the last date if not already included
-      if (marks[marks.length - 1].value !== maxIndex) {
-        const date = new Date(dateList[maxIndex] + 'T00:00:00');
-        const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        marks.push({ value: maxIndex, label });
-      }
+      dateList.forEach((date, dateIdx) => {
+        const dateObj = new Date(date + 'T00:00:00');
+        const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        // Add mark at the start of each day
+        marks.push({ value: cumulativeIndex, label });
+        
+        // Calculate cumulative index for next day
+        if (detailData[date] && detailData[date][sensorIds[0]]) {
+          cumulativeIndex += detailData[date][sensorIds[0]].length;
+        }
+      });
       
       return marks;
     }
@@ -86,7 +86,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h6" gutterBottom>
-        {mode === 'single' ? '⏱️ Time Control' : '📅 Date Control'}
+        ⏱️ Time Control
       </Typography>
       
       {/* Control buttons */}
@@ -127,7 +127,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         </IconButton>
 
         <Typography variant="body1" sx={{ ml: 2, fontWeight: 'bold' }}>
-          {mode === 'single' ? `Time: ${currentTime}` : `Date: ${currentTime}`}
+          {currentTime}
         </Typography>
       </Box>
 
@@ -147,12 +147,34 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
               const minutes = (value % 4) * 15;
               return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
             } else {
-              // Show actual date in tooltip
-              if (dateList.length > 0 && dateList[value]) {
-                const date = new Date(dateList[value] + 'T00:00:00');
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              // Show date and time for multiple days mode
+              if (Object.keys(detailData).length === 0) return '';
+              
+              const allTimePoints = [];
+              const dates = dateList;
+              
+              dates.forEach(date => {
+                const dateData = detailData[date];
+                if (dateData && dateData[sensorIds[0]]) {
+                  dateData[sensorIds[0]].forEach((record) => {
+                    allTimePoints.push({ date, ts: record.ts });
+                  });
+                }
+              });
+              
+              if (allTimePoints[value]) {
+                const { date, ts } = allTimePoints[value];
+                const dateObj = new Date(date + 'T00:00:00');
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                // Parse time from timestamp
+                const timeMatch = ts.match(/(\d{2}):(\d{2})/);
+                if (timeMatch) {
+                  return `${dateStr} ${timeMatch[1]}:${timeMatch[2]}`;
+                }
+                return dateStr;
               }
-              return `Day ${value + 1}`;
+              return '';
             }
           }}
           sx={{

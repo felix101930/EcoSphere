@@ -43,6 +43,7 @@ const ThermalPage = () => {
   const [dateTo, setDateTo] = useState(null);
   const [dailyData, setDailyData] = useState({});
   const [aggregatedData, setAggregatedData] = useState({});
+  const [multipleDaysDetailData, setMultipleDaysDetailData] = useState({}); // Store detailed 15-min data for multiple days
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [dateRangeError, setDateRangeError] = useState(null);
@@ -142,6 +143,21 @@ const ThermalPage = () => {
 
           const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, newSensorIds);
           setAggregatedData(data);
+          
+          // Load detailed data for new floor
+          const dates = Object.keys(data).sort();
+          const detailDataPromises = dates.map(date => 
+            ThermalService.getMultipleSensorsDailyData(date, newSensorIds)
+          );
+          const detailDataResults = await Promise.all(detailDataPromises);
+          
+          const detailDataByDate = {};
+          dates.forEach((date, index) => {
+            detailDataByDate[date] = detailDataResults[index];
+          });
+          
+          setMultipleDaysDetailData(detailDataByDate);
+          setCurrentTimeIndex(0);
           setCurrentDateIndex(0);
           setLoading(false);
         } catch (err) {
@@ -164,6 +180,7 @@ const ThermalPage = () => {
         setDateFrom(null);
         setDateTo(null);
         setAggregatedData({});
+        setMultipleDaysDetailData({});
       } else {
         setDailyData({});
       }
@@ -235,11 +252,27 @@ const ThermalPage = () => {
       const dateFromStr = formatDate(dateFrom);
       const dateToStr = formatDate(dateTo);
 
-      // Load aggregated data using current floor's sensor IDs
-      const data = await ThermalService.getAggregatedData(dateFromStr, dateToStr, sensorIds);
-      setAggregatedData(data);
+      // Load aggregated data for chart (using current floor's sensor IDs)
+      const aggData = await ThermalService.getAggregatedData(dateFromStr, dateToStr, sensorIds);
+      setAggregatedData(aggData);
 
-      // Reset to first date index
+      // Load detailed 15-min data for all days in range
+      const dates = Object.keys(aggData).sort();
+      const detailDataPromises = dates.map(date => 
+        ThermalService.getMultipleSensorsDailyData(date, sensorIds)
+      );
+      const detailDataResults = await Promise.all(detailDataPromises);
+      
+      // Organize by date
+      const detailDataByDate = {};
+      dates.forEach((date, index) => {
+        detailDataByDate[date] = detailDataResults[index];
+      });
+      
+      setMultipleDaysDetailData(detailDataByDate);
+
+      // Reset to first time index
+      setCurrentTimeIndex(0);
       setCurrentDateIndex(0);
 
       setLoading(false);
@@ -273,32 +306,74 @@ const ThermalPage = () => {
       });
       return currentData;
     } else {
-      // Multiple Days mode - show average for selected date
-      const dates = Object.keys(aggregatedData).sort();
-      if (dates.length > 0 && dates[currentDateIndex]) {
-        const selectedDateData = aggregatedData[dates[currentDateIndex]];
-        const currentData = {};
-        sensorIds.forEach(sensorId => {
-          if (selectedDateData[sensorId]) {
-            currentData[sensorId] = selectedDateData[sensorId].avg;
-          } else {
-            currentData[sensorId] = null;
+      // Multiple Days mode - show temperature for current time point
+      if (Object.keys(multipleDaysDetailData).length > 0) {
+        const allTimePoints = [];
+        const dates = Object.keys(multipleDaysDetailData).sort();
+        
+        // Flatten all time points from all dates
+        dates.forEach(date => {
+          const dateData = multipleDaysDetailData[date];
+          if (dateData && dateData[sensorIds[0]]) {
+            dateData[sensorIds[0]].forEach((record, idx) => {
+              allTimePoints.push({ date, timeIndex: idx });
+            });
           }
         });
-        return currentData;
+        
+        if (allTimePoints[currentTimeIndex]) {
+          const { date, timeIndex } = allTimePoints[currentTimeIndex];
+          const currentData = {};
+          sensorIds.forEach(sensorId => {
+            const dateData = multipleDaysDetailData[date];
+            if (dateData && dateData[sensorId] && dateData[sensorId][timeIndex]) {
+              currentData[sensorId] = dateData[sensorId][timeIndex].value;
+            } else {
+              currentData[sensorId] = null;
+            }
+          });
+          return currentData;
+        }
       }
       return {};
     }
   };
 
-  // Get current time string (Single Day mode)
+  // Get current time string (Single Day mode or Multiple Days mode)
   const getCurrentTime = () => {
-    const firstSensorId = sensorIds[0];
-    const sensorData = dailyData[firstSensorId];
-    if (sensorData && sensorData[currentTimeIndex]) {
-      return ThermalService.parseTime(sensorData[currentTimeIndex].ts);
+    if (viewMode === 'single') {
+      const firstSensorId = sensorIds[0];
+      const sensorData = dailyData[firstSensorId];
+      if (sensorData && sensorData[currentTimeIndex]) {
+        return ThermalService.parseTime(sensorData[currentTimeIndex].ts);
+      }
+      return '00:00';
+    } else {
+      // Multiple Days mode - show date and time
+      if (Object.keys(multipleDaysDetailData).length > 0) {
+        const allTimePoints = [];
+        const dates = Object.keys(multipleDaysDetailData).sort();
+        
+        // Flatten all time points from all dates
+        dates.forEach(date => {
+          const dateData = multipleDaysDetailData[date];
+          if (dateData && dateData[sensorIds[0]]) {
+            dateData[sensorIds[0]].forEach((record) => {
+              allTimePoints.push({ date, ts: record.ts });
+            });
+          }
+        });
+        
+        if (allTimePoints[currentTimeIndex]) {
+          const { date, ts } = allTimePoints[currentTimeIndex];
+          const dateObj = new Date(date + 'T00:00:00');
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const timeStr = ThermalService.parseTime(ts);
+          return `${dateStr} ${timeStr}`;
+        }
+      }
+      return '';
     }
-    return '00:00';
   };
 
   // Get current date string (Multiple Days mode)
@@ -322,6 +397,21 @@ const ThermalPage = () => {
   };
 
   const maxTimeIndex = sensorIds[0] && dailyData[sensorIds[0]] ? (dailyData[sensorIds[0]].length - 1) : 0;
+  
+  // Calculate max time index for multiple days mode (all 15-min intervals across all days)
+  const maxMultipleDaysTimeIndex = (() => {
+    if (Object.keys(multipleDaysDetailData).length === 0) return 0;
+    let totalPoints = 0;
+    const dates = Object.keys(multipleDaysDetailData).sort();
+    dates.forEach(date => {
+      const dateData = multipleDaysDetailData[date];
+      if (dateData && dateData[sensorIds[0]]) {
+        totalPoints += dateData[sensorIds[0]].length;
+      }
+    });
+    return Math.max(0, totalPoints - 1);
+  })();
+  
   const maxDateIndex = (Object.keys(aggregatedData).length || 1) - 1;
 
   if (loading && !selectedDate) {
@@ -529,12 +619,14 @@ const ThermalPage = () => {
 
         {/* Time/Date Slider */}
         <ThermalTimeSlider
-          currentIndex={viewMode === 'single' ? currentTimeIndex : currentDateIndex}
-          maxIndex={viewMode === 'single' ? maxTimeIndex : maxDateIndex}
-          onIndexChange={viewMode === 'single' ? setCurrentTimeIndex : setCurrentDateIndex}
-          currentTime={viewMode === 'single' ? getCurrentTime() : getCurrentDate()}
+          currentIndex={viewMode === 'single' ? currentTimeIndex : currentTimeIndex}
+          maxIndex={viewMode === 'single' ? maxTimeIndex : maxMultipleDaysTimeIndex}
+          onIndexChange={setCurrentTimeIndex}
+          currentTime={getCurrentTime()}
           mode={viewMode}
           dateList={viewMode === 'multiple' ? Object.keys(aggregatedData).sort() : []}
+          detailData={viewMode === 'multiple' ? multipleDaysDetailData : {}}
+          sensorIds={sensorIds}
         />
       </Box>
     </>
