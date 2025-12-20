@@ -13,7 +13,12 @@ const ThermalTrendChart = ({ data, onTimeClick }) => {
     '20008_TL2': { border: 'rgb(255, 105, 0)', bg: 'rgba(255, 105, 0, 0.1)' },      // Orange
     '20009_TL2': { border: 'rgb(255, 193, 7)', bg: 'rgba(255, 193, 7, 0.1)' },      // Yellow
     '20010_TL2': { border: 'rgb(156, 39, 176)', bg: 'rgba(156, 39, 176, 0.1)' },    // Magenta
-    '20011_TL2': { border: 'rgb(0, 188, 212)', bg: 'rgba(0, 188, 212, 0.1)' }       // Cyan
+    '20011_TL2': { border: 'rgb(0, 188, 212)', bg: 'rgba(0, 188, 212, 0.1)' },      // Cyan
+    '20012_TL2': { border: 'rgb(233, 30, 99)', bg: 'rgba(233, 30, 99, 0.1)' },      // Pink
+    '20013_TL2': { border: 'rgb(103, 58, 183)', bg: 'rgba(103, 58, 183, 0.1)' },    // Deep Purple
+    '20014_TL2': { border: 'rgb(63, 81, 181)', bg: 'rgba(63, 81, 181, 0.1)' },      // Indigo
+    '20015_TL2': { border: 'rgb(0, 150, 136)', bg: 'rgba(0, 150, 136, 0.1)' },      // Teal
+    '20016_TL2': { border: 'rgb(205, 220, 57)', bg: 'rgba(205, 220, 57, 0.1)' }     // Lime
   };
 
   // Get available sensor IDs from data

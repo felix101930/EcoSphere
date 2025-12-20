@@ -45,7 +45,8 @@ const ThermalPage = () => {
   const [aggregatedData, setAggregatedData] = useState({});
   const [multipleDaysDetailData, setMultipleDaysDetailData] = useState({}); // Store detailed 15-min data for multiple days
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
-  const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  // eslint-disable-next-line no-unused-vars
+  const [currentDateIndex, setCurrentDateIndex] = useState(0); // Used for date click in chart
   const [dateRangeError, setDateRangeError] = useState(null);
 
   // Floor configurations
@@ -57,6 +58,10 @@ const ThermalPage = () => {
     level1: {
       name: 'Level 1',
       sensorIds: ['20007_TL2', '20008_TL2', '20009_TL2', '20010_TL2', '20011_TL2']
+    },
+    level2: {
+      name: 'Level 2',
+      sensorIds: ['20012_TL2', '20013_TL2', '20014_TL2', '20015_TL2', '20016_TL2']
     }
   }), []);
 
@@ -376,16 +381,6 @@ const ThermalPage = () => {
     }
   };
 
-  // Get current date string (Multiple Days mode)
-  const getCurrentDate = () => {
-    const dates = Object.keys(aggregatedData).sort();
-    if (dates.length > 0 && dates[currentDateIndex]) {
-      const date = new Date(dates[currentDateIndex] + 'T00:00:00');
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-    }
-    return '';
-  };
-
   // Handle time click from chart (Single Day mode)
   const handleTimeClick = (index) => {
     setCurrentTimeIndex(index);
@@ -394,6 +389,18 @@ const ThermalPage = () => {
   // Handle date click from chart (Multiple Days mode)
   const handleDateClick = (index) => {
     setCurrentDateIndex(index);
+    // Calculate the time index for the start of the clicked date
+    if (Object.keys(multipleDaysDetailData).length > 0) {
+      const dates = Object.keys(multipleDaysDetailData).sort();
+      let cumulativeIndex = 0;
+      for (let i = 0; i < index && i < dates.length; i++) {
+        const dateData = multipleDaysDetailData[dates[i]];
+        if (dateData && dateData[sensorIds[0]]) {
+          cumulativeIndex += dateData[sensorIds[0]].length;
+        }
+      }
+      setCurrentTimeIndex(cumulativeIndex);
+    }
   };
 
   const maxTimeIndex = sensorIds[0] && dailyData[sensorIds[0]] ? (dailyData[sensorIds[0]].length - 1) : 0;
@@ -411,8 +418,6 @@ const ThermalPage = () => {
     });
     return Math.max(0, totalPoints - 1);
   })();
-  
-  const maxDateIndex = (Object.keys(aggregatedData).length || 1) - 1;
 
   if (loading && !selectedDate) {
     return (
@@ -470,6 +475,9 @@ const ThermalPage = () => {
                 </ToggleButton>
                 <ToggleButton value="level1" aria-label="level 1">
                   Level 1
+                </ToggleButton>
+                <ToggleButton value="level2" aria-label="level 2">
+                  Level 2
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
@@ -579,7 +587,7 @@ const ThermalPage = () => {
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
             {viewMode === 'single' 
               ? 'View 15-minute interval data for a single day'
-              : 'View daily Open/High/Low/Close candlestick chart for up to 30 days'}
+              : 'View daily data for up to 30 days'}
           </Typography>
         </Box>
 
@@ -627,6 +635,7 @@ const ThermalPage = () => {
           dateList={viewMode === 'multiple' ? Object.keys(aggregatedData).sort() : []}
           detailData={viewMode === 'multiple' ? multipleDaysDetailData : {}}
           sensorIds={sensorIds}
+          loading={loading}
         />
       </Box>
     </>

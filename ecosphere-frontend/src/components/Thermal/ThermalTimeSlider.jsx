@@ -1,5 +1,5 @@
 // Thermal Time Slider - Control time navigation
-import { Box, Slider, IconButton, Typography } from '@mui/material';
+import { Box, Slider, IconButton, Typography, CircularProgress } from '@mui/material';
 import { 
   PlayArrow as PlayIcon, 
   Pause as PauseIcon,
@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 
-const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [], detailData = {}, sensorIds = [] }) => {
+const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [], detailData = {}, sensorIds = [], loading = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Auto-play functionality
@@ -64,7 +64,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
       const marks = [];
       let cumulativeIndex = 0;
       
-      dateList.forEach((date, dateIdx) => {
+      dateList.forEach((date) => {
         const dateObj = new Date(date + 'T00:00:00');
         const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         
@@ -84,16 +84,41 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
   const marks = generateMarks();
 
   return (
-    <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
+    <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1, position: 'relative' }}>
+      {/* Loading overlay */}
+      {loading && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 1,
+            zIndex: 10
+          }}
+        >
+          <CircularProgress size={40} sx={{ color: '#DA291C' }} />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Loading data...
+          </Typography>
+        </Box>
+      )}
+      
       <Typography variant="h6" gutterBottom>
         ⏱️ Time Control
       </Typography>
       
       {/* Control buttons */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, opacity: loading ? 0.5 : 1 }}>
         <IconButton 
           onClick={handlePrevious} 
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || loading}
           sx={{ 
             bgcolor: '#f5f5f5',
             '&:hover': { bgcolor: '#e0e0e0' }
@@ -104,6 +129,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         
         <IconButton 
           onClick={handlePlayPause}
+          disabled={loading}
           sx={{ 
             bgcolor: isPlaying ? '#DA291C' : '#4CAF50',
             color: 'white',
@@ -117,7 +143,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         
         <IconButton 
           onClick={handleNext}
-          disabled={currentIndex === maxIndex}
+          disabled={currentIndex === maxIndex || loading}
           sx={{ 
             bgcolor: '#f5f5f5',
             '&:hover': { bgcolor: '#e0e0e0' }
@@ -132,7 +158,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
       </Box>
 
       {/* Time slider */}
-      <Box sx={{ px: 2 }}>
+      <Box sx={{ px: 2, opacity: loading ? 0.5 : 1 }}>
         <Slider
           value={currentIndex}
           min={0}
@@ -140,6 +166,7 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
           step={1}
           marks={marks}
           onChange={handleSliderChange}
+          disabled={loading}
           valueLabelDisplay="auto"
           valueLabelFormat={(value) => {
             if (mode === 'single') {

@@ -2,6 +2,7 @@
 import { Box, Typography } from '@mui/material';
 import basementPlan from '../../assets/floorplan/basement.png';
 import level1Plan from '../../assets/floorplan/level1.png';
+import level2Plan from '../../assets/floorplan/level2.png';
 import ThermalService from '../../services/ThermalService';
 
 const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
@@ -27,6 +28,18 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement' }) => {
         '20009': { top: '68%', left: '42%', width: '200px', height: '120px' },
         '20010': { top: '30%', right: '8%', width: '200px', height: '120px' },
         '20011': { top: '12%', left: '42%', width: '200px', height: '120px' }
+      }
+    },
+    level2: {
+      name: 'Level 2',
+      image: level2Plan,
+      sensorIds: ['20012', '20013', '20014', '20015', '20016'],
+      positions: {
+        '20012': { top: '35%', left: '8%', width: '200px', height: '120px' },
+        '20013': { top: '15%', left: '42%', width: '200px', height: '120px' },
+        '20014': { top: '35%', right: '8%', width: '200px', height: '120px' },
+        '20015': { top: '65%', left: '42%', width: '200px', height: '120px' },
+        '20016': { top: '65%', left: '15%', width: '200px', height: '120px' }
       }
     }
   };

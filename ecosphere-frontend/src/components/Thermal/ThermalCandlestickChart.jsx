@@ -35,7 +35,12 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
     '20008_TL2': { rgb: '255, 105, 0', name: 'Sensor 20008' },      // Orange
     '20009_TL2': { rgb: '255, 193, 7', name: 'Sensor 20009' },      // Yellow
     '20010_TL2': { rgb: '156, 39, 176', name: 'Sensor 20010' },     // Magenta
-    '20011_TL2': { rgb: '0, 188, 212', name: 'Sensor 20011' }       // Cyan
+    '20011_TL2': { rgb: '0, 188, 212', name: 'Sensor 20011' },      // Cyan
+    '20012_TL2': { rgb: '233, 30, 99', name: 'Sensor 20012' },      // Pink
+    '20013_TL2': { rgb: '103, 58, 183', name: 'Sensor 20013' },     // Deep Purple
+    '20014_TL2': { rgb: '63, 81, 181', name: 'Sensor 20014' },      // Indigo
+    '20015_TL2': { rgb: '0, 150, 136', name: 'Sensor 20015' },      // Teal
+    '20016_TL2': { rgb: '205, 220, 57', name: 'Sensor 20016' }      // Lime
   };
 
   // Extract dates and prepare chart data
