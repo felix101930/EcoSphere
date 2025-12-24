@@ -28,7 +28,7 @@ ChartJS.register(
   TimeScale
 );
 
-const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMARY }) => {
+const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMARY, preserveSign = false }) => {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!data || data.length === 0) {
@@ -40,7 +40,7 @@ const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMAR
       datasets: [
         {
           label: dataLabel,
-          data: data.map(d => Math.abs(d.value)),
+          data: data.map(d => preserveSign ? d.value : Math.abs(d.value)),
           borderColor: color,
           backgroundColor: color + '20',
           borderWidth: 2,
@@ -50,7 +50,7 @@ const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMAR
         }
       ]
     };
-  }, [data, dataLabel, color]);
+  }, [data, dataLabel, color, preserveSign]);
 
   // Chart options
   const options = useMemo(() => ({
@@ -103,7 +103,7 @@ const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMAR
         }
       },
       y: {
-        beginAtZero: true,
+        beginAtZero: false,
         title: {
           display: true,
           text: 'Energy (Wh)'

@@ -5,25 +5,9 @@ import PageHeader from '../components/Common/PageHeader';
 import ElectricityTimeFilter from '../components/Electricity/ElectricityTimeFilter';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
+import NetEnergyTab from '../components/Electricity/NetEnergyTab';
 import { TAB_TYPES } from '../lib/constants/electricity';
 import { useElectricityData } from '../lib/hooks/useElectricityData';
-
-// Placeholder component for Net Energy tab
-const NetEnergyTab = ({ data, loading }) => (
-  <Box sx={{ p: 3 }}>
-    {loading ? (
-      <CircularProgress />
-    ) : data ? (
-      <Alert severity="success">
-        Net Energy Tab - Data loaded: {data.count} records
-        <br />
-        Total: {data.metrics?.total?.toFixed(2)} Wh
-      </Alert>
-    ) : (
-      <Alert severity="info">Select a date range to view net energy data</Alert>
-    )}
-  </Box>
-);
 
 const ElectricityReportPage = () => {
   // Tab state
@@ -228,7 +212,10 @@ const ElectricityReportPage = () => {
           />
         )}
         {activeTab === TAB_TYPES.NET_ENERGY && (
-          <NetEnergyTab data={netEnergyData} loading={loading} />
+          <NetEnergyTab 
+            data={netEnergyData} 
+            loading={loading}
+          />
         )}
       </Box>
     </>

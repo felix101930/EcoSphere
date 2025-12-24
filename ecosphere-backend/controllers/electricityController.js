@@ -113,7 +113,8 @@ const getNetEnergyData = async (req, res) => {
     }
     
     const data = await ElectricityService.getNetEnergyData(dateFrom, dateTo);
-    const metrics = ElectricityService.calculateMetrics(data);
+    // Use special metrics calculation that preserves sign
+    const metrics = ElectricityService.calculateNetEnergyMetrics(data);
     
     res.json({
       success: true,

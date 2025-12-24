@@ -344,6 +344,32 @@ class ElectricityService {
   }
 
   /**
+   * Calculate metrics for net energy (preserves sign)
+   * Negative = consuming more than generating
+   * Positive = generating more than consuming
+   */
+  static calculateNetEnergyMetrics(data) {
+    if (!data || data.length === 0) {
+      return {
+        total: 0,
+        average: 0,
+        peak: 0,
+        min: 0
+      };
+    }
+
+    const values = data.map(d => d.value); // Keep sign!
+    const total = values.reduce((sum, val) => sum + val, 0);
+    
+    return {
+      total: total,
+      average: total / values.length,
+      peak: Math.max(...values),  // Most positive (max surplus)
+      min: Math.min(...values)    // Most negative (max deficit)
+    };
+  }
+
+  /**
    * Calculate self-sufficiency rate
    */
   static calculateSelfSufficiency(generationData, consumptionData) {
