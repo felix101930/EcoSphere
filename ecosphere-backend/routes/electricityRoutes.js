@@ -1,24 +1,39 @@
-// Electricity Routes
+// Electricity Routes - SQL Server based
 const express = require('express');
 const router = express.Router();
-const electricityController = require('../controllers/electricityController');
+const {
+  getAvailableDateRange,
+  getConsumptionData,
+  getGenerationData,
+  getNetEnergyData,
+  getPhaseBreakdownData,
+  getEquipmentBreakdownData,
+  getSolarSourceBreakdownData,
+  getElectricityOverview
+} = require('../controllers/electricityController');
 
-// GET /api/electricity/all - Get all records
-router.get('/all', electricityController.getAllRecords.bind(electricityController));
+// Get available date range
+router.get('/date-range', getAvailableDateRange);
 
-// GET /api/electricity/range?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
-router.get('/range', electricityController.getRecordsByDateRange.bind(electricityController));
+// Get comprehensive overview (consumption + generation + net energy)
+router.get('/overview/:dateFrom/:dateTo', getElectricityOverview);
 
-// GET /api/electricity/realtime - Get today's data
-router.get('/realtime', electricityController.getRealTimeData.bind(electricityController));
+// Get consumption data (TL341)
+router.get('/consumption/:dateFrom/:dateTo', getConsumptionData);
 
-// GET /api/electricity/daily?days=10 - Get last N days
-router.get('/daily', electricityController.getDailyData.bind(electricityController));
+// Get generation data (TL340)
+router.get('/generation/:dateFrom/:dateTo', getGenerationData);
 
-// GET /api/electricity/longterm - Get last 12 months
-router.get('/longterm', electricityController.getLongTermData.bind(electricityController));
+// Get net energy data (TL339)
+router.get('/net-energy/:dateFrom/:dateTo', getNetEnergyData);
 
-// GET /api/electricity/metadata - Get metadata
-router.get('/metadata', electricityController.getMetadata.bind(electricityController));
+// Get phase breakdown data (TL342-345)
+router.get('/phase-breakdown/:dateFrom/:dateTo', getPhaseBreakdownData);
+
+// Get equipment breakdown data (TL213, TL4, TL209-212)
+router.get('/equipment-breakdown/:dateFrom/:dateTo', getEquipmentBreakdownData);
+
+// Get solar source breakdown data (TL252-253)
+router.get('/solar-breakdown/:dateFrom/:dateTo', getSolarSourceBreakdownData);
 
 module.exports = router;
