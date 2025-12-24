@@ -163,6 +163,8 @@ class ElectricityService {
   /**
    * Get phase breakdown data (TL342-345)
    * Available: 2020-11-01 to 2020-11-08 (7 days only)
+   * Note: Phase tables use 1-minute intervals (~10,378 records per 7 days)
+   * This method aggregates to hourly data for better frontend performance
    */
   static async getPhaseBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -175,7 +177,11 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
+      // Aggregate 1-minute data to hourly sums for better frontend performance
+      // Original: ~10,378 records per 7 days (1-minute intervals)
+      // Aggregated: ~168 records per 7 days (hourly sums)
+      // Note: SUM is used because values are already in Wh (energy), not power
+      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, SUM(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {
@@ -208,12 +214,13 @@ class ElectricityService {
   }
 
   /**
-   * Get equipment breakdown data
-   * TL213: Panel2A-1 (2020-02-15 to 2020-11-08, 9 months)
-   * TL4: Ventilation (2020-11-01 to 2020-11-08, 7 days)
-   * TL209: Lighting (2019-11-07 to 2019-11-14, 7 days)
-   * TL211: Equipment/R&D (2019-11-07 to 2019-11-14, 7 days)
-   * TL212: Appliances (2019-11-07 to 2019-11-14, 7 days)
+   * Get equipment breakdown data (aggregated to hourly)
+   * TL213: Panel2A-1 (~15-min intervals, 2020-02-15 to 2020-11-08, 9 months)
+   * TL4: Ventilation (1-min intervals, 2020-11-01 to 2020-11-08, 7 days)
+   * TL209: Lighting (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
+   * TL211: Equipment/R&D (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
+   * TL212: Appliances (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
+   * Note: Aggregated to hourly sums for consistent interval across all breakdowns
    */
   static async getEquipmentBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -227,7 +234,8 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
+      // Aggregate to hourly sums for consistent interval with Overall and Phase data
+      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, SUM(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {
@@ -260,9 +268,10 @@ class ElectricityService {
   }
 
   /**
-   * Get solar source breakdown data (TL252, TL253)
+   * Get solar source breakdown data (TL252, TL253) - aggregated to hourly
    * Available: 2020-11-01 to 2020-11-08 (7 days only)
-   * Note: Unit is W (power), not Wh (energy)
+   * Note: Original unit is W (power), 1-minute intervals
+   * Aggregated to hourly averages for consistent interval across all breakdowns
    */
   static async getSolarSourceBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -273,7 +282,9 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
+      // Aggregate to hourly averages (since original unit is W power, not Wh energy)
+      // AVG is used because we want average power output per hour
+      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, AVG(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {
