@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
+import ExportReportDialog from '../components/Common/ExportReportDialog';
 import ElectricityTimeFilter from '../components/Electricity/ElectricityTimeFilter';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
@@ -16,6 +17,9 @@ const ElectricityReportPage = () => {
   // Date filter state
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+  
+  // Export dialog state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   
   // Custom hook for data management
   const {
@@ -157,9 +161,19 @@ const ElectricityReportPage = () => {
       <PageHeader 
         title="Electricity Report" 
         subtitle="Monitor and analyze electricity consumption and generation"
+        showExportButton={true}
+        onExport={() => setExportDialogOpen(true)}
+      />
+
+      {/* Export Report Dialog */}
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        reportType="Electricity"
+        reportTitle="Electricity Report"
       />
       
-      <Box sx={{ px: 4, py: 3 }}>
+      <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Time Filter */}
         <ElectricityTimeFilter
           dateFrom={dateFrom}
