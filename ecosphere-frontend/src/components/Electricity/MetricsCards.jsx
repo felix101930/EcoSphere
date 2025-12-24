@@ -7,11 +7,11 @@ import {
   Speed
 } from '@mui/icons-material';
 
-const MetricCard = ({ title, value, unit, icon: Icon, color = 'primary' }) => {
+const MetricCard = ({ title, value, unit, icon: IconComponent, color = 'primary' }) => {
   return (
     <Paper sx={{ p: 2, height: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-        <Icon sx={{ color: `${color}.main`, mr: 1 }} />
+        <IconComponent sx={{ color: `${color}.main`, mr: 1 }} />
         <Typography variant="subtitle2" color="text.secondary">
           {title}
         </Typography>
@@ -37,7 +37,7 @@ const MetricsCards = ({ metrics }) => {
         Key Metrics
       </Typography>
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <MetricCard
             title="Total"
             value={Math.abs(metrics.total).toFixed(2)}
@@ -46,7 +46,7 @@ const MetricsCards = ({ metrics }) => {
             color="primary"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <MetricCard
             title="Average"
             value={Math.abs(metrics.average).toFixed(2)}
@@ -55,7 +55,7 @@ const MetricsCards = ({ metrics }) => {
             color="info"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <MetricCard
             title="Peak"
             value={Math.abs(metrics.peak).toFixed(2)}
@@ -64,7 +64,7 @@ const MetricsCards = ({ metrics }) => {
             color="error"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <MetricCard
             title="Minimum"
             value={Math.abs(metrics.min).toFixed(2)}

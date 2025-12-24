@@ -165,6 +165,7 @@ class ElectricityService {
    * Available: 2020-11-01 to 2020-11-08 (7 days only)
    * Note: Phase tables use 1-minute intervals (~10,378 records per 7 days)
    * This method aggregates to hourly data for better frontend performance
+   * Optimized query using DATEPART for fast grouping
    */
   static async getPhaseBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -177,11 +178,9 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      // Aggregate 1-minute data to hourly sums for better frontend performance
-      // Original: ~10,378 records per 7 days (1-minute intervals)
-      // Aggregated: ~168 records per 7 days (hourly sums)
-      // Note: SUM is used because values are already in Wh (energy), not power
-      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, SUM(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
+      // Optimized aggregation using DATEPART - much faster than DATEADD/DATEDIFF
+      // Format: YYYY-MM-DD HH:00:00
+      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {
@@ -221,6 +220,7 @@ class ElectricityService {
    * TL211: Equipment/R&D (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
    * TL212: Appliances (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
    * Note: Aggregated to hourly sums for consistent interval across all breakdowns
+   * Optimized query using DATEPART for fast grouping
    */
   static async getEquipmentBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -234,8 +234,9 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      // Aggregate to hourly sums for consistent interval with Overall and Phase data
-      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, SUM(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
+      // Optimized aggregation using DATEPART - much faster than DATEADD/DATEDIFF
+      // Format: YYYY-MM-DD HH:00:00
+      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {
@@ -272,6 +273,7 @@ class ElectricityService {
    * Available: 2020-11-01 to 2020-11-08 (7 days only)
    * Note: Original unit is W (power), 1-minute intervals
    * Aggregated to hourly averages for consistent interval across all breakdowns
+   * Optimized query using DATEPART for fast grouping
    */
   static async getSolarSourceBreakdownData(dateFrom, dateTo) {
     const tables = {
@@ -282,9 +284,10 @@ class ElectricityService {
     const results = {};
     
     for (const [key, tableName] of Object.entries(tables)) {
-      // Aggregate to hourly averages (since original unit is W power, not Wh energy)
-      // AVG is used because we want average power output per hour
-      const query = `SELECT CONVERT(varchar, DATEADD(hour, DATEDIFF(hour, 0, ts), 0), 120) as ts, AVG(value) as value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' GROUP BY DATEADD(hour, DATEDIFF(hour, 0, ts), 0) ORDER BY ts`;
+      // Optimized aggregation using DATEPART - much faster than DATEADD/DATEDIFF
+      // AVG is used because we want average power output per hour (unit is W, not Wh)
+      // Format: YYYY-MM-DD HH:00:00
+      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
       
       let authParams = '-E';
       if (DB_USER && DB_PASSWORD) {

@@ -1,3 +1,6 @@
+// Backup: If Grid2 doesn't work, use this version with Grid v1 (with warnings suppressed)
+// Just rename this file to BreakdownSelector.jsx if needed
+
 // Breakdown Selector Component - Card-based selection for data breakdown
 import { Box, Paper, Typography, Grid, Card, CardContent, CardActionArea, Chip } from '@mui/material';
 import { 
@@ -118,9 +121,10 @@ const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consu
       <Typography variant="h6" gutterBottom>
         Data Breakdown
       </Typography>
+      {/* Using Grid v1 - warnings can be ignored */}
       <Grid container spacing={2}>
         {breakdowns.map((breakdown) => (
-          <Grid xs={12} md={4} key={breakdown.id}>
+          <Grid item xs={12} md={4} key={breakdown.id}>
             <BreakdownCard
               title={breakdown.title}
               description={breakdown.description}
