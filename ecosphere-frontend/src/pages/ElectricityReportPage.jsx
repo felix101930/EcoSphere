@@ -4,26 +4,11 @@ import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ElectricityTimeFilter from '../components/Electricity/ElectricityTimeFilter';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
+import GenerationTab from '../components/Electricity/GenerationTab';
 import { TAB_TYPES } from '../lib/constants/electricity';
 import { useElectricityData } from '../lib/hooks/useElectricityData';
 
-// Placeholder components for Generation and Net Energy tabs
-const GenerationTab = ({ data, loading }) => (
-  <Box sx={{ p: 3 }}>
-    {loading ? (
-      <CircularProgress />
-    ) : data ? (
-      <Alert severity="success">
-        Generation Tab - Data loaded: {data.count} records
-        <br />
-        Total: {data.metrics?.total?.toFixed(2)} Wh
-      </Alert>
-    ) : (
-      <Alert severity="info">Select a date range to view generation data</Alert>
-    )}
-  </Box>
-);
-
+// Placeholder component for Net Energy tab
 const NetEnergyTab = ({ data, loading }) => (
   <Box sx={{ p: 3 }}>
     {loading ? (
@@ -58,11 +43,13 @@ const ElectricityReportPage = () => {
     netEnergyData,
     phaseBreakdownData,
     equipmentBreakdownData,
+    solarBreakdownData,
     loadConsumptionData,
     loadGenerationData,
     loadNetEnergyData,
     loadPhaseBreakdown,
-    loadEquipmentBreakdown
+    loadEquipmentBreakdown,
+    loadSolarBreakdown
   } = useElectricityData();
 
   // Set default date range when dateRange is loaded
@@ -116,6 +103,40 @@ const ElectricityReportPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateFrom, dateTo]);
+
+  // Auto-load data when tab changes
+  useEffect(() => {
+    if (!dateFrom || !dateTo) return;
+
+    const loadDataForTab = async () => {
+      try {
+        switch (activeTab) {
+          case TAB_TYPES.CONSUMPTION:
+            if (!consumptionData) {
+              await loadConsumptionData(dateFrom, dateTo);
+            }
+            break;
+          case TAB_TYPES.GENERATION:
+            if (!generationData) {
+              await loadGenerationData(dateFrom, dateTo);
+            }
+            break;
+          case TAB_TYPES.NET_ENERGY:
+            if (!netEnergyData) {
+              await loadNetEnergyData(dateFrom, dateTo);
+            }
+            break;
+          default:
+            break;
+        }
+      } catch (err) {
+        console.error('Error loading data for tab:', err);
+      }
+    };
+
+    loadDataForTab();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, dateFrom, dateTo]);
 
   // Loading state
   if (!dateRange && loading) {
@@ -197,7 +218,14 @@ const ElectricityReportPage = () => {
           />
         )}
         {activeTab === TAB_TYPES.GENERATION && (
-          <GenerationTab data={generationData} loading={loading} />
+          <GenerationTab 
+            data={generationData} 
+            loading={loading}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onLoadSolarSourceBreakdown={loadSolarBreakdown}
+            solarSourceBreakdownData={solarBreakdownData}
+          />
         )}
         {activeTab === TAB_TYPES.NET_ENERGY && (
           <NetEnergyTab data={netEnergyData} loading={loading} />

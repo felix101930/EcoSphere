@@ -4,9 +4,14 @@ import {
   BarChart, 
   ElectricBolt, 
   Devices,
-  Warning
+  Warning,
+  WbSunny
 } from '@mui/icons-material';
-import { CONSUMPTION_BREAKDOWNS, DATA_WARNINGS } from '../../lib/constants/electricity';
+import { 
+  CONSUMPTION_BREAKDOWNS, 
+  GENERATION_BREAKDOWNS, 
+  DATA_WARNINGS 
+} from '../../lib/constants/electricity';
 
 const BreakdownCard = ({ 
   title, 
@@ -60,7 +65,7 @@ const BreakdownCard = ({
 };
 
 const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consumption' }) => {
-  const breakdowns = type === 'consumption' ? [
+  const consumptionBreakdowns = [
     {
       id: CONSUMPTION_BREAKDOWNS.OVERALL,
       title: 'Overall',
@@ -85,7 +90,28 @@ const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consu
       available: 'Various ranges',
       warning: DATA_WARNINGS.EQUIPMENT
     }
-  ] : [];
+  ];
+
+  const generationBreakdowns = [
+    {
+      id: GENERATION_BREAKDOWNS.OVERALL,
+      title: 'Overall',
+      description: 'Total generation trend over time',
+      icon: BarChart,
+      available: '634 days available',
+      warning: null
+    },
+    {
+      id: GENERATION_BREAKDOWNS.SOURCE,
+      title: 'By Source',
+      description: 'Solar generation by panel location',
+      icon: WbSunny,
+      available: '7 days only',
+      warning: DATA_WARNINGS.SOLAR_SOURCE
+    }
+  ];
+
+  const breakdowns = type === 'consumption' ? consumptionBreakdowns : generationBreakdowns;
 
   return (
     <Box sx={{ mb: 3 }}>

@@ -176,6 +176,7 @@ export const useElectricityData = () => {
       );
       
       if (response.success) {
+        // Store the full response (includes data, metrics, warning)
         setPhaseBreakdownData(response);
       } else {
         throw new Error(response.error || 'Failed to load phase breakdown data');
@@ -206,6 +207,7 @@ export const useElectricityData = () => {
       );
       
       if (response.success) {
+        // Store the full response (includes data, metrics, warning)
         setEquipmentBreakdownData(response);
       } else {
         throw new Error(response.error || 'Failed to load equipment breakdown data');
@@ -236,6 +238,7 @@ export const useElectricityData = () => {
       );
       
       if (response.success) {
+        // Store the full response (includes data, metrics, warning)
         setSolarBreakdownData(response);
       } else {
         throw new Error(response.error || 'Failed to load solar breakdown data');
