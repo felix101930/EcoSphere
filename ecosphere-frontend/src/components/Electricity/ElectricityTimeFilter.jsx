@@ -1,11 +1,11 @@
 // Electricity Time Filter Component
 import { useState } from 'react';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  Button, 
-  ToggleButtonGroup, 
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  ToggleButtonGroup,
   ToggleButton,
   Alert
 } from '@mui/material';
@@ -14,28 +14,30 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TIME_PRESETS } from '../../lib/constants/electricity';
 
-const ElectricityTimeFilter = ({ 
-  dateFrom, 
-  dateTo, 
-  onDateFromChange, 
-  onDateToChange, 
+const ElectricityTimeFilter = ({
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
   onApply,
   dateRange,
-  loading 
+  loading
 }) => {
   const [preset, setPreset] = useState(TIME_PRESETS.LAST_7_DAYS);
 
   // Handle preset change
   const handlePresetChange = (_event, newPreset) => {
     if (newPreset === null) return;
-    
+
     setPreset(newPreset);
-    
+
     if (!dateRange) return;
-    
-    const maxDate = new Date(dateRange.consumption.maxDate);
+
+    // Use date strings with noon time to avoid timezone shifts
+    const maxDateStr = dateRange.consumption.maxDate; // e.g., "2020-11-08"
+    const maxDate = new Date(maxDateStr + 'T12:00:00');
     let fromDate = new Date(maxDate);
-    
+
     switch (newPreset) {
       case TIME_PRESETS.LAST_7_DAYS:
         fromDate.setDate(fromDate.getDate() - 7);
@@ -52,13 +54,14 @@ const ElectricityTimeFilter = ({
       default:
         break;
     }
-    
+
     // Ensure fromDate is not before minDate
-    const minDate = new Date(dateRange.consumption.minDate);
+    const minDateStr = dateRange.consumption.minDate;
+    const minDate = new Date(minDateStr + 'T12:00:00');
     if (fromDate < minDate) {
       fromDate = minDate;
     }
-    
+
     onDateFromChange(fromDate);
     onDateToChange(maxDate);
   };
@@ -66,10 +69,13 @@ const ElectricityTimeFilter = ({
   // Should disable dates outside available range
   const shouldDisableDate = (date) => {
     if (!dateRange) return false;
-    
-    const minDate = new Date(dateRange.consumption.minDate);
-    const maxDate = new Date(dateRange.consumption.maxDate);
-    
+
+    // Add noon time to avoid timezone shifts when comparing
+    const minDateStr = dateRange.consumption.minDate;
+    const maxDateStr = dateRange.consumption.maxDate;
+    const minDate = new Date(minDateStr + 'T12:00:00');
+    const maxDate = new Date(maxDateStr + 'T12:00:00');
+
     return date < minDate || date > maxDate;
   };
 
@@ -78,7 +84,7 @@ const ElectricityTimeFilter = ({
       <Typography variant="h6" gutterBottom>
         Time Range
       </Typography>
-      
+
       {/* Preset Buttons */}
       <Box sx={{ mb: 3 }}>
         <ToggleButtonGroup
@@ -115,15 +121,15 @@ const ElectricityTimeFilter = ({
             }}
             shouldDisableDate={shouldDisableDate}
             slotProps={{
-              textField: { 
+              textField: {
                 size: 'small',
                 sx: { minWidth: 200 }
               }
             }}
           />
-          
+
           <Typography>to</Typography>
-          
+
           <DatePicker
             label="To Date"
             value={dateTo}
@@ -133,15 +139,15 @@ const ElectricityTimeFilter = ({
             }}
             shouldDisableDate={shouldDisableDate}
             slotProps={{
-              textField: { 
+              textField: {
                 size: 'small',
                 sx: { minWidth: 200 }
               }
             }}
           />
-          
-          <Button 
-            variant="contained" 
+
+          <Button
+            variant="contained"
             onClick={onApply}
             disabled={!dateFrom || !dateTo || loading}
           >

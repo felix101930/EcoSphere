@@ -16,12 +16,12 @@ const ThermalPage = () => {
   // View mode state
   const [viewMode, setViewMode] = useState(VIEW_MODES.SINGLE);
   const [selectedFloor, setSelectedFloor] = useState('basement');
-  
+
   // Multiple Days mode state (separate from Single Day)
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [dateRangeError, setDateRangeError] = useState(null);
-  
+
   // Export dialog state
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
@@ -79,7 +79,7 @@ const ThermalPage = () => {
     if (newMode !== null) {
       setViewMode(newMode);
       setDateRangeError(null);
-      
+
       if (newMode === VIEW_MODES.SINGLE) {
         // Switching to Single Day - selectedDate already has the last selected date
         // Just reload the data if needed
@@ -95,18 +95,18 @@ const ThermalPage = () => {
         // Switching to Multiple Days - set default range if not set
         if (!dateFrom || !dateTo) {
           if (availableDates.length > 0) {
-            // Get the last available date
+            // Get the last available date (add noon time to avoid timezone shifts)
             const lastDateStr = availableDates[availableDates.length - 1];
-            const lastDate = new Date(lastDateStr + 'T00:00:00');
-            
+            const lastDate = new Date(lastDateStr + 'T12:00:00');
+
             // Calculate 5 days before (or use earliest available date)
             const daysToGoBack = Math.min(4, availableDates.length - 1);
             const fromDateStr = availableDates[availableDates.length - 1 - daysToGoBack];
-            const fromDate = new Date(fromDateStr + 'T00:00:00');
-            
+            const fromDate = new Date(fromDateStr + 'T12:00:00');
+
             setDateFrom(fromDate);
             setDateTo(lastDate);
-            
+
             // Auto-load data for the default range
             try {
               await loadMultipleDaysData(fromDate, lastDate, sensorIds);
@@ -172,8 +172,8 @@ const ThermalPage = () => {
   if (loading && !selectedDate) {
     return (
       <>
-        <PageHeader 
-          title="Thermal Dashboard" 
+        <PageHeader
+          title="Thermal Dashboard"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -189,8 +189,8 @@ const ThermalPage = () => {
   if (error) {
     return (
       <>
-        <PageHeader 
-          title="Thermal Dashboard" 
+        <PageHeader
+          title="Thermal Dashboard"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -211,14 +211,14 @@ const ThermalPage = () => {
         reportType="thermal"
         reportTitle="Thermal Report"
       />
-      
-      <PageHeader 
-        title="Thermal Dashboard" 
+
+      <PageHeader
+        title="Thermal Dashboard"
         subtitle="Monitor and analyze building temperature"
         showExportButton={true}
         onExport={() => setExportDialogOpen(true)}
       />
-      
+
       <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Control Panel */}
         <ThermalControlPanel
@@ -248,7 +248,7 @@ const ThermalPage = () => {
         />
 
         {/* Floor Plan */}
-        <ThermalFloorPlan 
+        <ThermalFloorPlan
           currentData={currentData}
           floor={selectedFloor}
         />

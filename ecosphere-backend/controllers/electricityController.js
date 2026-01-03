@@ -10,7 +10,7 @@ const getAvailableDateRange = async (req, res) => {
     const consumptionRange = await ElectricityService.getAvailableDateRange('30000_TL341');
     const generationRange = await ElectricityService.getAvailableDateRange('30000_TL340');
     const netEnergyRange = await ElectricityService.getAvailableDateRange('30000_TL339');
-    
+
     res.json({
       success: true,
       dateRanges: {
@@ -34,17 +34,17 @@ const getAvailableDateRange = async (req, res) => {
 const getConsumptionData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     const data = await ElectricityService.getConsumptionData(dateFrom, dateTo);
     const metrics = ElectricityService.calculateMetrics(data);
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -69,17 +69,17 @@ const getConsumptionData = async (req, res) => {
 const getGenerationData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     const data = await ElectricityService.getGenerationData(dateFrom, dateTo);
     const metrics = ElectricityService.calculateMetrics(data);
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -104,18 +104,18 @@ const getGenerationData = async (req, res) => {
 const getNetEnergyData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     const data = await ElectricityService.getNetEnergyData(dateFrom, dateTo);
     // Use special metrics calculation that preserves sign
     const metrics = ElectricityService.calculateNetEnergyMetrics(data);
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -140,33 +140,32 @@ const getNetEnergyData = async (req, res) => {
 const getPhaseBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     // Validate date range (only 2020-11-01 to 2020-11-08 available)
-    const from = new Date(dateFrom);
-    const to = new Date(dateTo);
-    const availableFrom = new Date('2020-11-01');
-    const availableTo = new Date('2020-11-08');
-    
-    if (from < availableFrom || to > availableTo) {
+    // Use string comparison to avoid timezone issues
+    const availableFrom = '2020-11-01';
+    const availableTo = '2020-11-08';
+
+    if (dateFrom < availableFrom || dateTo > availableTo) {
       return res.status(400).json({
         success: false,
         error: 'Phase breakdown data only available from 2020-11-01 to 2020-11-08',
         availableRange: {
-          from: '2020-11-01',
-          to: '2020-11-08'
+          from: availableFrom,
+          to: availableTo
         }
       });
     }
-    
+
     const data = await ElectricityService.getPhaseBreakdownData(dateFrom, dateTo);
-    
+
     // Calculate metrics for each phase
     const metrics = {
       total: ElectricityService.calculateMetrics(data.total),
@@ -174,7 +173,7 @@ const getPhaseBreakdownData = async (req, res) => {
       phaseB: ElectricityService.calculateMetrics(data.phaseB),
       phaseC: ElectricityService.calculateMetrics(data.phaseC)
     };
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -204,16 +203,16 @@ const getPhaseBreakdownData = async (req, res) => {
 const getEquipmentBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     const data = await ElectricityService.getEquipmentBreakdownData(dateFrom, dateTo);
-    
+
     // Calculate metrics for each equipment
     const metrics = {
       panel2A1: ElectricityService.calculateMetrics(data.panel2A1),
@@ -222,7 +221,7 @@ const getEquipmentBreakdownData = async (req, res) => {
       equipment: ElectricityService.calculateMetrics(data.equipment),
       appliances: ElectricityService.calculateMetrics(data.appliances)
     };
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -253,21 +252,20 @@ const getEquipmentBreakdownData = async (req, res) => {
 const getSolarSourceBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     // Validate date range (only 2020-11-01 to 2020-11-08 available)
-    const from = new Date(dateFrom);
-    const to = new Date(dateTo);
-    const availableFrom = new Date('2020-11-01');
-    const availableTo = new Date('2020-11-08');
-    
-    if (from < availableFrom || to > availableTo) {
+    // Use string comparison to avoid timezone issues
+    const availableFrom = '2020-11-01';
+    const availableTo = '2020-11-08';
+
+    if (dateFrom < availableFrom || dateTo > availableTo) {
       return res.status(400).json({
         success: false,
         error: 'Solar source data only available from 2020-11-01 to 2020-11-08',
@@ -277,15 +275,15 @@ const getSolarSourceBreakdownData = async (req, res) => {
         }
       });
     }
-    
+
     const data = await ElectricityService.getSolarSourceBreakdownData(dateFrom, dateTo);
-    
+
     // Calculate metrics for each source
     const metrics = {
       carport: ElectricityService.calculateMetrics(data.carport),
       rooftop: ElectricityService.calculateMetrics(data.rooftop)
     };
-    
+
     res.json({
       success: true,
       dateFrom,
@@ -313,29 +311,29 @@ const getSolarSourceBreakdownData = async (req, res) => {
 const getElectricityOverview = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
-    
+
     if (!dateFrom || !dateTo) {
       return res.status(400).json({
         success: false,
         error: 'Missing dateFrom or dateTo parameter'
       });
     }
-    
+
     // Fetch all three datasets in parallel
     const [consumptionData, generationData, netEnergyData] = await Promise.all([
       ElectricityService.getConsumptionData(dateFrom, dateTo),
       ElectricityService.getGenerationData(dateFrom, dateTo),
       ElectricityService.getNetEnergyData(dateFrom, dateTo)
     ]);
-    
+
     // Calculate metrics
     const consumptionMetrics = ElectricityService.calculateMetrics(consumptionData);
     const generationMetrics = ElectricityService.calculateMetrics(generationData);
     const netEnergyMetrics = ElectricityService.calculateMetrics(netEnergyData);
-    
+
     // Calculate self-sufficiency
     const selfSufficiency = ElectricityService.calculateSelfSufficiency(generationData, consumptionData);
-    
+
     res.json({
       success: true,
       dateFrom,

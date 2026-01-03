@@ -34,11 +34,11 @@ export const useThermalData = (selectedFloor) => {
           throw new Error('No available dates found');
         }
 
-        // Use the last available date as default
+        // Use the last available date as default (add noon time to avoid timezone shifts)
         const lastDateStr = dates[dates.length - 1];
-        
-        // Create date object
-        const dateObj = new Date(lastDateStr + 'T00:00:00');
+
+        // Create date object with noon time to avoid timezone issues
+        const dateObj = new Date(lastDateStr + 'T12:00:00');
         setSelectedDate(dateObj);
 
         // Load data for that date using initial floor
@@ -64,7 +64,7 @@ export const useThermalData = (selectedFloor) => {
       setLoading(true);
       setError(null);
 
-      // Format date as YYYY-MM-DD
+      // Format date as YYYY-MM-DD (timezone-safe)
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -91,7 +91,7 @@ export const useThermalData = (selectedFloor) => {
       setLoading(true);
       setError(null);
 
-      // Format dates as YYYY-MM-DD
+      // Format dates as YYYY-MM-DD (timezone-safe)
       const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -108,17 +108,17 @@ export const useThermalData = (selectedFloor) => {
 
       // Load detailed 15-min data for all days in range
       const dates = Object.keys(aggData).sort();
-      const detailDataPromises = dates.map(date => 
+      const detailDataPromises = dates.map(date =>
         ThermalService.getMultipleSensorsDailyData(date, floorSensorIds)
       );
       const detailDataResults = await Promise.all(detailDataPromises);
-      
+
       // Organize by date
       const detailDataByDate = {};
       dates.forEach((date, index) => {
         detailDataByDate[date] = detailDataResults[index];
       });
-      
+
       setMultipleDaysDetailData(detailDataByDate);
 
       setLoading(false);
@@ -138,11 +138,11 @@ export const useThermalData = (selectedFloor) => {
     }
 
     const daysDiff = Math.ceil((dateTo - dateFrom) / (1000 * 60 * 60 * 24));
-    
+
     if (daysDiff < 0) {
       return UI_CONFIG.ERROR_MESSAGES.INVALID_RANGE;
     }
-    
+
     if (daysDiff > DATE_CONFIG.MAX_DATE_RANGE_DAYS) {
       return UI_CONFIG.ERROR_MESSAGES.RANGE_TOO_LARGE;
     }
@@ -171,7 +171,7 @@ export const useThermalData = (selectedFloor) => {
     aggregatedData,
     multipleDaysDetailData,
     sensorIds,
-    
+
     // Actions
     loadSingleDayData,
     loadMultipleDaysData,

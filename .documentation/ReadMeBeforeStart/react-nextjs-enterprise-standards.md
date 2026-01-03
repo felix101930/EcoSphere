@@ -15,10 +15,11 @@
 7. [Error Handling](#error-handling)
 8. [API Integration](#api-integration)
 9. [String Processing & HTML Safety](#string-processing--html-safety)
-10. [Styling & UI Consistency](#styling--ui-consistency)
-11. [TypeScript Best Practices](#typescript-best-practices)
-12. [Testing Strategy](#testing-strategy)
-13. [Common Pitfalls & Solutions](#common-pitfalls--solutions)
+10. [Date and Timezone Handling](#date-and-timezone-handling-defensive-programming)
+11. [Styling & UI Consistency](#styling--ui-consistency)
+12. [TypeScript Best Practices](#typescript-best-practices)
+13. [Testing Strategy](#testing-strategy)
+14. [Common Pitfalls & Solutions](#common-pitfalls--solutions)
 
 ---
 
@@ -943,7 +944,201 @@ function sanitizeInput(input) {
 
 ---
 
-## 10. Styling & UI Consistency
+## 10. Date and Timezone Handling (Defensive Programming)
+
+### The Timezone Problem
+
+When working with dates from databases that store timestamps without timezone information, JavaScript Date objects can behave inconsistently across browsers and timezones.
+
+**The Issue:**
+```javascript
+// ❌ RISKY - Browser-dependent behavior
+const date = new Date('2020-11-08');
+
+// Different browsers may interpret this as:
+// - Local time: 2020-11-08 00:00:00 MST (correct)
+// - UTC time: 2020-11-08 00:00:00 UTC → 2020-11-07 17:00:00 MST (WRONG - previous day!)
+```
+
+### The Solution: Add Noon Time
+
+**✅ SAFE - Defensive programming approach:**
+```javascript
+// Add T12:00:00 to prevent date boundary crossing
+const date = new Date('2020-11-08T12:00:00');
+
+// Even if browser applies timezone conversion:
+// 2020-11-08 12:00:00 UTC → 2020-11-08 05:00:00 MST (still same day)
+```
+
+### Why Noon Time (12:00:00)?
+
+1. **Safety Margin**: Noon provides enough buffer that timezone conversions won't cross date boundaries
+2. **Browser Compatibility**: Works consistently across all browsers
+3. **Future-Proof**: If someone accesses from a different timezone, dates remain correct
+4. **Defensive**: Prevents subtle bugs from timezone edge cases
+
+### Implementation Patterns
+
+**Pattern 1: Creating Date Objects from Strings**
+```javascript
+// ✅ GOOD - Add noon time when creating from date string
+const dateStr = '2020-11-08';
+const date = new Date(dateStr + 'T12:00:00');
+
+// ❌ BAD - Direct creation without time
+const date = new Date('2020-11-08');
+```
+
+**Pattern 2: Formatting Dates for API**
+```javascript
+// ✅ GOOD - Use local time methods (not UTC methods)
+function formatDate(date) {
+  if (!date) return null;
+  
+  // Check if already formatted
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  
+  // Use local time components
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
+
+// ❌ BAD - Using UTC methods when database uses local time
+function formatDate(date) {
+  const year = date.getUTCFullYear();  // Wrong if DB uses local time
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+```
+
+**Pattern 3: Date Pickers and User Input**
+```javascript
+// ✅ GOOD - Add noon time when setting default dates
+useEffect(() => {
+  if (dateRange && !dateFrom && !dateTo) {
+    const maxDateStr = dateRange.maxDate; // e.g., "2020-11-08"
+    const maxDate = new Date(maxDateStr + 'T12:00:00');
+    const minDate = new Date(maxDate);
+    minDate.setDate(minDate.getDate() - 7);
+    
+    setDateFrom(minDate);
+    setDateTo(maxDate);
+  }
+}, [dateRange, dateFrom, dateTo]);
+```
+
+**Pattern 4: Backend Date Validation**
+```javascript
+// ✅ GOOD - Use string comparison instead of Date objects
+const validateDateRange = (dateFrom, dateTo) => {
+  const availableFrom = '2020-11-01';
+  const availableTo = '2020-11-08';
+  
+  // String comparison avoids timezone issues
+  if (dateFrom < availableFrom || dateTo > availableTo) {
+    return { error: 'Date out of range' };
+  }
+  
+  return { valid: true };
+};
+
+// ❌ BAD - Creating Date objects for comparison
+const validateDateRange = (dateFrom, dateTo) => {
+  const from = new Date(dateFrom);  // May shift date
+  const to = new Date(dateTo);
+  const availableFrom = new Date('2020-11-01');
+  const availableTo = new Date('2020-11-08');
+  
+  if (from < availableFrom || to > availableTo) {
+    return { error: 'Date out of range' };
+  }
+  
+  return { valid: true };
+};
+```
+
+### Key Principles
+
+1. **Always use local time methods** when database stores local time:
+   - ✅ `getFullYear()`, `getMonth()`, `getDate()`
+   - ❌ `getUTCFullYear()`, `getUTCMonth()`, `getUTCDate()`
+
+2. **Add T12:00:00 when creating Date objects from date strings**:
+   - Prevents date boundary crossing
+   - Ensures consistent behavior across browsers
+
+3. **Use string comparison for date validation**:
+   - Avoids timezone conversion issues
+   - Simpler and more reliable
+
+4. **Document timezone assumptions**:
+   - Comment where dates come from (database, user input, API)
+   - Note if timestamps include timezone information
+
+### Real-World Example
+
+```javascript
+// Custom hook for loading thermal data
+const useThermalData = (selectedFloor) => {
+  const [selectedDate, setSelectedDate] = useState(null);
+  
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const dates = await ThermalService.getAvailableDates();
+      
+      if (dates.length > 0) {
+        // ✅ Add noon time to prevent timezone issues
+        const lastDateStr = dates[dates.length - 1];
+        const dateObj = new Date(lastDateStr + 'T12:00:00');
+        setSelectedDate(dateObj);
+        
+        // Load data for that date
+        const data = await ThermalService.getMultipleSensorsDailyData(
+          lastDateStr,  // Send as string, not Date object
+          sensorIds
+        );
+        setDailyData(data);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
+  
+  // Format date for API (timezone-safe)
+  const loadSingleDayData = useCallback(async (date, sensorIds) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    
+    const data = await ThermalService.getMultipleSensorsDailyData(dateStr, sensorIds);
+    return data;
+  }, []);
+};
+```
+
+### When NOT to Use This Pattern
+
+This pattern is specifically for databases that store timestamps **without timezone information** in **local time**. 
+
+**Don't use this pattern if:**
+- Database stores timestamps with timezone (e.g., `TIMESTAMP WITH TIME ZONE`)
+- Database stores timestamps in UTC
+- Working with ISO 8601 strings that include timezone (e.g., `2020-11-08T12:00:00Z`)
+
+In those cases, use proper timezone libraries like `date-fns-tz` or `luxon`.
+
+
+---
+
+## 11. Styling & UI Consistency
 
 ### Centralize UI Styles
 

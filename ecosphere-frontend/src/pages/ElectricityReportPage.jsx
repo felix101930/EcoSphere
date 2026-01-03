@@ -13,14 +13,14 @@ import { useElectricityData } from '../lib/hooks/useElectricityData';
 const ElectricityReportPage = () => {
   // Tab state
   const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);
-  
+
   // Date filter state
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
-  
+
   // Export dialog state
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  
+
   // Custom hook for data management
   const {
     loading,
@@ -44,10 +44,12 @@ const ElectricityReportPage = () => {
   useEffect(() => {
     if (dateRange && !dateFrom && !dateTo) {
       // Set default to last 7 days of available data
-      const maxDate = new Date(dateRange.consumption.maxDate);
+      // Use date strings directly to avoid timezone issues
+      const maxDateStr = dateRange.consumption.maxDate; // e.g., "2020-11-08"
+      const maxDate = new Date(maxDateStr + 'T12:00:00'); // Add noon time to avoid timezone shifts
       const minDate = new Date(maxDate);
       minDate.setDate(minDate.getDate() - 7);
-      
+
       setDateFrom(minDate);
       setDateTo(maxDate);
     }
@@ -130,8 +132,8 @@ const ElectricityReportPage = () => {
   if (!dateRange && loading) {
     return (
       <>
-        <PageHeader 
-          title="Electricity Report" 
+        <PageHeader
+          title="Electricity Report"
           subtitle="Monitor and analyze electricity consumption and generation"
         />
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', px: 4 }}>
@@ -145,8 +147,8 @@ const ElectricityReportPage = () => {
   if (error && !dateRange) {
     return (
       <>
-        <PageHeader 
-          title="Electricity Report" 
+        <PageHeader
+          title="Electricity Report"
           subtitle="Monitor and analyze electricity consumption and generation"
         />
         <Box sx={{ px: 4, mt: 4 }}>
@@ -158,8 +160,8 @@ const ElectricityReportPage = () => {
 
   return (
     <>
-      <PageHeader 
-        title="Electricity Report" 
+      <PageHeader
+        title="Electricity Report"
         subtitle="Monitor and analyze electricity consumption and generation"
         showExportButton={true}
         onExport={() => setExportDialogOpen(true)}
@@ -172,7 +174,7 @@ const ElectricityReportPage = () => {
         reportType="Electricity"
         reportTitle="Electricity Report"
       />
-      
+
       <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Time Filter */}
         <ElectricityTimeFilter
@@ -187,16 +189,16 @@ const ElectricityReportPage = () => {
         {/* Main Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
-            <Tab 
-              label="Consumption" 
+            <Tab
+              label="Consumption"
               value={TAB_TYPES.CONSUMPTION}
             />
-            <Tab 
-              label="Generation" 
+            <Tab
+              label="Generation"
               value={TAB_TYPES.GENERATION}
             />
-            <Tab 
-              label="Net Energy" 
+            <Tab
+              label="Net Energy"
               value={TAB_TYPES.NET_ENERGY}
             />
           </Tabs>
@@ -204,8 +206,8 @@ const ElectricityReportPage = () => {
 
         {/* Tab Content */}
         {activeTab === TAB_TYPES.CONSUMPTION && (
-          <ConsumptionTab 
-            data={consumptionData} 
+          <ConsumptionTab
+            data={consumptionData}
             loading={loading}
             dateFrom={dateFrom}
             dateTo={dateTo}
@@ -216,8 +218,8 @@ const ElectricityReportPage = () => {
           />
         )}
         {activeTab === TAB_TYPES.GENERATION && (
-          <GenerationTab 
-            data={generationData} 
+          <GenerationTab
+            data={generationData}
             loading={loading}
             dateFrom={dateFrom}
             dateTo={dateTo}
@@ -226,8 +228,8 @@ const ElectricityReportPage = () => {
           />
         )}
         {activeTab === TAB_TYPES.NET_ENERGY && (
-          <NetEnergyTab 
-            data={netEnergyData} 
+          <NetEnergyTab
+            data={netEnergyData}
             loading={loading}
           />
         )}

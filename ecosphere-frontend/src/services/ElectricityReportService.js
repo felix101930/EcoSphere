@@ -133,14 +133,25 @@ class ElectricityReportService {
   }
 
   /**
-   * Format date to YYYY-MM-DD
+   * Format date to YYYY-MM-DD (timezone-safe)
+   * Uses local date components to avoid timezone conversion issues
    */
   formatDate(date) {
     if (!date) return null;
+
+    // If date is already a string in YYYY-MM-DD format, return as-is
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+
     const d = new Date(date);
+
+    // Use local date components to avoid timezone shifts
+    // This ensures the date selected in the UI is the date sent to the API
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
+
     return `${year}-${month}-${day}`;
   }
 }
