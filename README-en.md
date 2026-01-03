@@ -31,8 +31,8 @@ Edit `ecosphere-backend/.env` file to configure your SQL Server database:
 
 ```env
 # SQL Server Configuration
-DB_SERVER=localhost          # Database server address
-DB_DATABASE=TestSlimDB       # Database name
+DB_SERVER=.\SQLEXPRESS        # Database server address (use .\SQLEXPRESS for SQL Server Express)
+DB_DATABASE=TestSlimDB        # Database name
 
 # If using SQL Server Authentication, uncomment and fill in:
 # DB_USER=your_username
@@ -43,14 +43,19 @@ DB_DATABASE=TestSlimDB       # Database name
 
 **Important Notes**:
 - Default uses **Windows Authentication** (no username/password needed)
+- For SQL Server Express, use `.\SQLEXPRESS` as the server name
 - If your database uses SQL Server Authentication, set `DB_USER` and `DB_PASSWORD`
 - Ensure SQL Server is running and accessible
 - Table name format: `SaitSolarLab_<sensor_id>` (e.g., `SaitSolarLab_20004_TL2`)
+- **ODBC Driver 18 Requirement**: If using sqlcmd version 18+, add `-C` flag to trust server certificate
 
 **Test Database Connection**:
 ```bash
-# Test connection in command line
-sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+# Test connection in command line (with ODBC Driver 18)
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+
+# If using older sqlcmd version (without -C flag)
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
 ```
 
 ### 4. Update Data
@@ -381,11 +386,14 @@ sc query MSSQLSERVER
 
 **Step 2: Test Database Connection**
 ```bash
-# Test with Windows Authentication
-sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT @@VERSION"
+# Test with Windows Authentication (ODBC Driver 18)
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT @@VERSION"
 
-# Test with SQL Server Authentication
-sqlcmd -S localhost -U your_username -P your_password -d TestSlimDB -Q "SELECT @@VERSION"
+# Test with SQL Server Authentication (ODBC Driver 18)
+sqlcmd -S .\SQLEXPRESS -U your_username -P your_password -d TestSlimDB -C -Q "SELECT @@VERSION"
+
+# If using older sqlcmd version, omit the -C flag
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -Q "SELECT @@VERSION"
 ```
 
 **Step 3: Verify Database Configuration**
@@ -395,17 +403,19 @@ sqlcmd -S localhost -U your_username -P your_password -d TestSlimDB -Q "SELECT @
 
 **Step 4: Check Database Tables**
 ```bash
-# List all tables
-sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
+# List all tables (ODBC Driver 18)
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
 
-# Check if sensor table exists
-sqlcmd -S localhost -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
+# Check if sensor table exists (ODBC Driver 18)
+sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
 ```
 
 **Common Issues**:
+- **Wrong server name**: For SQL Server Express, use `.\SQLEXPRESS` not `localhost`
 - **Wrong database name**: Confirm your database name is `TestSlimDB`
 - **Wrong table name**: Sensor table format must be `SaitSolarLab_<sensor_id>`
-- **Port issue**: If SQL Server uses non-default port, set `DB_SERVER=localhost,1434` in `.env`
+- **ODBC Driver 18**: If using sqlcmd version 18+, add `-C` flag to trust server certificate
+- **Port issue**: If SQL Server uses non-default port, set `DB_SERVER=.\SQLEXPRESS,1434` in `.env`
 - **Firewall**: Ensure firewall allows SQL Server connections
 
 **Test API Endpoint**:
