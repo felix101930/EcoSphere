@@ -3,7 +3,6 @@ import { Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
 import OverviewPage from './pages/OverviewPage';
 import UserManagementPage from './pages/UserManagementPage';
 import CarbonFootprintPage from './pages/CarbonFootprintPage';
@@ -29,7 +28,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
   }
 
   if (adminOnly && !isAdmin()) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/overview" replace />;
   }
 
   return children;
@@ -70,17 +69,6 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
 
             {/* Protected Routes - Dashboards (with AI Chatbot) */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <MainLayout showAIChatbot={true}>
-                    <DashboardPage />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             <Route
               path="/overview"
               element={

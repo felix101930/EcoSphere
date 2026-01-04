@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setIsLoading(true);
-      
+
       // Get IP address for logging
       let ipAddress = '127.0.0.1';
       try {
@@ -46,17 +46,17 @@ export const AuthProvider = ({ children }) => {
       } catch {
         console.log('Could not fetch IP address, using default');
       }
-      
+
       // Call backend login API
       const response = await fetch('http://localhost:3001/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
           password,
-          ipAddress 
+          ipAddress
         })
       });
 
@@ -66,19 +66,19 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await response.json();
-      
+
       setCurrentUser(data.user);
       sessionStorage.setItem('ecosphere_user', JSON.stringify(data.user));
-      
+
       // Redirect based on role after successful login
       if (data.user.role === 'Admin' || data.user.role === 'SuperAdmin') {
         navigate('/users');
       } else {
-        navigate('/dashboard');
+        navigate('/overview');
       }
-      
+
       return { success: true, user: data.user };
-      
+
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: error.message || 'Invalid email or password' };
@@ -98,14 +98,14 @@ export const AuthProvider = ({ children }) => {
           console.error('Error updating logout:', logError);
         }
       }
-      
+
       // Clear local state
       setCurrentUser(null);
       sessionStorage.removeItem('ecosphere_user');
-      
+
       // Redirect to login
       navigate('/login');
-      
+
     } catch (error) {
       console.error('Logout error:', error);
     }

@@ -22,14 +22,14 @@ function LoginPage() {
 
     try {
       const result = await login(email, password);
-      
+
       if (result.success) {
         // Navigation is handled by AuthContext's onAuthStateChanged
         // But we can show a success message or redirect based on role
         if (result.user && result.user.role === 'Admin') {
           navigate('/users');
         } else {
-          navigate('/dashboard');
+          navigate('/overview');
         }
       } else {
         setError(result.error || 'Login failed');
@@ -78,10 +78,10 @@ function LoginPage() {
         >
           {/* SAIT Logo */}
           <Box sx={{ mb: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-            <img 
-              src={saitLogo} 
-              alt="SAIT Logo" 
-              style={{ 
+            <img
+              src={saitLogo}
+              alt="SAIT Logo"
+              style={{
                 maxWidth: '280px',
                 width: '100%',
                 height: 'auto',
@@ -100,8 +100,8 @@ function LoginPage() {
           {/* Login Form */}
           <form onSubmit={handleSubmit}>
             <Box sx={{ mb: 2 }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 sx={{ mb: 0.5, color: '#666', fontWeight: 500 }}
               >
                 Email address
@@ -122,8 +122,8 @@ function LoginPage() {
             </Box>
 
             <Box sx={{ mb: 2 }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 sx={{ mb: 0.5, color: '#666', fontWeight: 500 }}
               >
                 Password
@@ -182,16 +182,16 @@ function LoginPage() {
             </Button>
 
             {/* Demo Accounts Info */}
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mt: 3, 
-                textAlign: 'center', 
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 3,
+                textAlign: 'center',
                 color: '#666',
                 fontSize: '12px'
               }}
             >
-              Demo: admin@ecosphere.com / password123
+              Demo: super.admin@edu.sait.ca / abcd1234
             </Typography>
           </form>
         </Paper>
