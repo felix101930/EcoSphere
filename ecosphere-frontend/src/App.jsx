@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import OverviewPage from './pages/OverviewPage';
 import UserManagementPage from './pages/UserManagementPage';
 import CarbonFootprintPage from './pages/CarbonFootprintPage';
 import ThermalPage from './pages/ThermalPage';
@@ -75,6 +76,17 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout showAIChatbot={true}>
                     <DashboardPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/overview"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <OverviewPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
