@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // Database connection configuration
 const DB_CONFIG = {
-    SERVER: process.env.DB_SERVER || 'localhost',
+    SERVER: process.env.DB_SERVER || '.\\SQLEXPRESS',
     DATABASE: process.env.DB_DATABASE || 'TestSlimDB',
     USER: process.env.DB_USER,
     PASSWORD: process.env.DB_PASSWORD,
@@ -41,7 +41,11 @@ const TABLE_NAMES = {
 
     // Electricity - Solar Source
     SOLAR_CARPORT: `${TABLE_PREFIX}${TABLE_NAMESPACE}TL252`,
-    SOLAR_ROOFTOP: `${TABLE_PREFIX}${TABLE_NAMESPACE}TL253`
+    SOLAR_ROOFTOP: `${TABLE_PREFIX}${TABLE_NAMESPACE}TL253`,
+
+    // Water - Rainwater and Hot Water
+    RAINWATER_LEVEL: `${TABLE_PREFIX}20000_TL93`,
+    HOT_WATER_CONSUMPTION: `${TABLE_PREFIX}${TABLE_NAMESPACE}TL210`
 };
 
 // Query constants

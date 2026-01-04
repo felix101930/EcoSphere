@@ -8,6 +8,7 @@ import UserManagementPage from './pages/UserManagementPage';
 import CarbonFootprintPage from './pages/CarbonFootprintPage';
 import ThermalPage from './pages/ThermalPage';
 import ElectricityReportPage from './pages/ElectricityReportPage';
+import WaterReportPage from './pages/WaterReportPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
@@ -39,12 +40,12 @@ function MainLayout({ children, showAIChatbot = true }) {
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Left Sidebar - Fixed */}
       <Sidebar />
-      
+
       {/* Main Content Area - Scrollable */}
-      <Box 
-        sx={{ 
-          flexGrow: 1, 
-          bgcolor: 'white', 
+      <Box
+        sx={{
+          flexGrow: 1,
+          bgcolor: 'white',
           overflowY: 'auto',
           height: '100vh'
         }}
@@ -64,117 +65,117 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
-          {/* Public Route */}
-          <Route path="/login" element={<LoginPage />} />
+            {/* Public Route */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected Routes - Dashboards (with AI Chatbot) */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <DashboardPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes - Dashboards (with AI Chatbot) */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <DashboardPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/electricity"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <ElectricityReportPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/electricity"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <ElectricityReportPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/water"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <ComingSoonPage featureName="Water Dashboard" />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/water"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <WaterReportPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/thermal"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <ThermalPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/thermal"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <ThermalPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Protected Routes - Advanced (with AI Chatbot) */}
-          <Route
-            path="/3d-model"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <ComingSoonPage featureName="3D Model" />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes - Advanced (with AI Chatbot) */}
+            <Route
+              path="/3d-model"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <ComingSoonPage featureName="3D Model" />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Protected Routes - Calculator (with AI Chatbot) */}
-          <Route
-            path="/carbon-footprint"
-            element={
-              <ProtectedRoute>
-                <MainLayout showAIChatbot={true}>
-                  <CarbonFootprintPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes - Calculator (with AI Chatbot) */}
+            <Route
+              path="/carbon-footprint"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <CarbonFootprintPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Protected Routes - Management (Admin Only, NO AI Chatbot) */}
-          <Route
-  path="/users"
-  element={
-    <ProtectedRoute adminOnly={true}>
-      <MainLayout showAIChatbot={false}>
-        <UserManagementPage />
-      </MainLayout>
-    </ProtectedRoute>
-  }
-/>
+            {/* Protected Routes - Management (Admin Only, NO AI Chatbot) */}
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MainLayout showAIChatbot={false}>
+                    <UserManagementPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-  path="/dashboard-management"
-  element={
-    <ProtectedRoute adminOnly={true}>
-      <MainLayout showAIChatbot={false}>
-        <ComingSoonPage featureName="Dashboard Management" />
-      </MainLayout>
-    </ProtectedRoute>
-  }
-/>
+            <Route
+              path="/dashboard-management"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MainLayout showAIChatbot={false}>
+                    <ComingSoonPage featureName="Dashboard Management" />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-  path="/quiz-management"
-  element={
-    <ProtectedRoute adminOnly={true}>
-      <MainLayout showAIChatbot={false}>
-        <ComingSoonPage featureName="Quiz Management" />
-      </MainLayout>
-    </ProtectedRoute>
-  }
-/>
+            <Route
+              path="/quiz-management"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MainLayout showAIChatbot={false}>
+                    <ComingSoonPage featureName="Quiz Management" />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+            {/* Default Route */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   );
 }

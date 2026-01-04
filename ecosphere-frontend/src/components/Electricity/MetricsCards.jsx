@@ -1,8 +1,8 @@
 // Metrics Cards Component - Display key metrics
 import { Box, Paper, Typography, Grid } from '@mui/material';
-import { 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  TrendingUp,
+  TrendingDown,
   ShowChart,
   Speed
 } from '@mui/icons-material';
@@ -26,7 +26,7 @@ const MetricCard = ({ title, value, unit, icon: IconComponent, color = 'primary'
   );
 };
 
-const MetricsCards = ({ metrics }) => {
+const MetricsCards = ({ metrics, unit = 'Wh' }) => {
   if (!metrics) {
     return null;
   }
@@ -41,7 +41,7 @@ const MetricsCards = ({ metrics }) => {
           <MetricCard
             title="Total"
             value={Math.abs(metrics.total).toFixed(2)}
-            unit="Wh"
+            unit={unit}
             icon={ShowChart}
             color="primary"
           />
@@ -50,7 +50,7 @@ const MetricsCards = ({ metrics }) => {
           <MetricCard
             title="Average"
             value={Math.abs(metrics.average).toFixed(2)}
-            unit="Wh"
+            unit={unit}
             icon={Speed}
             color="info"
           />
@@ -59,7 +59,7 @@ const MetricsCards = ({ metrics }) => {
           <MetricCard
             title="Peak"
             value={Math.abs(metrics.peak).toFixed(2)}
-            unit="Wh"
+            unit={unit}
             icon={TrendingUp}
             color="error"
           />
@@ -68,7 +68,7 @@ const MetricsCards = ({ metrics }) => {
           <MetricCard
             title="Minimum"
             value={Math.abs(metrics.min).toFixed(2)}
-            unit="Wh"
+            unit={unit}
             icon={TrendingDown}
             color="success"
           />

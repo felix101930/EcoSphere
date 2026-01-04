@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const config = require("./config/config");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
+const waterRoutes = require("./routes/waterRoutes");
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.get("/", (req, res) => {
       users: "/api/users",
       auth: "/api/auth/login",
       electricity: "/api/electricity/*",
+      water: "/api/water/*",
     },
     documentation: "Visit /api/health for system status",
   });
@@ -56,6 +58,7 @@ const thermalRoutes = require("./routes/thermalRoutes");
 // API Routes
 app.use("/api", userRoutes); // This includes /api/auth/login
 app.use("/api/electricity", electricityRoutes);
+app.use("/api/water", waterRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/db", databaseTestRoutes);
 app.use("/api/thermal", thermalRoutes);
@@ -70,6 +73,7 @@ app.get("/api/health", (req, res) => {
     routes: {
       users: "loaded",
       electricity: "loaded",
+      water: "loaded",
     },
   });
 });

@@ -28,7 +28,15 @@ ChartJS.register(
   TimeScale
 );
 
-const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMARY, preserveSign = false }) => {
+const OverallTrendChart = ({
+  data,
+  title,
+  dataLabel,
+  color = CHART_COLORS.PRIMARY,
+  preserveSign = false,
+  unit = 'Wh',
+  yAxisLabel = 'Energy (Wh)'
+}) => {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!data || data.length === 0) {
@@ -75,13 +83,13 @@ const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMAR
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += context.parsed.y.toFixed(2) + ' Wh';
+              label += context.parsed.y.toFixed(2) + ' ' + unit;
             }
             return label;
           }
@@ -106,16 +114,16 @@ const OverallTrendChart = ({ data, title, dataLabel, color = CHART_COLORS.PRIMAR
         beginAtZero: false,
         title: {
           display: true,
-          text: 'Energy (Wh)'
+          text: yAxisLabel
         },
         ticks: {
-          callback: function(value) {
-            return value.toLocaleString() + ' Wh';
+          callback: function (value) {
+            return value.toLocaleString() + ' ' + unit;
           }
         }
       }
     }
-  }), []);
+  }), [unit, yAxisLabel]);
 
   if (!chartData) {
     return (
