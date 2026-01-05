@@ -38,7 +38,8 @@ const ElectricityReportPage = () => {
     loadNetEnergyData,
     loadPhaseBreakdown,
     loadEquipmentBreakdown,
-    loadSolarBreakdown
+    loadSolarBreakdown,
+    clearData
   } = useElectricityData();
 
   // Set default date range when dateRange is loaded
@@ -68,6 +69,10 @@ const ElectricityReportPage = () => {
     }
 
     try {
+      // Clear all existing data first to force reload
+      // This ensures all tabs get fresh data when dates change
+      clearData();
+
       // Load data based on active tab
       switch (activeTab) {
         case TAB_TYPES.CONSUMPTION:
