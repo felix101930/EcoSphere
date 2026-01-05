@@ -1,13 +1,67 @@
 // Data Availability Card - Shows data status and algorithm selection
-import { Box, Card, CardContent, Typography, LinearProgress, Alert, Chip } from '@mui/material';
+import { Box, Card, CardContent, Typography, LinearProgress, Alert, Chip, Grid } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
 
+// Algorithm Tier Card Component
+const AlgorithmTierCard = ({ tier, name, stars, features, requirements, isActive }) => {
+    return (
+        <Grid item xs={12} sm={6} md={3}>
+            <Box
+                sx={{
+                    p: 2,
+                    height: 270,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    borderRadius: 1,
+                    border: '2px solid',
+                    borderColor: isActive ? 'success.main' : 'grey.300',
+                    bgcolor: isActive ? 'success.light' : 'grey.50',
+                    opacity: isActive ? 1 : 0.6,
+                    transition: 'all 0.3s'
+                }}
+            >
+                <Box sx={{ mb: 1.5 }}>
+                    <Chip
+                        label={`Tier ${tier}`}
+                        size="small"
+                        color={isActive ? 'success' : 'default'}
+                        sx={{ mb: 1 }}
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {stars}
+                    </Typography>
+                </Box>
+                <Box sx={{ height: 72, mb: 1 }}>
+                    {features.map((feature, index) => (
+                        <Typography key={index} variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
+                            • {feature}
+                        </Typography>
+                    ))}
+                </Box>
+                <Box sx={{ pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        Requirements:
+                    </Typography>
+                    {requirements.map((req, index) => (
+                        <Typography key={index} variant="caption" display="block" color="text.secondary">
+                            • {req}
+                        </Typography>
+                    ))}
+                </Box>
+            </Box>
+        </Grid>
+    );
+};
+
 const DataAvailabilityCard = ({ metadata }) => {
     if (!metadata) return null;
 
-    const { dataAvailability, strategyName, confidence, accuracy, warning } = metadata;
+    const { dataAvailability, strategy, strategyName, confidence, accuracy, warning } = metadata;
 
     // Determine confidence level
     const getConfidenceLevel = (conf) => {
@@ -81,13 +135,13 @@ const DataAvailabilityCard = ({ metadata }) => {
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {dataAvailability.hasTwoYearsCycle ? (
+                            {dataAvailability.hasOneYearCycle ? (
                                 <CheckCircleIcon fontSize="small" color="success" />
                             ) : (
                                 <WarningIcon fontSize="small" color="warning" />
                             )}
                             <Typography variant="body2">
-                                Complete 2-year cycle data
+                                Complete 1-year cycle data
                             </Typography>
                         </Box>
                     </Box>
@@ -151,6 +205,77 @@ const DataAvailabilityCard = ({ metadata }) => {
                         The prediction results are still reliable, but accuracy may be slightly lower than with complete data.
                     </Alert>
                 )}
+
+                {/* Algorithm Explanation */}
+                <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                        📚 Prediction Algorithm Tiers
+                    </Typography>
+
+                    <Grid container spacing={2}>
+                        <AlgorithmTierCard
+                            tier={1}
+                            name="Holt-Winters"
+                            stars="★★★★★"
+                            features={[
+                                'Industry standard method',
+                                'Exponential smoothing',
+                                'Weekly seasonality'
+                            ]}
+                            requirements={[
+                                '1 year historical data',
+                                '70% data completeness'
+                            ]}
+                            isActive={strategy === 'HOLT_WINTERS'}
+                        />
+
+                        <AlgorithmTierCard
+                            tier={2}
+                            name="Seasonal Weighted"
+                            stars="★★★★☆"
+                            features={[
+                                '30% last year data',
+                                '50% last week data',
+                                '20% 30-day average'
+                            ]}
+                            requirements={[
+                                'Last year same period',
+                                'Recent 30 days data'
+                            ]}
+                            isActive={strategy === 'SEASONAL_WEIGHTED'}
+                        />
+
+                        <AlgorithmTierCard
+                            tier={3}
+                            name="Trend-Based"
+                            stars="★★★☆☆"
+                            features={[
+                                'Linear trend analysis',
+                                'No seasonality',
+                                'Recent pattern only'
+                            ]}
+                            requirements={[
+                                'Recent 30 days data'
+                            ]}
+                            isActive={strategy === 'TREND_BASED'}
+                        />
+
+                        <AlgorithmTierCard
+                            tier={4}
+                            name="Moving Average"
+                            stars="★★☆☆☆"
+                            features={[
+                                'Simple average',
+                                'Baseline method',
+                                'No trend/seasonality'
+                            ]}
+                            requirements={[
+                                'Recent 7 days data'
+                            ]}
+                            isActive={strategy === 'MOVING_AVERAGE'}
+                        />
+                    </Grid>
+                </Box>
             </CardContent>
         </Card>
     );

@@ -62,8 +62,8 @@ class ForecastService {
         const target = new Date(targetDate + 'T12:00:00');
         const dataPoints = historicalData.length;
 
-        // Check for 2 years of data (730 days)
-        const hasTwoYearsCycle = dataPoints >= 730 * 24; // Hourly data
+        // Check for 1 year of data (365 days)
+        const hasOneYearCycle = dataPoints >= 365 * 24; // Hourly data
 
         // Check for last year same period
         const lastYearStart = new Date(target);
@@ -102,7 +102,7 @@ class ForecastService {
         const missingPeriods = this.identifyMissingPeriods(historicalData);
 
         return {
-            hasTwoYearsCycle,
+            hasOneYearCycle,
             hasLastYearData,
             hasRecent30Days,
             hasRecent7Days,
@@ -193,12 +193,12 @@ class ForecastService {
      */
     static selectPredictionStrategy(dataAvailability) {
         // Tier 1: Holt-Winters (Best)
-        if (dataAvailability.hasTwoYearsCycle &&
-            dataAvailability.completenessScore >= 80) {
+        if (dataAvailability.hasOneYearCycle &&
+            dataAvailability.completenessScore >= 70) {
             return {
                 strategy: 'HOLT_WINTERS',
                 name: 'Holt-Winters Seasonal Smoothing',
-                confidence: 95,
+                confidence: 90,
                 accuracy: '★★★★★',
                 warning: null
             };
