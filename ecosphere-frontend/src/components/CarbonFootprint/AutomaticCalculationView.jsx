@@ -4,7 +4,7 @@ import { CHART_COLORS, CARBON_INTENSITY } from '../../lib/constants/carbonFootpr
 import NoDataMessage from '../Common/NoDataMessage';
 import { DATA_RANGES } from '../../lib/constants/carbonFootprint';
 
-export default function AutomaticCalculationView({ data, carbonIntensity }) {
+export default function AutomaticCalculationView({ data, carbonIntensity, isSingleDay }) {
     if (!data || !data.data || data.data.length === 0) {
         return (
             <Card sx={{ mb: 3 }}>
@@ -22,10 +22,11 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
         );
     }
 
-    // Calculate carbon footprint for each day using its specific carbon intensity
+    // Calculate carbon footprint for each data point
     const carbonFootprintData = data.data.map(item => {
         // Extract date from timestamp (YYYY-MM-DD)
-        const dateStr = (item.timestamp || item.ts).split('T')[0];
+        const fullTimestamp = item.timestamp || item.ts;
+        const dateStr = fullTimestamp.split('T')[0];
 
         // Get carbon intensity for this specific date
         const dayIntensity = carbonIntensity && carbonIntensity[dateStr]
@@ -35,10 +36,11 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
         // Use absolute value (consumption is negative in database)
         const energyConsumption = Math.abs(item.value);
 
-        // Calculate carbon footprint for this day
+        // Calculate carbon footprint
         const carbonFootprint = energyConsumption * dayIntensity;
 
         return {
+            timestamp: fullTimestamp,
             date: dateStr,
             energy: energyConsumption,
             carbon: carbonFootprint,
@@ -58,8 +60,18 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
     // Prepare chart data
     const chartData = {
         labels: carbonFootprintData.map(item => {
-            const date = new Date(item.date + 'T12:00:00');
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (isSingleDay) {
+                // For single day, show hour (e.g., "1 AM", "2 PM")
+                const date = new Date(item.timestamp);
+                const hour = date.getHours();
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour % 12 || 12;
+                return `${displayHour} ${ampm}`;
+            } else {
+                // For multiple days, show date (e.g., "Nov 1")
+                const date = new Date(item.date + 'T12:00:00');
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
         }),
         datasets: [
             {
@@ -102,7 +114,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
             tooltip: {
                 callbacks: {
                     title: function (context) {
-                        // Show date as title
+                        // Show date/time as title
                         return context[0].label;
                     },
                     label: function (context) {
@@ -174,7 +186,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
                     <Grid item xs={12} sm={6} md={3}>
                         <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                                Avg Consumption/Day
+                                {isSingleDay ? 'Avg Consumption/Hour' : 'Avg Consumption/Day'}
                             </Typography>
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                 {avgEnergy.toFixed(2)} kWh
@@ -184,7 +196,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
                     <Grid item xs={12} sm={6} md={3}>
                         <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                                Avg Footprint/Day
+                                {isSingleDay ? 'Avg Footprint/Hour' : 'Avg Footprint/Day'}
                             </Typography>
                             <Typography variant="h6" sx={{ fontWeight: 600, color: '#DA291C' }}>
                                 {avgCarbon.toFixed(2)} kg CO₂
@@ -201,7 +213,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity }) {
                 {/* Carbon Intensity Info */}
                 <Box sx={{ mt: 2, p: 2, bgcolor: '#f9f9f9', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                        Note: Each day's carbon footprint is calculated using that day's actual carbon intensity from the grid. Hover over the chart to see the carbon intensity for each specific day.
+                        Note: Each {isSingleDay ? 'hour' : 'day'}'s carbon footprint is calculated using that {isSingleDay ? 'day' : 'day'}'s actual carbon intensity from the grid. Hover over the chart to see the carbon intensity.
                     </Typography>
                 </Box>
             </CardContent>

@@ -20,12 +20,17 @@ export const TIME_PRESETS = {
     YESTERDAY: 'yesterday',
     LAST_7_DAYS: 'last7days',
     LAST_30_DAYS: 'last30days',
-    DEMO_DAY: 'demoday'
+    CUSTOM: 'custom'
 };
 
-export const DEMO_DATE_RANGE = {
-    start: '2020-11-01',
-    end: '2020-11-08'
+// Demo dates based on available data (Nov 2020)
+export const DEMO_DATES = {
+    TODAY: '2020-11-08',
+    YESTERDAY: '2020-11-07',
+    LAST_7_DAYS_START: '2020-11-02',
+    LAST_7_DAYS_END: '2020-11-08',
+    LAST_30_DAYS_START: '2020-10-10',
+    LAST_30_DAYS_END: '2020-11-08'
 };
 
 // ============================================================================

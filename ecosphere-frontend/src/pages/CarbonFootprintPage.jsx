@@ -5,7 +5,7 @@ import TimePresetSelector from '../components/CarbonFootprint/TimePresetSelector
 import AutomaticCalculationView from '../components/CarbonFootprint/AutomaticCalculationView';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
 import useCarbonFootprintData from '../lib/hooks/useCarbonFootprintData';
-import { CARBON_INTENSITY } from '../lib/constants/carbonFootprint';
+import { CARBON_INTENSITY, TIME_PRESETS } from '../lib/constants/carbonFootprint';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -33,18 +33,44 @@ export default function CarbonFootprintPage() {
   const {
     timePreset,
     setTimePreset,
+    dateRange,
+    setDateRange,
     loading,
     error,
     consumptionData,
-    carbonIntensity
+    carbonIntensity,
+    isSingleDay,
+    reload
   } = useCarbonFootprintData();
 
-  // Calculate emission factor
-  const emissionFactor = carbonIntensity
-    ? carbonIntensity.carbonIntensity / 1000 // Convert g/kWh to kg/kWh
-    : CARBON_INTENSITY.DEFAULT;
+  // Handle custom date apply
+  const handleApplyCustomDates = () => {
+    reload();
+  };
 
-  if (loading) {
+  // Handle date changes for custom preset
+  const handleDateFromChange = (newDate) => {
+    setDateRange({ ...dateRange, from: newDate });
+  };
+
+  const handleDateToChange = (newDate) => {
+    setDateRange({ ...dateRange, to: newDate });
+  };
+
+  // Calculate average emission factor from carbon intensity data
+  const getAverageEmissionFactor = () => {
+    if (!carbonIntensity || Object.keys(carbonIntensity).length === 0) {
+      return CARBON_INTENSITY.DEFAULT;
+    }
+
+    const intensities = Object.values(carbonIntensity);
+    const avgIntensity = intensities.reduce((sum, item) => sum + item.carbonIntensity, 0) / intensities.length;
+    return avgIntensity / 1000; // Convert g/kWh to kg/kWh
+  };
+
+  const emissionFactor = getAverageEmissionFactor();
+
+  if (loading && !consumptionData) {
     return (
       <>
         <PageHeader
@@ -82,14 +108,21 @@ export default function CarbonFootprintPage() {
       <Box sx={{ px: 4, py: 3 }}>
         {/* Time Preset Selector */}
         <TimePresetSelector
-          value={timePreset}
-          onChange={setTimePreset}
+          preset={timePreset}
+          onPresetChange={setTimePreset}
+          dateFrom={dateRange.from}
+          dateTo={dateRange.to}
+          onDateFromChange={handleDateFromChange}
+          onDateToChange={handleDateToChange}
+          onApply={handleApplyCustomDates}
+          loading={loading}
         />
 
         {/* Automatic Calculation View (From Database) */}
         <AutomaticCalculationView
           data={consumptionData}
           carbonIntensity={carbonIntensity}
+          isSingleDay={isSingleDay}
         />
 
         {/* Custom Calculator (User Input) */}

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TIME_PRESETS, DATA_RANGES, DEMO_DATE_RANGE } from '../constants/carbonFootprint';
+import { TIME_PRESETS, DATA_RANGES, DEMO_DATES } from '../constants/carbonFootprint';
 import ElectricityReportService from '../../services/ElectricityReportService';
 import ElectricityMapsService from '../../services/ElectricityMapsService';
 import { aggregateToDaily, calculateDailyMetrics } from '../utils/dataAggregation';
 
 export default function useCarbonFootprintData() {
-    const [timePreset, setTimePreset] = useState(TIME_PRESETS.DEMO_DAY);
+    const [timePreset, setTimePreset] = useState(TIME_PRESETS.TODAY);
     const [dateRange, setDateRange] = useState({ from: null, to: null });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -14,38 +14,31 @@ export default function useCarbonFootprintData() {
 
     // Calculate date range based on preset
     const calculateDateRange = useCallback((preset) => {
-        const today = new Date();
-        today.setHours(12, 0, 0, 0); // Noon time for timezone safety
-
         let from, to;
 
         switch (preset) {
-            case TIME_PRESETS.DEMO_DAY:
-                from = new Date(DEMO_DATE_RANGE.start + 'T12:00:00');
-                to = new Date(DEMO_DATE_RANGE.end + 'T12:00:00');
-                break;
             case TIME_PRESETS.TODAY:
-                from = new Date(today);
-                to = new Date(today);
+                from = new Date(DEMO_DATES.TODAY + 'T12:00:00');
+                to = new Date(DEMO_DATES.TODAY + 'T12:00:00');
                 break;
             case TIME_PRESETS.YESTERDAY:
-                from = new Date(today);
-                from.setDate(from.getDate() - 1);
-                to = new Date(from);
+                from = new Date(DEMO_DATES.YESTERDAY + 'T12:00:00');
+                to = new Date(DEMO_DATES.YESTERDAY + 'T12:00:00');
                 break;
             case TIME_PRESETS.LAST_7_DAYS:
-                to = new Date(today);
-                from = new Date(today);
-                from.setDate(from.getDate() - 7);
+                from = new Date(DEMO_DATES.LAST_7_DAYS_START + 'T12:00:00');
+                to = new Date(DEMO_DATES.LAST_7_DAYS_END + 'T12:00:00');
                 break;
             case TIME_PRESETS.LAST_30_DAYS:
-                to = new Date(today);
-                from = new Date(today);
-                from.setDate(from.getDate() - 30);
+                from = new Date(DEMO_DATES.LAST_30_DAYS_START + 'T12:00:00');
+                to = new Date(DEMO_DATES.LAST_30_DAYS_END + 'T12:00:00');
                 break;
+            case TIME_PRESETS.CUSTOM:
+                // Keep current dates
+                return null;
             default:
-                from = new Date(today);
-                to = new Date(today);
+                from = new Date(DEMO_DATES.TODAY + 'T12:00:00');
+                to = new Date(DEMO_DATES.TODAY + 'T12:00:00');
         }
 
         return { from, to };
@@ -65,24 +58,38 @@ export default function useCarbonFootprintData() {
             dateStr <= DATA_RANGES.electricity.end;
     }, []);
 
+    // Check if date range is single day
+    const isSingleDay = useCallback((from, to) => {
+        return formatDate(from) === formatDate(to);
+    }, []);
+
     // Load consumption data
-    const loadConsumptionData = useCallback(async (fromStr, toStr) => {
+    const loadConsumptionData = useCallback(async (from, to) => {
         try {
+            const fromStr = formatDate(from);
+            const toStr = formatDate(to);
+
             if (!isDateInRange(fromStr) || !isDateInRange(toStr)) {
                 return null;
             }
 
             const response = await ElectricityReportService.getConsumptionData(fromStr, toStr);
 
-            // Aggregate hourly data to daily data
             if (response && response.data) {
-                const dailyData = aggregateToDaily(response.data);
-                const dailyMetrics = calculateDailyMetrics(dailyData);
+                // For single day, keep hourly data; for multiple days, aggregate to daily
+                if (isSingleDay(from, to)) {
+                    // Keep hourly data as is
+                    return response;
+                } else {
+                    // Aggregate to daily
+                    const dailyData = aggregateToDaily(response.data);
+                    const dailyMetrics = calculateDailyMetrics(dailyData);
 
-                return {
-                    data: dailyData,
-                    metrics: dailyMetrics
-                };
+                    return {
+                        data: dailyData,
+                        metrics: dailyMetrics
+                    };
+                }
             }
 
             return response;
@@ -90,7 +97,7 @@ export default function useCarbonFootprintData() {
             console.error('Error loading consumption data:', err);
             return null;
         }
-    }, [isDateInRange]);
+    }, [isDateInRange, isSingleDay]);
 
     // Load carbon intensity (historical data for date range)
     const loadCarbonIntensity = useCallback(async (fromStr, toStr) => {
@@ -116,7 +123,7 @@ export default function useCarbonFootprintData() {
             const toStr = formatDate(dateRange.to);
 
             const [consumption, intensity] = await Promise.all([
-                loadConsumptionData(fromStr, toStr),
+                loadConsumptionData(dateRange.from, dateRange.to),
                 loadCarbonIntensity(fromStr, toStr)
             ]);
 
@@ -132,8 +139,12 @@ export default function useCarbonFootprintData() {
 
     // Update date range when preset changes
     useEffect(() => {
+        if (timePreset === TIME_PRESETS.CUSTOM) return;
+
         const range = calculateDateRange(timePreset);
-        setDateRange(range);
+        if (range) {
+            setDateRange(range);
+        }
     }, [timePreset, calculateDateRange]);
 
     // Load data when date range changes
@@ -145,10 +156,12 @@ export default function useCarbonFootprintData() {
         timePreset,
         setTimePreset,
         dateRange,
+        setDateRange,
         loading,
         error,
         consumptionData,
         carbonIntensity,
+        isSingleDay: dateRange.from && dateRange.to ? isSingleDay(dateRange.from, dateRange.to) : false,
         reload: loadAllData
     };
 }
