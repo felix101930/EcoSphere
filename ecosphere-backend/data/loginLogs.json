@@ -1078,6 +1078,56 @@
       "status": "success",
       "failureReason": null,
       "ipAddress": "142.110.36.186",
+      "logoutTimestamp": "2026-01-04 19:05:22"
+    },
+    {
+      "id": 109,
+      "timestamp": "2026-01-04 19:13:14",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "142.110.36.186",
+      "logoutTimestamp": "2026-01-04 19:43:20"
+    },
+    {
+      "id": 110,
+      "timestamp": "2026-01-04 19:59:29",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "142.110.36.186",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 111,
+      "timestamp": "2026-01-04 20:06:30",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "142.110.36.186",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 112,
+      "timestamp": "2026-01-04 20:21:19",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "142.110.36.186",
+      "logoutTimestamp": null
+    },
+    {
+      "id": 113,
+      "timestamp": "2026-01-04 20:47:53",
+      "email": "super.admin@edu.sait.ca",
+      "role": "SuperAdmin",
+      "status": "success",
+      "failureReason": null,
+      "ipAddress": "142.110.36.186",
       "logoutTimestamp": null
     }
   ]

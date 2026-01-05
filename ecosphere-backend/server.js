@@ -54,6 +54,7 @@ app.get("/", (req, res) => {
 const loginLogRoutes = require("./routes/loginLogRoutes");
 const databaseTestRoutes = require("./routes/databaseTestRoutes");
 const thermalRoutes = require("./routes/thermalRoutes");
+const forecastRoutes = require("./routes/forecastRoutes");
 
 // API Routes
 app.use("/api", userRoutes); // This includes /api/auth/login
@@ -62,6 +63,7 @@ app.use("/api/water", waterRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/db", databaseTestRoutes);
 app.use("/api/thermal", thermalRoutes);
+app.use("/api/forecast", forecastRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

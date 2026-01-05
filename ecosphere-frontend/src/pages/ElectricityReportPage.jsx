@@ -7,6 +7,7 @@ import ElectricityTimeFilter from '../components/Electricity/ElectricityTimeFilt
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
 import NetEnergyTab from '../components/Electricity/NetEnergyTab';
+import ForecastTab from '../components/Forecast/ForecastTab';
 import { TAB_TYPES } from '../lib/constants/electricity';
 import { useElectricityData } from '../lib/hooks/useElectricityData';
 
@@ -176,7 +177,7 @@ const ElectricityReportPage = () => {
       />
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
-        {/* Time Filter */}
+        {/* Time Filter - Show for all tabs */}
         <ElectricityTimeFilter
           dateFrom={dateFrom}
           dateTo={dateTo}
@@ -200,6 +201,10 @@ const ElectricityReportPage = () => {
             <Tab
               label="Net Energy"
               value={TAB_TYPES.NET_ENERGY}
+            />
+            <Tab
+              label="Forecast"
+              value="FORECAST"
             />
           </Tabs>
         </Box>
@@ -231,6 +236,11 @@ const ElectricityReportPage = () => {
           <NetEnergyTab
             data={netEnergyData}
             loading={loading}
+          />
+        )}
+        {activeTab === 'FORECAST' && (
+          <ForecastTab
+            dateTo={dateTo}
           />
         )}
       </Box>
