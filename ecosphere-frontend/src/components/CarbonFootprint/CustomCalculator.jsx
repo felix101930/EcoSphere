@@ -5,19 +5,19 @@ import CustomEntryForm from './CustomEntryForm';
 import CustomChart from './CustomChart';
 import { prepareCustomChartData } from '../../utils/chartDataPreparation';
 
-const CustomCalculator = ({ emissionFactor, onDataChange }) => {
+const CustomCalculator = ({ emissionFactor }) => {
   // Get current year and month for validation (user's local time)
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth(); // 0-11
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                      'July', 'August', 'September', 'October', 'November', 'December'];
-  
+    'July', 'August', 'September', 'October', 'November', 'December'];
+
   // Generate available years (only up to current year)
   const availableYears = [];
   for (let year = 2020; year <= currentYear; year++) {
     availableYears.push(year.toString());
   }
-  
+
   // Get available months for a given year
   const getAvailableMonths = (selectedYear) => {
     const year = parseInt(selectedYear);
@@ -28,7 +28,7 @@ const CustomCalculator = ({ emissionFactor, onDataChange }) => {
     }
     return []; // No months for future years (shouldn't happen)
   };
-  
+
   const [customEntries, setCustomEntries] = useState([
     { id: 1, year: currentYear.toString(), month: 'January', usage: '' }
   ]);
@@ -37,23 +37,23 @@ const CustomCalculator = ({ emissionFactor, onDataChange }) => {
 
   const handleAddCustomEntry = () => {
     const newId = Math.max(...customEntries.map(e => e.id), 0) + 1;
-    
+
     // Get the last entry to determine next month
     const lastEntry = customEntries[customEntries.length - 1];
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+      'July', 'August', 'September', 'October', 'November', 'December'];
     const currentMonthIndex = months.indexOf(lastEntry.month);
-    
+
     let nextYear = lastEntry.year;
     let nextMonth = lastEntry.month;
-    
+
     if (currentMonthIndex === 11) {
       nextMonth = 'January';
       nextYear = (parseInt(lastEntry.year) + 1).toString();
     } else {
       nextMonth = months[currentMonthIndex + 1];
     }
-    
+
     setCustomEntries([...customEntries, { id: newId, year: nextYear, month: nextMonth, usage: '' }]);
   };
 
@@ -61,55 +61,55 @@ const CustomCalculator = ({ emissionFactor, onDataChange }) => {
   const isFutureDate = (year, month) => {
     const selectedYear = parseInt(year);
     const selectedMonthIndex = monthNames.indexOf(month);
-    
+
     if (selectedYear > currentYear) {
       return true;
     }
-    
+
     if (selectedYear === currentYear && selectedMonthIndex > currentMonth) {
       return true;
     }
-    
+
     return false;
   };
 
   const handleUpdateEntry = (id, field, value) => {
-    let updatedEntries = customEntries.map(entry => 
+    let updatedEntries = customEntries.map(entry =>
       entry.id === id ? { ...entry, [field]: value } : entry
     );
-    
+
     // If year changed, reset month to first available month
     if (field === 'year') {
       const availableMonths = getAvailableMonths(value);
       if (availableMonths.length > 0) {
-        updatedEntries = updatedEntries.map(entry => 
+        updatedEntries = updatedEntries.map(entry =>
           entry.id === id ? { ...entry, month: availableMonths[0] } : entry
         );
       }
     }
-    
+
     // Check for duplicates if year or month changed
     if (field === 'year' || field === 'month') {
       const currentEntry = updatedEntries.find(e => e.id === id);
-      
+
       // Check if selected date is in the future (redundant now, but keep for safety)
       if (isFutureDate(currentEntry.year, currentEntry.month)) {
         alert(`Cannot select future date: ${currentEntry.month} ${currentEntry.year}`);
         return; // Don't update if future date
       }
-      
-      const duplicate = updatedEntries.find(e => 
+
+      const duplicate = updatedEntries.find(e =>
         e.id !== id && e.year === currentEntry.year && e.month === currentEntry.month
       );
-      
+
       if (duplicate) {
         alert(`${currentEntry.month} ${currentEntry.year} already exists. Please choose a different month or year.`);
         return; // Don't update if duplicate
       }
-      
+
       // Auto-sort entries by year and month
       const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December'];
+        'July', 'August', 'September', 'October', 'November', 'December'];
       updatedEntries.sort((a, b) => {
         if (a.year !== b.year) {
           return parseInt(a.year) - parseInt(b.year);
@@ -117,7 +117,7 @@ const CustomCalculator = ({ emissionFactor, onDataChange }) => {
         return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month);
       });
     }
-    
+
     setCustomEntries(updatedEntries);
   };
 
@@ -127,41 +127,21 @@ const CustomCalculator = ({ emissionFactor, onDataChange }) => {
       alert('Please enter at least one valid electricity usage');
       return;
     }
-    
+
     // Create snapshot of current data for chart
     const chartDataSnapshot = prepareCustomChartData(validEntries, emissionFactor);
     setChartData(chartDataSnapshot);
     setShowCustomChart(true);
-    
-    // Notify parent component with custom calculation data
-    if (onDataChange) {
-      onDataChange({
-        hasData: true,
-        data: validEntries.map(entry => ({
-          ts: `${entry.year}-${String(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].indexOf(entry.month) + 1).padStart(2, '0')}-01 00:00:00.0000000`,
-          value: parseFloat(entry.usage) * 1000, // Convert kWh to Wh to match other data format
-          year: entry.year,
-          month: entry.month,
-          usage: parseFloat(entry.usage)
-        })),
-        chartData: chartDataSnapshot
-      });
-    }
   };
 
   const handleClearCustomData = () => {
     setCustomEntries([{ id: 1, year: currentYear.toString(), month: 'January', usage: '' }]);
     setShowCustomChart(false);
     setChartData(null);
-    
-    // Notify parent component that custom data is cleared
-    if (onDataChange) {
-      onDataChange(null);
-    }
   };
 
   return (
-    <Box 
+    <Box
       data-custom-calculator
       data-has-content={showCustomChart ? 'true' : 'false'}
       sx={{ mb: 3, p: 3, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}
