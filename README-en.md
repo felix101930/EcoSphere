@@ -42,6 +42,7 @@ DB_DATABASE=TestSlimDB        # Database name
 ```
 
 **Important Notes**:
+
 - Default uses **Windows Authentication** (no username/password needed)
 - For SQL Server Express, use `.\SQLEXPRESS` as the server name
 - If your database uses SQL Server Authentication, set `DB_USER` and `DB_PASSWORD`
@@ -50,6 +51,7 @@ DB_DATABASE=TestSlimDB        # Database name
 - **ODBC Driver 18 Requirement**: If using sqlcmd version 18+, add `-C` flag to trust server certificate
 
 **Test Database Connection**:
+
 ```bash
 # Test connection in command line (with ODBC Driver 18)
 sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
@@ -58,17 +60,7 @@ sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_
 sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -Q "SELECT TOP 5 * FROM SaitSolarLab_20004_TL2"
 ```
 
-### 4. Update Data
-
-**In the project root directory**, double-click to run:
-
-```
-update-electricity-data.bat
-```
-
-This will update electricity data to the current time.
-
-### 5. Start the Application
+### 4. Start the Application
 
 **In the project root directory**, double-click to run:
 
@@ -78,60 +70,47 @@ start.bat
 
 This will automatically start both backend and frontend servers.
 
-### 6. Access the Application
+### 5. Access the Application
 
-Open in browser: **http://localhost:5174**
+Open in browser: **http://localhost:5173**
 
 **Login Credentials**:
+
 - Email: `super.admin@edu.sait.ca`
 - Password: `abcd1234`
 
 ---
 
-## Local Development (Recommended)
+## Local Development
 
-### Why Local Development is Recommended?
+### Why Local Development?
 
 ✅ **Advantages**:
 
-- Real-time data updates (run `update-electricity-data.bat` once daily)
+- Real-time data from SQL Server database
 - No need to wait for Vercel deployment
 - More convenient for development and testing
 - Full control over data and configuration
 
-❌ **Vercel Issues**:
-
-- Data does not auto-update
-- Requires redeployment for each data update
-- Longer deployment time
-- Not suitable for frequently updated data
-
 ### Daily Usage Workflow
 
-#### First Use Each Day
+#### Start Application
 
-1. **Update Data** (double-click to run):
+**Double-click to run**:
 
-   ```
-   update-electricity-data.bat
-   ```
+```
+start.bat
+```
 
-   - Adds new data from yesterday to now
-   - Shows "Data is already up to date!" if data is current
-2. **Start Application** (double-click to run):
+- Automatically starts backend (port 3001)
+- Automatically starts frontend (port 5174)
+- Automatically opens browser
 
-   ```
-   start.bat
-   ```
+#### Use Application
 
-   - Automatically starts backend (port 3001)
-   - Automatically starts frontend (port 5174)
-   - Automatically opens browser
-3. **Use Application**:
-
-   - Open http://localhost:5174
-   - Login with test account
-   - Start using features
+- Open http://localhost:5174
+- Login with test account
+- Start using features
 
 #### Stop Application
 
@@ -140,49 +119,23 @@ Open in browser: **http://localhost:5174**
 
 ---
 
-## Vercel Deployment (Not Recommended)
-
-⚠️ **Warning**: Vercel deployment is not recommended because data requires manual synchronization and does not auto-update.
-
-If you must deploy to Vercel, follow these steps:
+## Vercel Deployment
 
 ### Pre-Deployment Preparation
 
-1. **Update Data** (double-click to run):
-
-   ```
-   update-electricity-data.bat
-   ```
-2. **Sync Data to Backend** (double-click to run):
-
-   ```
-   sync-mock-data.bat
-   ```
-
-   - Copies files from mock-data/ to ecosphere-backend/data/
-   - Vercel deployment uses files from backend/data/
-3. **Commit to Git**:
+1. **Commit to Git**:
 
    ```bash
    git add .
-   git commit -m "Update data for deployment"
+   git commit -m "Update for deployment"
    git push
    ```
-4. **Wait for Vercel Auto-Deployment**
+2. **Wait for Vercel Auto-Deployment**
 
    - Login to Vercel to check deployment status
    - Access the URL provided by Vercel after deployment completes
 
-### Updating Data on Vercel
-
-Each time you need to update data, repeat the above steps:
-
-1. Run `update-electricity-data.bat`
-2. Run `sync-mock-data.bat`
-3. Git commit and push
-4. Wait for Vercel to redeploy
-
-**This is why Vercel is not recommended!**
+**Note**: Vercel deployment uses SQL Server database connection. Ensure database is accessible from Vercel servers.
 
 ---
 
@@ -274,9 +227,12 @@ Each time you need to update data, repeat the above steps:
 
 ### 3. Data Sources
 
-- **Electricity Maps API**: Real-time carbon intensity data (Alberta, Calgary)
-- **Mock Data**: Electricity consumption data (2024-01-01 to present)
-- **Auto-Update**: Run `update-electricity-data.bat` to update data
+- **SQL Server Database**: Real-time data from GBTAC building sensors
+  - Electricity data (TL341, TL340, TL339)
+  - Water data (TL93, TL210)
+  - Thermal data (20004-20016_TL2)
+- **Electricity Maps API**: Historical carbon intensity data (Alberta, CA-AB zone)
+- **Mock Data**: User accounts and login logs (will migrate to SQL Server in future)
 
 ---
 
@@ -348,19 +304,7 @@ npm install
 
 ---
 
-### Issue 5: Data Update Failed
-
-**Error Message**: `electricity.json not found`
-
-**Solution**:
-
-1. Ensure running `update-electricity-data.bat` in project root directory
-2. Check if `mock-data/electricity.json` exists
-3. If file is corrupted, restore from Git
-
----
-
-### Issue 6: Startup Script Won't Run
+### Issue 5: Database Connection Failed
 
 **Error Message**: `.bat` file closes immediately after double-clicking
 
@@ -372,19 +316,21 @@ npm install
 
 ---
 
-### Issue 7: Database Connection Failed
+### Issue 6: Startup Script Won't Run
 
 **Error Message**: `Cannot open database` or `Login failed`
 
 **Solution**:
 
 **Step 1: Check if SQL Server is Running**
+
 ```bash
 # Check SQL Server service status
 sc query MSSQLSERVER
 ```
 
 **Step 2: Test Database Connection**
+
 ```bash
 # Test with Windows Authentication (ODBC Driver 18)
 sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT @@VERSION"
@@ -397,11 +343,13 @@ sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -Q "SELECT @@VERSION"
 ```
 
 **Step 3: Verify Database Configuration**
+
 - Open `ecosphere-backend/.env`
 - Confirm `DB_SERVER` and `DB_DATABASE` are correct
 - If using SQL Server Authentication, confirm `DB_USER` and `DB_PASSWORD` are correct
 
 **Step 4: Check Database Tables**
+
 ```bash
 # List all tables (ODBC Driver 18)
 sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES"
@@ -411,6 +359,7 @@ sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_
 ```
 
 **Common Issues**:
+
 - **Wrong server name**: For SQL Server Express, use `.\SQLEXPRESS` not `localhost`
 - **Wrong database name**: Confirm your database name is `TestSlimDB`
 - **Wrong table name**: Sensor table format must be `SaitSolarLab_<sensor_id>`
@@ -419,6 +368,7 @@ sqlcmd -S .\SQLEXPRESS -E -d TestSlimDB -C -Q "SELECT TOP 5 * FROM SaitSolarLab_
 - **Firewall**: Ensure firewall allows SQL Server connections
 
 **Test API Endpoint**:
+
 ```bash
 # After starting backend, test sensor data API
 curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
@@ -429,25 +379,27 @@ curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
 ## 📝 Version Information
 
 - **Version**: Prototype Phase 3
-- **Last Updated**: 2025-12-02
+- **Last Updated**: 2026-01-04
 - **Status**: In Development
+- **Database**: SQL Server (Electricity, Water, Thermal, Carbon Footprint modules migrated)
 
 ---
 
 ## ⚠️ Important Notes
 
-1. **This is Prototype Phase**
+1. **Database Connection Required**
 
-   - Uses Mock data (JSON files)
-   - Will connect to real SQL Server database in the future
+   - All data modules now use SQL Server database
+   - Ensure SQL Server is running and accessible
+   - User Management still uses Mock JSON (will migrate in future)
 2. **Data Security**
 
    - Do not use in production environment
    - Test account passwords are for demonstration only
-3. **Performance Optimization**
+3. **Performance**
 
-   - Electricity data file is large (~1.7 MB)
-   - First load may take a few seconds
+   - Data loads directly from SQL Server
+   - First load may take a few seconds depending on date range
 
 ---
 
