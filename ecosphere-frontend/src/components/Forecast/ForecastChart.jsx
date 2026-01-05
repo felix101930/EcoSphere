@@ -2,7 +2,7 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { FORECAST_COLORS } from '../../lib/constants/forecast';
+import { FORECAST_COLORS, CHART_HEIGHT } from '../../lib/constants/forecast';
 
 const ForecastChart = ({ predictions, targetDate }) => {
     if (!predictions || predictions.length === 0) {
@@ -95,7 +95,7 @@ const ForecastChart = ({ predictions, targetDate }) => {
                     Base Date: {targetDate} | Forecast Period: {predictions.length} days
                 </Typography>
 
-                <Box sx={{ height: 400, position: 'relative' }}>
+                <Box sx={{ height: CHART_HEIGHT, position: 'relative' }}>
                     <Line data={chartData} options={options} plugins={[ChartDataLabels]} />
                 </Box>
 

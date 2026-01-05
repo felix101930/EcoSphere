@@ -1,5 +1,12 @@
 // Forecast Service - Multi-tier prediction with graceful degradation
 const t = require('timeseries-analysis');
+const {
+    formatDate,
+    addDays,
+    calculateAverage,
+    calculateLinearTrend,
+    aggregateHourlyToDaily
+} = require('../utils/forecastHelpers');
 
 class ForecastService {
     /**
@@ -116,8 +123,8 @@ class ForecastService {
      * Check if data exists in a date range
      */
     static checkDataInRange(data, startDate, endDate) {
-        const startStr = this.formatDate(startDate);
-        const endStr = this.formatDate(endDate);
+        const startStr = formatDate(startDate);
+        const endStr = formatDate(endDate);
 
         const dataInRange = data.filter(d => {
             const dateStr = d.ts.substring(0, 10);
@@ -129,16 +136,6 @@ class ForecastService {
         const expectedPoints = expectedDays * 24; // Hourly data
 
         return dataInRange.length >= expectedPoints * 0.5;
-    }
-
-    /**
-     * Format date to YYYY-MM-DD
-     */
-    static formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
     }
 
     /**
@@ -178,8 +175,8 @@ class ForecastService {
             // If gap is more than 24 hours, record it
             if (hoursDiff > 24) {
                 missingPeriods.push({
-                    start: this.formatDate(prev),
-                    end: this.formatDate(curr),
+                    start: formatDate(prev),
+                    end: formatDate(curr),
                     days: Math.floor(hoursDiff / 24)
                 });
             }
@@ -268,7 +265,7 @@ class ForecastService {
 
         // Get predictions and aggregate to daily
         const output = ts.output();
-        return this.aggregateHourlyToDaily(output, forecastDays);
+        return aggregateHourlyToDaily(output, forecastDays);
     }
 
     /**
@@ -302,7 +299,7 @@ class ForecastService {
                 0.2 * avgValue;
 
             predictions.push({
-                date: this.formatDate(forecastDate),
+                date: formatDate(forecastDate),
                 value: prediction
             });
         }
@@ -316,13 +313,13 @@ class ForecastService {
     static trendBasedForecast(data, forecastDays) {
         // Calculate linear trend from last 30 days
         const recent30 = data.slice(-30 * 24); // Last 30 days hourly
-        const trend = this.calculateLinearTrend(recent30);
+        const trend = calculateLinearTrend(recent30);
         const lastValue = Math.abs(data[data.length - 1].value);
 
         const predictions = [];
         for (let i = 1; i <= forecastDays; i++) {
             predictions.push({
-                date: this.formatDate(this.addDays(new Date(data[data.length - 1].ts), i)),
+                date: formatDate(addDays(new Date(data[data.length - 1].ts), i)),
                 value: Math.max(0, lastValue + trend * i * 24) // Daily trend
             });
         }
@@ -336,14 +333,14 @@ class ForecastService {
     static movingAverageForecast(data, forecastDays) {
         // Calculate 7-day average
         const recent7Days = data.slice(-7 * 24);
-        const avg = this.calculateAverage(recent7Days);
+        const avg = calculateAverage(recent7Days);
 
         const predictions = [];
         const lastDate = new Date(data[data.length - 1].ts);
 
         for (let i = 1; i <= forecastDays; i++) {
             predictions.push({
-                date: this.formatDate(this.addDays(lastDate, i)),
+                date: formatDate(addDays(lastDate, i)),
                 value: avg
             });
         }
@@ -355,15 +352,15 @@ class ForecastService {
      * Helper: Get value for specific date (daily average)
      */
     static getValueForDate(data, date) {
-        const dateStr = this.formatDate(date);
+        const dateStr = formatDate(date);
         const dayData = data.filter(d => d.ts.startsWith(dateStr));
 
         if (dayData.length === 0) {
             // Fallback to overall average
-            return this.calculateAverage(data);
+            return calculateAverage(data);
         }
 
-        return this.calculateAverage(dayData);
+        return calculateAverage(dayData);
     }
 
     /**
@@ -374,75 +371,15 @@ class ForecastService {
         const startDate = new Date(endDate);
         startDate.setDate(startDate.getDate() - days);
 
-        const startStr = this.formatDate(startDate);
-        const endStr = this.formatDate(endDate);
+        const startStr = formatDate(startDate);
+        const endStr = formatDate(endDate);
 
         const periodData = data.filter(d => {
             const dateStr = d.ts.substring(0, 10);
             return dateStr >= startStr && dateStr < endStr;
         });
 
-        return this.calculateAverage(periodData);
-    }
-
-    /**
-     * Helper: Calculate average of data points
-     */
-    static calculateAverage(data) {
-        if (data.length === 0) return 0;
-        const sum = data.reduce((acc, d) => acc + Math.abs(d.value), 0);
-        return sum / data.length;
-    }
-
-    /**
-     * Helper: Calculate linear trend
-     */
-    static calculateLinearTrend(data) {
-        if (data.length < 2) return 0;
-
-        const n = data.length;
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-
-        data.forEach((d, i) => {
-            const x = i;
-            const y = Math.abs(d.value);
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumX2 += x * x;
-        });
-
-        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        return slope;
-    }
-
-    /**
-     * Helper: Add days to date
-     */
-    static addDays(date, days) {
-        const result = new Date(date);
-        result.setDate(result.getDate() + days);
-        return result;
-    }
-
-    /**
-     * Helper: Aggregate hourly predictions to daily
-     */
-    static aggregateHourlyToDaily(hourlyData, forecastDays) {
-        const dailyPredictions = [];
-
-        for (let day = 0; day < forecastDays; day++) {
-            const dayData = hourlyData.slice(day * 24, (day + 1) * 24);
-            const avgValue = dayData.reduce((sum, point) => sum + point[1], 0) / dayData.length;
-
-            const date = new Date(dayData[0][0]);
-            dailyPredictions.push({
-                date: this.formatDate(date),
-                value: avgValue
-            });
-        }
-
-        return dailyPredictions;
+        return calculateAverage(periodData);
     }
 }
 

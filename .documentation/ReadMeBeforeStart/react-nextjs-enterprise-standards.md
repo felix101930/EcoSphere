@@ -391,6 +391,142 @@ setOpenFiles([...openFiles, newFile]);
 setCount(count + 1);
 ```
 
+### Multi-Tab Data Management Pattern
+
+**Problem:** When a page has multiple tabs (e.g., Consumption, Generation, Net Energy) and a shared filter (e.g., date range), changing the filter should update data for ALL tabs, not just the currently active one.
+
+**Common Issue:**
+```javascript
+// ❌ BAD - Only loads data for active tab
+const handleApplyFilter = async () => {
+  switch (activeTab) {
+    case 'CONSUMPTION':
+      await loadConsumptionData(dateFrom, dateTo);
+      break;
+    case 'GENERATION':
+      await loadGenerationData(dateFrom, dateTo);
+      break;
+  }
+};
+
+// When user switches tabs, old data is still cached
+useEffect(() => {
+  if (!consumptionData) {  // Won't reload if old data exists
+    loadConsumptionData(dateFrom, dateTo);
+  }
+}, [activeTab]);
+```
+
+**Result:** User changes date filter → clicks Apply → switches to another tab → sees OLD data (because it was cached from previous date range).
+
+**Solution: Clear All Cached Data When Filter Changes**
+
+```javascript
+// ✅ GOOD - Clear all data first, then load current tab
+const handleApplyFilter = async () => {
+  if (!dateFrom || !dateTo) return;
+  
+  try {
+    // Step 1: Clear ALL cached data to force reload
+    clearData(); // Clears consumption, generation, net energy, etc.
+    
+    // Step 2: Load data for current active tab
+    switch (activeTab) {
+      case 'CONSUMPTION':
+        await loadConsumptionData(dateFrom, dateTo);
+        break;
+      case 'GENERATION':
+        await loadGenerationData(dateFrom, dateTo);
+        break;
+      case 'NET_ENERGY':
+        await loadNetEnergyData(dateFrom, dateTo);
+        break;
+    }
+  } catch (err) {
+    console.error('Error loading data:', err);
+  }
+};
+
+// When user switches tabs, data is null so it will reload
+useEffect(() => {
+  if (!dateFrom || !dateTo) return;
+  
+  const loadDataForTab = async () => {
+    switch (activeTab) {
+      case 'CONSUMPTION':
+        if (!consumptionData) {  // Data is null, so it loads
+          await loadConsumptionData(dateFrom, dateTo);
+        }
+        break;
+      case 'GENERATION':
+        if (!generationData) {  // Data is null, so it loads
+          await loadGenerationData(dateFrom, dateTo);
+        }
+        break;
+      case 'NET_ENERGY':
+        if (!netEnergyData) {  // Data is null, so it loads
+          await loadNetEnergyData(dateFrom, dateTo);
+        }
+        break;
+    }
+  };
+  
+  loadDataForTab();
+}, [activeTab, dateFrom, dateTo]);
+```
+
+**Custom Hook Pattern:**
+
+```javascript
+// useElectricityData.js
+export const useElectricityData = () => {
+  const [consumptionData, setConsumptionData] = useState(null);
+  const [generationData, setGenerationData] = useState(null);
+  const [netEnergyData, setNetEnergyData] = useState(null);
+  
+  const loadConsumptionData = useCallback(async (dateFrom, dateTo) => {
+    // Load and set consumption data
+  }, []);
+  
+  const loadGenerationData = useCallback(async (dateFrom, dateTo) => {
+    // Load and set generation data
+  }, []);
+  
+  const loadNetEnergyData = useCallback(async (dateFrom, dateTo) => {
+    // Load and set net energy data
+  }, []);
+  
+  // ✅ CRITICAL - Provide clearData function
+  const clearData = useCallback(() => {
+    setConsumptionData(null);
+    setGenerationData(null);
+    setNetEnergyData(null);
+  }, []);
+  
+  return {
+    consumptionData,
+    generationData,
+    netEnergyData,
+    loadConsumptionData,
+    loadGenerationData,
+    loadNetEnergyData,
+    clearData  // Export this!
+  };
+};
+```
+
+**Key Benefits:**
+1. **Consistency**: All tabs always show data for the same date range
+2. **No Stale Data**: Prevents showing old data when switching tabs
+3. **Lazy Loading**: Only loads data when tab is actually viewed
+4. **Performance**: Doesn't load all tabs at once (only current + on-demand)
+
+**When to Use This Pattern:**
+- Multi-tab interfaces with shared filters
+- Dashboard pages with multiple views
+- Report pages with different data breakdowns
+- Any scenario where filter changes should affect all views
+
 
 ---
 
