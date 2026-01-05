@@ -51,19 +51,20 @@ function calculateLinearTrend(data) {
 }
 
 /**
- * Aggregate hourly predictions to daily
+ * Aggregate hourly predictions to daily total
  */
 function aggregateHourlyToDaily(hourlyData, forecastDays) {
     const dailyPredictions = [];
 
     for (let day = 0; day < forecastDays; day++) {
         const dayData = hourlyData.slice(day * 24, (day + 1) * 24);
-        const avgValue = dayData.reduce((sum, point) => sum + point[1], 0) / dayData.length;
+        // Sum all hourly values to get daily total consumption
+        const totalValue = dayData.reduce((sum, point) => sum + point[1], 0);
 
         const date = new Date(dayData[0][0]);
         dailyPredictions.push({
             date: formatDate(date),
-            value: avgValue
+            value: totalValue  // Daily total, not average
         });
     }
 

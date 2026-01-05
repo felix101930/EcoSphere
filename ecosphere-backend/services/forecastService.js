@@ -7,6 +7,28 @@ const {
     calculateLinearTrend,
     aggregateHourlyToDaily
 } = require('../utils/forecastHelpers');
+const {
+    HOURS_PER_DAY,
+    DAYS_PER_WEEK,
+    DAYS_PER_MONTH,
+    DAYS_PER_YEAR,
+    MIN_HOURS_FOR_COMPLETE_DAY,
+    MIN_COMPLETENESS_SCORE,
+    MIN_DATA_AVAILABILITY,
+    GAP_THRESHOLD_HOURS,
+    MAX_MISSING_PERIODS,
+    SHORT_TERM_DAYS,
+    MEDIUM_TERM_DAYS,
+    CONFIDENCE,
+    ACCURACY,
+    ALGORITHM_NAMES,
+    STRATEGY,
+    SEASONAL_WEIGHTS,
+    HOLT_WINTERS,
+    MS_PER_HOUR,
+    MS_PER_DAY,
+    WARNINGS
+} = require('../utils/forecastConstants');
 
 class ForecastService {
     /**
@@ -69,8 +91,8 @@ class ForecastService {
         const target = new Date(targetDate + 'T12:00:00');
         const dataPoints = historicalData.length;
 
-        // Check for 1 year of data (365 days)
-        const hasOneYearCycle = dataPoints >= 365 * 24; // Hourly data
+        // Check for 1 year of data
+        const hasOneYearCycle = dataPoints >= DAYS_PER_YEAR * HOURS_PER_DAY;
 
         // Check for last year same period
         const lastYearStart = new Date(target);
@@ -86,7 +108,7 @@ class ForecastService {
 
         // Check for recent 30 days
         const recent30Start = new Date(target);
-        recent30Start.setDate(recent30Start.getDate() - 30);
+        recent30Start.setDate(recent30Start.getDate() - DAYS_PER_MONTH);
         const hasRecent30Days = this.checkDataInRange(
             historicalData,
             recent30Start,
@@ -95,7 +117,7 @@ class ForecastService {
 
         // Check for recent 7 days
         const recent7Start = new Date(target);
-        recent7Start.setDate(recent7Start.getDate() - 7);
+        recent7Start.setDate(recent7Start.getDate() - SHORT_TERM_DAYS);
         const hasRecent7Days = this.checkDataInRange(
             historicalData,
             recent7Start,
@@ -131,11 +153,11 @@ class ForecastService {
             return dateStr >= startStr && dateStr <= endStr;
         });
 
-        // Consider data available if we have at least 50% of expected points
-        const expectedDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-        const expectedPoints = expectedDays * 24; // Hourly data
+        // Consider data available if we have at least MIN_DATA_AVAILABILITY of expected points
+        const expectedDays = Math.ceil((endDate - startDate) / MS_PER_DAY);
+        const expectedPoints = expectedDays * HOURS_PER_DAY;
 
-        return dataInRange.length >= expectedPoints * 0.5;
+        return dataInRange.length >= expectedPoints * MIN_DATA_AVAILABILITY;
     }
 
     /**
@@ -149,7 +171,7 @@ class ForecastService {
 
         const firstDate = new Date(data[0].ts);
         const lastDate = new Date(data[data.length - 1].ts);
-        const totalHours = (lastDate - firstDate) / (1000 * 60 * 60);
+        const totalHours = (lastDate - firstDate) / MS_PER_HOUR;
         const expectedPoints = Math.floor(totalHours);
 
         if (expectedPoints === 0) return 100;
@@ -170,19 +192,19 @@ class ForecastService {
         for (let i = 1; i < data.length; i++) {
             const prev = new Date(data[i - 1].ts);
             const curr = new Date(data[i].ts);
-            const hoursDiff = (curr - prev) / (1000 * 60 * 60);
+            const hoursDiff = (curr - prev) / MS_PER_HOUR;
 
-            // If gap is more than 24 hours, record it
-            if (hoursDiff > 24) {
+            // If gap is more than GAP_THRESHOLD_HOURS, record it
+            if (hoursDiff > GAP_THRESHOLD_HOURS) {
                 missingPeriods.push({
                     start: formatDate(prev),
                     end: formatDate(curr),
-                    days: Math.floor(hoursDiff / 24)
+                    days: Math.floor(hoursDiff / HOURS_PER_DAY)
                 });
             }
         }
 
-        return missingPeriods.slice(0, 5); // Return top 5 gaps
+        return missingPeriods.slice(0, MAX_MISSING_PERIODS);
     }
 
     /**
@@ -191,12 +213,12 @@ class ForecastService {
     static selectPredictionStrategy(dataAvailability) {
         // Tier 1: Holt-Winters (Best)
         if (dataAvailability.hasOneYearCycle &&
-            dataAvailability.completenessScore >= 70) {
+            dataAvailability.completenessScore >= MIN_COMPLETENESS_SCORE) {
             return {
-                strategy: 'HOLT_WINTERS',
-                name: 'Holt-Winters Seasonal Smoothing',
-                confidence: 90,
-                accuracy: '★★★★★',
+                strategy: STRATEGY.HOLT_WINTERS,
+                name: ALGORITHM_NAMES.HOLT_WINTERS,
+                confidence: CONFIDENCE.TIER_1_HOLT_WINTERS,
+                accuracy: ACCURACY.TIER_1,
                 warning: null
             };
         }
@@ -205,43 +227,43 @@ class ForecastService {
         if (dataAvailability.hasLastYearData &&
             dataAvailability.hasRecent30Days) {
             return {
-                strategy: 'SEASONAL_WEIGHTED',
-                name: 'Weighted Seasonal Prediction',
-                confidence: 80,
-                accuracy: '★★★★☆',
-                warning: 'Some historical data missing, using simplified seasonal algorithm'
+                strategy: STRATEGY.SEASONAL_WEIGHTED,
+                name: ALGORITHM_NAMES.SEASONAL_WEIGHTED,
+                confidence: CONFIDENCE.TIER_2_SEASONAL,
+                accuracy: ACCURACY.TIER_2,
+                warning: WARNINGS.TIER_2
             };
         }
 
         // Tier 3: Trend Based (Acceptable)
         if (dataAvailability.hasRecent30Days) {
             return {
-                strategy: 'TREND_BASED',
-                name: 'Trend-Based Prediction',
-                confidence: 65,
-                accuracy: '★★★☆☆',
-                warning: 'Missing last year data, prediction based on recent trend only'
+                strategy: STRATEGY.TREND_BASED,
+                name: ALGORITHM_NAMES.TREND_BASED,
+                confidence: CONFIDENCE.TIER_3_TREND,
+                accuracy: ACCURACY.TIER_3,
+                warning: WARNINGS.TIER_3
             };
         }
 
         // Tier 4: Moving Average (Basic)
         if (dataAvailability.hasRecent7Days) {
             return {
-                strategy: 'MOVING_AVERAGE',
-                name: 'Moving Average',
-                confidence: 50,
-                accuracy: '★★☆☆☆',
-                warning: 'Insufficient historical data, using basic moving average with low accuracy'
+                strategy: STRATEGY.MOVING_AVERAGE,
+                name: ALGORITHM_NAMES.MOVING_AVERAGE,
+                confidence: CONFIDENCE.TIER_4_MOVING_AVG,
+                accuracy: ACCURACY.TIER_4,
+                warning: WARNINGS.TIER_4
             };
         }
 
         // Tier 5: Insufficient
         return {
-            strategy: 'INSUFFICIENT_DATA',
-            name: 'Insufficient Data',
-            confidence: 0,
-            accuracy: 'Cannot Predict',
-            warning: 'Insufficient historical data (less than 7 days), cannot generate reliable prediction'
+            strategy: STRATEGY.INSUFFICIENT_DATA,
+            name: ALGORITHM_NAMES.INSUFFICIENT_DATA,
+            confidence: CONFIDENCE.INSUFFICIENT,
+            accuracy: ACCURACY.INSUFFICIENT,
+            warning: WARNINGS.INSUFFICIENT
         };
     }
 
@@ -257,11 +279,11 @@ class ForecastService {
 
         // Apply Holt-Winters smoothing
         ts.smoother({
-            period: 7 * 24,  // Weekly seasonality (hourly data)
-            alpha: 0.5,      // Level smoothing
-            beta: 0.4,       // Trend smoothing
-            gamma: 0.3       // Seasonal smoothing
-        }).forecast(forecastDays * 24); // Forecast hourly
+            period: DAYS_PER_WEEK * HOURS_PER_DAY,  // Weekly seasonality (hourly data)
+            alpha: HOLT_WINTERS.ALPHA,              // Level smoothing
+            beta: HOLT_WINTERS.BETA,                // Trend smoothing
+            gamma: HOLT_WINTERS.GAMMA               // Seasonal smoothing
+        }).forecast(forecastDays * HOURS_PER_DAY);  // Forecast hourly
 
         // Get predictions and aggregate to daily
         const output = ts.output();
@@ -279,24 +301,24 @@ class ForecastService {
             const forecastDate = new Date(target);
             forecastDate.setDate(forecastDate.getDate() + i);
 
-            // Get last year same day
+            // Get last year same day (daily total)
             const lastYearDate = new Date(forecastDate);
             lastYearDate.setFullYear(lastYearDate.getFullYear() - 1);
-            const lastYearValue = this.getValueForDate(data, lastYearDate);
+            const lastYearValue = this.getDailyTotalForDate(data, lastYearDate);
 
-            // Get last week same day
+            // Get last week same day (daily total)
             const lastWeekDate = new Date(forecastDate);
-            lastWeekDate.setDate(lastWeekDate.getDate() - 7);
-            const lastWeekValue = this.getValueForDate(data, lastWeekDate);
+            lastWeekDate.setDate(lastWeekDate.getDate() - DAYS_PER_WEEK);
+            const lastWeekValue = this.getDailyTotalForDate(data, lastWeekDate);
 
-            // Get 30-day average
-            const avgValue = this.getAverageValue(data, 30, target);
+            // Get 30-day average daily total (excluding incomplete days)
+            const avgDailyValue = this.getAverageDailyTotal(data, DAYS_PER_MONTH, target, true);
 
-            // Weighted prediction
+            // Weighted prediction (daily total)
             const prediction =
-                0.3 * lastYearValue +
-                0.5 * lastWeekValue +
-                0.2 * avgValue;
+                SEASONAL_WEIGHTS.LAST_YEAR * lastYearValue +
+                SEASONAL_WEIGHTS.LAST_WEEK * lastWeekValue +
+                SEASONAL_WEIGHTS.RECENT_AVERAGE * avgDailyValue;
 
             predictions.push({
                 date: formatDate(forecastDate),
@@ -311,16 +333,33 @@ class ForecastService {
      * Tier 3: Trend Based Forecast
      */
     static trendBasedForecast(data, forecastDays) {
-        // Calculate linear trend from last 30 days
-        const recent30 = data.slice(-30 * 24); // Last 30 days hourly
-        const trend = calculateLinearTrend(recent30);
-        const lastValue = Math.abs(data[data.length - 1].value);
+        // Calculate daily totals for last 30 days (excluding incomplete last day)
+        const dailyTotals = this.calculateDailyTotals(data, DAYS_PER_MONTH, true);
+
+        if (dailyTotals.length === 0) {
+            // Fallback: use complete day's total
+            const lastCompleteDayTotal = this.getLastCompleteDayTotal(data);
+            const predictions = [];
+            const lastDate = new Date(data[data.length - 1].ts);
+            for (let i = 1; i <= forecastDays; i++) {
+                predictions.push({
+                    date: formatDate(addDays(lastDate, i)),
+                    value: lastCompleteDayTotal
+                });
+            }
+            return predictions;
+        }
+
+        // Calculate trend from daily totals
+        const trend = calculateLinearTrend(dailyTotals.map((total, i) => ({ value: total })));
+        const lastDayTotal = dailyTotals[dailyTotals.length - 1];
 
         const predictions = [];
+        const lastDate = new Date(data[data.length - 1].ts);
         for (let i = 1; i <= forecastDays; i++) {
             predictions.push({
-                date: formatDate(addDays(new Date(data[data.length - 1].ts), i)),
-                value: Math.max(0, lastValue + trend * i * 24) // Daily trend
+                date: formatDate(addDays(lastDate, i)),
+                value: Math.max(0, lastDayTotal + trend * i)
             });
         }
 
@@ -331,9 +370,13 @@ class ForecastService {
      * Tier 4: Moving Average Forecast
      */
     static movingAverageForecast(data, forecastDays) {
-        // Calculate 7-day average
-        const recent7Days = data.slice(-7 * 24);
-        const avg = calculateAverage(recent7Days);
+        // Calculate average daily total from last 7 days (excluding incomplete last day)
+        const avgDailyTotal = this.getAverageDailyTotal(
+            data,
+            SHORT_TERM_DAYS,
+            new Date(data[data.length - 1].ts),
+            true
+        );
 
         const predictions = [];
         const lastDate = new Date(data[data.length - 1].ts);
@@ -341,7 +384,7 @@ class ForecastService {
         for (let i = 1; i <= forecastDays; i++) {
             predictions.push({
                 date: formatDate(addDays(lastDate, i)),
-                value: avg
+                value: avgDailyTotal
             });
         }
 
@@ -349,24 +392,25 @@ class ForecastService {
     }
 
     /**
-     * Helper: Get value for specific date (daily average)
+     * Helper: Get daily total for specific date
      */
-    static getValueForDate(data, date) {
+    static getDailyTotalForDate(data, date) {
         const dateStr = formatDate(date);
         const dayData = data.filter(d => d.ts.startsWith(dateStr));
 
         if (dayData.length === 0) {
-            // Fallback to overall average
-            return calculateAverage(data);
+            // Fallback to average daily total
+            return this.getAverageDailyTotal(data, SHORT_TERM_DAYS, date);
         }
 
-        return calculateAverage(dayData);
+        // Sum all hourly values for the day
+        return dayData.reduce((sum, d) => sum + Math.abs(d.value), 0);
     }
 
     /**
-     * Helper: Get average value from last N days
+     * Helper: Get average daily total from last N days
      */
-    static getAverageValue(data, days, beforeDate) {
+    static getAverageDailyTotal(data, days, beforeDate, excludeIncompleteLastDay = false) {
         const endDate = new Date(beforeDate);
         const startDate = new Date(endDate);
         startDate.setDate(startDate.getDate() - days);
@@ -374,12 +418,119 @@ class ForecastService {
         const startStr = formatDate(startDate);
         const endStr = formatDate(endDate);
 
-        const periodData = data.filter(d => {
+        // Group data by date and calculate daily totals
+        const dailyTotals = {};
+        const dailyCounts = {};
+
+        data.forEach(d => {
             const dateStr = d.ts.substring(0, 10);
-            return dateStr >= startStr && dateStr < endStr;
+            if (dateStr >= startStr && dateStr < endStr) {
+                if (!dailyTotals[dateStr]) {
+                    dailyTotals[dateStr] = 0;
+                    dailyCounts[dateStr] = 0;
+                }
+                dailyTotals[dateStr] += Math.abs(d.value);
+                dailyCounts[dateStr]++;
+            }
         });
 
-        return calculateAverage(periodData);
+        // Filter out incomplete days if requested
+        let totals = Object.keys(dailyTotals).map(date => ({
+            date,
+            total: dailyTotals[date],
+            count: dailyCounts[date]
+        }));
+
+        if (excludeIncompleteLastDay) {
+            totals = totals.filter(d => d.count >= MIN_HOURS_FOR_COMPLETE_DAY);
+        }
+
+        if (totals.length === 0) return 0;
+
+        // Return average of daily totals
+        const sum = totals.reduce((acc, d) => acc + d.total, 0);
+        return sum / totals.length;
+    }
+
+    /**
+     * Helper: Calculate daily totals for last N days
+     */
+    static calculateDailyTotals(data, days, excludeIncompleteLastDay = false) {
+        if (data.length === 0) return [];
+
+        const endDate = new Date(data[data.length - 1].ts);
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - days);
+
+        const startStr = formatDate(startDate);
+        const endStr = formatDate(endDate);
+
+        // Group data by date and calculate daily totals
+        const dailyTotals = {};
+        const dailyCounts = {};
+
+        data.forEach(d => {
+            const dateStr = d.ts.substring(0, 10);
+            if (dateStr >= startStr && dateStr <= endStr) {
+                if (!dailyTotals[dateStr]) {
+                    dailyTotals[dateStr] = 0;
+                    dailyCounts[dateStr] = 0;
+                }
+                dailyTotals[dateStr] += Math.abs(d.value);
+                dailyCounts[dateStr]++;
+            }
+        });
+
+        // Return array of daily totals in chronological order
+        let dates = Object.keys(dailyTotals).sort();
+
+        // Exclude incomplete last day if requested
+        if (excludeIncompleteLastDay && dates.length > 0) {
+            const lastDate = dates[dates.length - 1];
+            if (dailyCounts[lastDate] < MIN_HOURS_FOR_COMPLETE_DAY) {
+                dates = dates.slice(0, -1);
+            }
+        }
+
+        return dates.map(date => dailyTotals[date]);
+    }
+
+    /**
+     * Helper: Get last day's total
+     */
+    static getLastDayTotal(data) {
+        if (data.length === 0) return 0;
+
+        const lastDate = new Date(data[data.length - 1].ts);
+        return this.getDailyTotalForDate(data, lastDate);
+    }
+
+    /**
+     * Helper: Get last complete day's total
+     */
+    static getLastCompleteDayTotal(data) {
+        if (data.length === 0) return 0;
+
+        // Group data by date
+        const dailyData = {};
+        data.forEach(d => {
+            const dateStr = d.ts.substring(0, 10);
+            if (!dailyData[dateStr]) {
+                dailyData[dateStr] = [];
+            }
+            dailyData[dateStr].push(d);
+        });
+
+        // Find last complete day
+        const dates = Object.keys(dailyData).sort().reverse();
+        for (const date of dates) {
+            if (dailyData[date].length >= MIN_HOURS_FOR_COMPLETE_DAY) {
+                return dailyData[date].reduce((sum, d) => sum + Math.abs(d.value), 0);
+            }
+        }
+
+        // Fallback: return average of all available data
+        return this.getAverageDailyTotal(data, SHORT_TERM_DAYS, new Date(data[data.length - 1].ts), true);
     }
 }
 

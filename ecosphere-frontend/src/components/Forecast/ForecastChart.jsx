@@ -74,7 +74,7 @@ const ForecastChart = ({ predictions, targetDate }) => {
                 display: true,
                 title: {
                     display: true,
-                    text: 'Electricity Consumption (Wh)'
+                    text: 'Daily Electricity Consumption (Wh/day)'
                 },
                 beginAtZero: true,
                 grid: {
