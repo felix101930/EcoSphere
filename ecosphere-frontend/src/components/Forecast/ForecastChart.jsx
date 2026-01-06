@@ -184,9 +184,6 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                             <Typography variant="caption" color="text.secondary">
                                 Strategy: {generationData.metadata.strategyName}
                             </Typography>
-                            <Typography variant="caption" display="block" color="text.secondary">
-                                R²: {generationData.metadata.accuracy?.toFixed(4) || 'N/A'}
-                            </Typography>
                         </Box>
                     )}
 

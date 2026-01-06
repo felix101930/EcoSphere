@@ -595,7 +595,7 @@ class ForecastService {
 
     /**
      * Train linear regression model: generation = f(weather)
-     * Model: generation = a*direct_radiation + b*temperature + c*(100-cloud_cover) + d
+     * Model: generation = a*direct_radiation + b
      */
     static trainWeatherModel(historicalGeneration, historicalWeather) {
         // Aggregate generation to daily
@@ -617,9 +617,7 @@ class ForecastService {
                 trainingData.push({
                     date: date,
                     generation: dailyGeneration[date],
-                    direct_radiation: historicalWeather[date].total_direct_radiation,
-                    temperature: historicalWeather[date].avg_temperature,
-                    cloud_cover: historicalWeather[date].avg_cloud_cover
+                    direct_radiation: historicalWeather[date].total_direct_radiation
                 });
             }
         });
@@ -628,55 +626,31 @@ class ForecastService {
             throw new Error('Insufficient training data (minimum 7 days required)');
         }
 
-        // Perform multiple linear regression
-        // Y = a*X1 + b*X2 + c*X3 + d
+        // Simple linear regression: Y = a*X + b
         const n = trainingData.length;
         const Y = trainingData.map(d => d.generation);
-        const X1 = trainingData.map(d => d.direct_radiation);
-        const X2 = trainingData.map(d => d.temperature);
-        const X3 = trainingData.map(d => 100 - d.cloud_cover); // Inverted cloud cover
+        const X = trainingData.map(d => d.direct_radiation);
 
         // Calculate means
         const meanY = Y.reduce((a, b) => a + b, 0) / n;
-        const meanX1 = X1.reduce((a, b) => a + b, 0) / n;
-        const meanX2 = X2.reduce((a, b) => a + b, 0) / n;
-        const meanX3 = X3.reduce((a, b) => a + b, 0) / n;
+        const meanX = X.reduce((a, b) => a + b, 0) / n;
 
-        // Build matrices for normal equations
-        // Using simplified approach for 3 variables
-        let sumX1Y = 0, sumX2Y = 0, sumX3Y = 0;
-        let sumX1X1 = 0, sumX2X2 = 0, sumX3X3 = 0;
-        let sumX1X2 = 0, sumX1X3 = 0, sumX2X3 = 0;
+        // Calculate slope (a) and intercept (b)
+        let numerator = 0;
+        let denominator = 0;
 
         for (let i = 0; i < n; i++) {
-            const y = Y[i] - meanY;
-            const x1 = X1[i] - meanX1;
-            const x2 = X2[i] - meanX2;
-            const x3 = X3[i] - meanX3;
-
-            sumX1Y += x1 * y;
-            sumX2Y += x2 * y;
-            sumX3Y += x3 * y;
-
-            sumX1X1 += x1 * x1;
-            sumX2X2 += x2 * x2;
-            sumX3X3 += x3 * x3;
-
-            sumX1X2 += x1 * x2;
-            sumX1X3 += x1 * x3;
-            sumX2X3 += x2 * x3;
+            numerator += (X[i] - meanX) * (Y[i] - meanY);
+            denominator += (X[i] - meanX) * (X[i] - meanX);
         }
 
-        // Solve using simplified method (assuming variables are relatively independent)
-        const a = sumX1X1 > 0 ? sumX1Y / sumX1X1 : 0;
-        const b = sumX2X2 > 0 ? sumX2Y / sumX2X2 : 0;
-        const c = sumX3X3 > 0 ? sumX3Y / sumX3X3 : 0;
-        const d = meanY - (a * meanX1 + b * meanX2 + c * meanX3);
+        const a = denominator > 0 ? numerator / denominator : 0;
+        const b = meanY - (a * meanX);
 
         // Calculate R-squared
         let ssTotal = 0, ssResidual = 0;
         for (let i = 0; i < n; i++) {
-            const predicted = a * X1[i] + b * X2[i] + c * X3[i] + d;
+            const predicted = a * X[i] + b;
             ssTotal += Math.pow(Y[i] - meanY, 2);
             ssResidual += Math.pow(Y[i] - predicted, 2);
         }
@@ -684,11 +658,9 @@ class ForecastService {
 
         return {
             coefficients: {
-                direct_radiation: a,
-                temperature: b,
-                cloud_cover_inverted: c
+                direct_radiation: a
             },
-            intercept: d,
+            intercept: b,
             r_squared: Math.max(0, Math.min(1, rSquared)),
             confidence: rSquared > 0.7 ? CONFIDENCE.HIGH :
                 rSquared > 0.5 ? CONFIDENCE.MEDIUM :
@@ -711,11 +683,9 @@ class ForecastService {
             if (forecastWeather[dateStr]) {
                 const weather = forecastWeather[dateStr];
 
-                // Apply model: generation = a*X1 + b*X2 + c*X3 + d
+                // Apply model: generation = a*direct_radiation + b
                 const predictedGeneration =
                     model.coefficients.direct_radiation * weather.total_direct_radiation +
-                    model.coefficients.temperature * weather.avg_temperature +
-                    model.coefficients.cloud_cover_inverted * (100 - weather.avg_cloud_cover) +
                     model.intercept;
 
                 // Ensure non-negative

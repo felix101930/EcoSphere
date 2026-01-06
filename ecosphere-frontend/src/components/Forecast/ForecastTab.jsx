@@ -14,19 +14,17 @@ import {
     Alert
 } from '@mui/material';
 import DataAvailabilityCard from './DataAvailabilityCard';
+import GenerationForecastInfo from './GenerationForecastInfo';
 import ForecastChart from './ForecastChart';
 import { useForecastData } from '../../lib/hooks/useForecastData';
 import {
     FORECAST_PERIODS,
-    FORECAST_PERIOD_LABELS,
-    FORECAST_TYPES,
-    FORECAST_TYPE_LABELS
+    FORECAST_PERIOD_LABELS
 } from '../../lib/constants/forecast';
 
 const ForecastTab = ({ dateTo }) => {
     // State
     const [forecastDays, setForecastDays] = useState(FORECAST_PERIODS.SEVEN_DAYS);
-    const [forecastType, setForecastType] = useState(FORECAST_TYPES.BOTH);
 
     // Custom hook
     const {
@@ -34,8 +32,6 @@ const ForecastTab = ({ dateTo }) => {
         error,
         consumptionForecast,
         generationForecast,
-        loadConsumptionForecast,
-        loadGenerationForecast,
         loadBothForecasts
     } = useForecastData();
 
@@ -44,13 +40,7 @@ const ForecastTab = ({ dateTo }) => {
         if (!dateTo) return;
 
         try {
-            if (forecastType === FORECAST_TYPES.CONSUMPTION) {
-                await loadConsumptionForecast(dateTo, forecastDays);
-            } else if (forecastType === FORECAST_TYPES.GENERATION) {
-                await loadGenerationForecast(dateTo, forecastDays);
-            } else {
-                await loadBothForecasts(dateTo, forecastDays);
-            }
+            await loadBothForecasts(dateTo, forecastDays);
         } catch (err) {
             console.error('Failed to generate forecast:', err);
         }
@@ -62,7 +52,7 @@ const ForecastTab = ({ dateTo }) => {
             handleGenerateForecast();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateTo, forecastDays, forecastType]);
+    }, [dateTo, forecastDays]);
 
     return (
         <Box>
@@ -74,26 +64,6 @@ const ForecastTab = ({ dateTo }) => {
                     </Typography>
 
                     <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end', mt: 2 }}>
-                        {/* Forecast Type Selector */}
-                        <FormControl sx={{ minWidth: 150 }}>
-                            <InputLabel>Forecast Type</InputLabel>
-                            <Select
-                                value={forecastType}
-                                label="Forecast Type"
-                                onChange={(e) => setForecastType(e.target.value)}
-                            >
-                                <MenuItem value={FORECAST_TYPES.CONSUMPTION}>
-                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.CONSUMPTION]}
-                                </MenuItem>
-                                <MenuItem value={FORECAST_TYPES.GENERATION}>
-                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.GENERATION]}
-                                </MenuItem>
-                                <MenuItem value={FORECAST_TYPES.BOTH}>
-                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.BOTH]}
-                                </MenuItem>
-                            </Select>
-                        </FormControl>
-
                         {/* Forecast Period Selector */}
                         <FormControl sx={{ minWidth: 150 }}>
                             <InputLabel>Forecast Period</InputLabel>
@@ -128,8 +98,7 @@ const ForecastTab = ({ dateTo }) => {
                     {/* Info Alert */}
                     <Alert severity="info" sx={{ mt: 2 }}>
                         The forecast will predict the next {forecastDays} days starting from the last day available in the DB (2020-11-09).
-                        {forecastType === FORECAST_TYPES.GENERATION && ' Generation forecast uses weather data from Open-Meteo API.'}
-                        {forecastType === FORECAST_TYPES.BOTH && ' Consumption uses historical patterns, Generation uses weather data.'}
+                        Consumption forecast uses historical patterns, Generation forecast uses weather data from Open-Meteo API.
                     </Alert>
                 </CardContent>
             </Card>
@@ -158,10 +127,11 @@ const ForecastTab = ({ dateTo }) => {
                             title="Consumption Forecast"
                         />
                     )}
+
+                    {/* Generation Forecast Info (different from consumption) */}
                     {generationForecast && (
-                        <DataAvailabilityCard
+                        <GenerationForecastInfo
                             metadata={generationForecast.metadata}
-                            title="Generation Forecast"
                         />
                     )}
 

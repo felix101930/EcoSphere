@@ -58,9 +58,9 @@ export const CONFIDENCE_LABELS = {
 // Chart colors
 export const FORECAST_COLORS = {
     CONSUMPTION: '#005EB8',        // SAIT Blue
-    GENERATION: '#FDB913',         // SAIT Yellow/Gold
+    GENERATION: '#4CAF50',         // Green (matches Generation tab)
     PREDICTED_CONSUMPTION: '#DA291C',     // SAIT Red
-    PREDICTED_GENERATION: '#FF6B35',      // Orange
+    PREDICTED_GENERATION: '#4CAF50',      // Green (matches Generation tab)
     CONFIDENCE_AREA: 'rgba(218, 41, 28, 0.1)'  // Light red
 };
 
