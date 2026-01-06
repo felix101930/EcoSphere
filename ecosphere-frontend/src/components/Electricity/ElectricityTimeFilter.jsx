@@ -1,5 +1,5 @@
 // Electricity Time Filter Component
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -24,6 +24,32 @@ const ElectricityTimeFilter = ({
   loading
 }) => {
   const [preset, setPreset] = useState(TIME_PRESETS.LAST_7_DAYS);
+
+  // Update preset when dates change from outside (e.g., initial load)
+  useEffect(() => {
+    if (dateFrom && dateTo && dateRange) {
+      const maxDateStr = dateRange.consumption.maxDate;
+      const maxDate = new Date(maxDateStr + 'T12:00:00');
+
+      // Check if dates match a preset
+      const daysDiff = Math.round((dateTo - dateFrom) / (1000 * 60 * 60 * 24));
+      const isMaxDate = dateTo.toDateString() === maxDate.toDateString();
+
+      if (isMaxDate) {
+        if (daysDiff === 7) {
+          setPreset(TIME_PRESETS.LAST_7_DAYS);
+        } else if (daysDiff === 30) {
+          setPreset(TIME_PRESETS.LAST_30_DAYS);
+        } else if (daysDiff >= 89 && daysDiff <= 92) { // ~3 months
+          setPreset(TIME_PRESETS.LAST_3_MONTHS);
+        } else {
+          setPreset(TIME_PRESETS.CUSTOM);
+        }
+      } else {
+        setPreset(TIME_PRESETS.CUSTOM);
+      }
+    }
+  }, [dateFrom, dateTo, dateRange]);
 
   // Handle preset change
   const handlePresetChange = (_event, newPreset) => {
@@ -120,10 +146,12 @@ const ElectricityTimeFilter = ({
               setPreset(TIME_PRESETS.CUSTOM);
             }}
             shouldDisableDate={shouldDisableDate}
+            format="yyyy-MM-dd"
             slotProps={{
               textField: {
                 size: 'small',
-                sx: { minWidth: 200 }
+                sx: { minWidth: 200 },
+                placeholder: 'Select start date'
               }
             }}
           />
@@ -138,10 +166,12 @@ const ElectricityTimeFilter = ({
               setPreset(TIME_PRESETS.CUSTOM);
             }}
             shouldDisableDate={shouldDisableDate}
+            format="yyyy-MM-dd"
             slotProps={{
               textField: {
                 size: 'small',
-                sx: { minWidth: 200 }
+                sx: { minWidth: 200 },
+                placeholder: 'Select end date'
               }
             }}
           />
@@ -155,6 +185,16 @@ const ElectricityTimeFilter = ({
           </Button>
         </Box>
       </LocalizationProvider>
+
+      {/* Current Selection Display */}
+      {dateFrom && dateTo && (
+        <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Selected Range:</strong> {dateFrom.toLocaleDateString()} to {dateTo.toLocaleDateString()}
+            {' '}({Math.round((dateTo - dateFrom) / (1000 * 60 * 60 * 24))} days)
+          </Typography>
+        </Box>
+      )}
 
       {/* Available Range Info */}
       {dateRange && (

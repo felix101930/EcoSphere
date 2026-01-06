@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
-import ElectricityTimeFilter from '../components/Electricity/ElectricityTimeFilter';
+import TimeFilter from '../components/Common/TimeFilter';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
 import NetEnergyTab from '../components/Electricity/NetEnergyTab';
@@ -183,13 +183,14 @@ const ElectricityReportPage = () => {
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Time Filter - Show for all tabs */}
-        <ElectricityTimeFilter
+        <TimeFilter
           dateFrom={dateFrom}
           dateTo={dateTo}
           onDateFromChange={setDateFrom}
           onDateToChange={setDateTo}
           onApply={handleApplyFilter}
-          dateRange={dateRange}
+          dateRange={dateRange?.consumption}
+          loading={loading}
         />
 
         {/* Main Tabs */}

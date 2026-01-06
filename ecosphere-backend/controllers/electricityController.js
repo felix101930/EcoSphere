@@ -1,5 +1,8 @@
 // Electricity Controller - Handle electricity data requests
 const ElectricityService = require('../services/electricityService');
+const { sendSuccess, sendError, sendDataWithMetadata } = require('../utils/responseHelper');
+const { validateDateRange, validateDateAvailability } = require('../utils/validationHelper');
+const { HTTP_STATUS, DATA_RANGES, DATA_SOURCES, ERROR_MESSAGES } = require('../utils/constants');
 
 /**
  * Get available date range for electricity data
@@ -11,6 +14,7 @@ const getAvailableDateRange = async (req, res) => {
     const generationRange = await ElectricityService.getAvailableDateRange('30000_TL340');
     const netEnergyRange = await ElectricityService.getAvailableDateRange('30000_TL339');
 
+    // Use custom response format to maintain backward compatibility
     res.json({
       success: true,
       dateRanges: {
@@ -21,10 +25,7 @@ const getAvailableDateRange = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getAvailableDateRange:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch available date range'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch available date range');
   }
 };
 
@@ -35,31 +36,28 @@ const getConsumptionData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
     const data = await ElectricityService.getConsumptionData(dateFrom, dateTo);
     const metrics = ElectricityService.calculateMetrics(data);
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSource: 'TL341',
-      count: data.length,
+    sendDataWithMetadata(res, {
       data,
-      metrics
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSource: DATA_SOURCES.CONSUMPTION,
+        count: data.length,
+        metrics
+      }
     });
   } catch (error) {
     console.error('Error in getConsumptionData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch consumption data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch consumption data');
   }
 };
 
@@ -70,31 +68,28 @@ const getGenerationData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
     const data = await ElectricityService.getGenerationData(dateFrom, dateTo);
     const metrics = ElectricityService.calculateMetrics(data);
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSource: 'TL340',
-      count: data.length,
+    sendDataWithMetadata(res, {
       data,
-      metrics
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSource: DATA_SOURCES.GENERATION,
+        count: data.length,
+        metrics
+      }
     });
   } catch (error) {
     console.error('Error in getGenerationData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch generation data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch generation data');
   }
 };
 
@@ -105,32 +100,29 @@ const getNetEnergyData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
     const data = await ElectricityService.getNetEnergyData(dateFrom, dateTo);
     // Use special metrics calculation that preserves sign
     const metrics = ElectricityService.calculateNetEnergyMetrics(data);
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSource: 'TL339',
-      count: data.length,
+    sendDataWithMetadata(res, {
       data,
-      metrics
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSource: DATA_SOURCES.NET_ENERGY,
+        count: data.length,
+        metrics
+      }
     });
   } catch (error) {
     console.error('Error in getNetEnergyData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch net energy data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch net energy data');
   }
 };
 
@@ -141,27 +133,26 @@ const getPhaseBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
-    // Validate date range (only 2020-11-01 to 2020-11-08 available)
-    // Use string comparison to avoid timezone issues
-    const availableFrom = '2020-11-01';
-    const availableTo = '2020-11-08';
-
-    if (dateFrom < availableFrom || dateTo > availableTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Phase breakdown data only available from 2020-11-01 to 2020-11-08',
-        availableRange: {
-          from: availableFrom,
-          to: availableTo
-        }
-      });
+    // Validate date availability
+    const availabilityCheck = validateDateAvailability(
+      dateFrom,
+      dateTo,
+      DATA_RANGES.PHASE_BREAKDOWN.FROM,
+      DATA_RANGES.PHASE_BREAKDOWN.TO
+    );
+    if (!availabilityCheck.isValid) {
+      return sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        availabilityCheck.error,
+        availabilityCheck.availableRange
+      );
     }
 
     const data = await ElectricityService.getPhaseBreakdownData(dateFrom, dateTo);
@@ -174,26 +165,19 @@ const getPhaseBreakdownData = async (req, res) => {
       phaseC: ElectricityService.calculateMetrics(data.phaseC)
     };
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSources: {
-        total: 'TL342',
-        phaseA: 'TL343',
-        phaseB: 'TL344',
-        phaseC: 'TL345'
-      },
+    sendDataWithMetadata(res, {
       data,
-      metrics,
-      warning: 'Phase data only available for 7 days (2020-11-01 to 2020-11-08)'
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSources: DATA_SOURCES.PHASE,
+        metrics,
+        warning: DATA_RANGES.PHASE_BREAKDOWN.DESCRIPTION
+      }
     });
   } catch (error) {
     console.error('Error in getPhaseBreakdownData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch phase breakdown data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch phase breakdown data');
   }
 };
 
@@ -204,11 +188,10 @@ const getEquipmentBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
     const data = await ElectricityService.getEquipmentBreakdownData(dateFrom, dateTo);
@@ -222,27 +205,19 @@ const getEquipmentBreakdownData = async (req, res) => {
       appliances: ElectricityService.calculateMetrics(data.appliances)
     };
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSources: {
-        panel2A1: 'TL213 (2020-02-15 to 2020-11-08)',
-        ventilation: 'TL4 (2020-11-01 to 2020-11-08)',
-        lighting: 'TL209 (2019-11-07 to 2019-11-14)',
-        equipment: 'TL211 (2019-11-07 to 2019-11-14)',
-        appliances: 'TL212 (2019-11-07 to 2019-11-14)'
-      },
+    sendDataWithMetadata(res, {
       data,
-      metrics,
-      warning: 'Equipment data has different time ranges for different categories'
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSources: DATA_SOURCES.EQUIPMENT,
+        metrics,
+        warning: DATA_RANGES.EQUIPMENT_BREAKDOWN.DESCRIPTION
+      }
     });
   } catch (error) {
     console.error('Error in getEquipmentBreakdownData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch equipment breakdown data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch equipment breakdown data');
   }
 };
 
@@ -253,27 +228,26 @@ const getSolarSourceBreakdownData = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
-    // Validate date range (only 2020-11-01 to 2020-11-08 available)
-    // Use string comparison to avoid timezone issues
-    const availableFrom = '2020-11-01';
-    const availableTo = '2020-11-08';
-
-    if (dateFrom < availableFrom || dateTo > availableTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Solar source data only available from 2020-11-01 to 2020-11-08',
-        availableRange: {
-          from: '2020-11-01',
-          to: '2020-11-08'
-        }
-      });
+    // Validate date availability
+    const availabilityCheck = validateDateAvailability(
+      dateFrom,
+      dateTo,
+      DATA_RANGES.SOLAR_BREAKDOWN.FROM,
+      DATA_RANGES.SOLAR_BREAKDOWN.TO
+    );
+    if (!availabilityCheck.isValid) {
+      return sendError(
+        res,
+        HTTP_STATUS.BAD_REQUEST,
+        availabilityCheck.error,
+        availabilityCheck.availableRange
+      );
     }
 
     const data = await ElectricityService.getSolarSourceBreakdownData(dateFrom, dateTo);
@@ -284,24 +258,19 @@ const getSolarSourceBreakdownData = async (req, res) => {
       rooftop: ElectricityService.calculateMetrics(data.rooftop)
     };
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      dataSources: {
-        carport: 'TL252',
-        rooftop: 'TL253'
-      },
+    sendDataWithMetadata(res, {
       data,
-      metrics,
-      warning: 'Solar source data only available for 7 days (2020-11-01 to 2020-11-08). Unit is W (power), not Wh (energy). Only covers ~27% of total generation.'
+      metadata: {
+        dateFrom,
+        dateTo,
+        dataSources: DATA_SOURCES.SOLAR,
+        metrics,
+        warning: DATA_RANGES.SOLAR_BREAKDOWN.DESCRIPTION
+      }
     });
   } catch (error) {
     console.error('Error in getSolarSourceBreakdownData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch solar source breakdown data'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch solar source breakdown data');
   }
 };
 
@@ -312,11 +281,10 @@ const getElectricityOverview = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.params;
 
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
+    // Validate date range
+    const validation = validateDateRange(dateFrom, dateTo);
+    if (!validation.isValid) {
+      return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
     }
 
     // Fetch all three datasets in parallel
@@ -334,36 +302,36 @@ const getElectricityOverview = async (req, res) => {
     // Calculate self-sufficiency
     const selfSufficiency = ElectricityService.calculateSelfSufficiency(generationData, consumptionData);
 
-    res.json({
-      success: true,
-      dateFrom,
-      dateTo,
-      consumption: {
-        data: consumptionData,
-        metrics: consumptionMetrics,
-        dataSource: 'TL341'
+    sendDataWithMetadata(res, {
+      data: {
+        consumption: {
+          data: consumptionData,
+          metrics: consumptionMetrics,
+          dataSource: DATA_SOURCES.CONSUMPTION
+        },
+        generation: {
+          data: generationData,
+          metrics: generationMetrics,
+          dataSource: DATA_SOURCES.GENERATION
+        },
+        netEnergy: {
+          data: netEnergyData,
+          metrics: netEnergyMetrics,
+          dataSource: DATA_SOURCES.NET_ENERGY
+        },
+        selfSufficiency: {
+          percentage: selfSufficiency.toFixed(2),
+          description: 'Percentage of consumption met by generation'
+        }
       },
-      generation: {
-        data: generationData,
-        metrics: generationMetrics,
-        dataSource: 'TL340'
-      },
-      netEnergy: {
-        data: netEnergyData,
-        metrics: netEnergyMetrics,
-        dataSource: 'TL339'
-      },
-      selfSufficiency: {
-        percentage: selfSufficiency.toFixed(2),
-        description: 'Percentage of consumption met by generation'
+      metadata: {
+        dateFrom,
+        dateTo
       }
     });
   } catch (error) {
     console.error('Error in getElectricityOverview:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch electricity overview'
-    });
+    sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch electricity overview');
   }
 };
 
