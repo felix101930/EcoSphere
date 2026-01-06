@@ -1,148 +1,134 @@
 // Thermal Controller - Handle thermal data requests
 const ThermalService = require('../services/thermalService');
+const { sendError } = require('../utils/responseHelper');
+const { HTTP_STATUS } = require('../utils/constants');
+const { asyncHandler } = require('../utils/controllerHelper');
+const {
+  DEFAULT_SENSORS,
+  DEFAULT_SENSOR_LIST,
+  THERMAL_RESPONSE_FIELDS,
+  THERMAL_ERROR_MESSAGES,
+  THERMAL_QUERY_PARAMS
+} = require('../utils/thermalConstants');
+const {
+  validateRequiredParams,
+  validateDateRangeLimit,
+  parseSensorIds
+} = require('../utils/thermalValidation');
 
-// Get available dates
-const getAvailableDates = async (req, res) => {
-  try {
-    const sensorId = req.query.sensorId || '20004_TL2';
-    const dates = await ThermalService.getAvailableDates(sensorId);
-    
-    res.json({
-      success: true,
-      dates: dates
-    });
-  } catch (error) {
-    console.error('Error in getAvailableDates:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch available dates'
-    });
-  }
-};
+/**
+ * Get available dates with data for a sensor
+ */
+const getAvailableDates = asyncHandler(async (req, res) => {
+  const sensorId = req.query[THERMAL_QUERY_PARAMS.SENSOR_ID] || DEFAULT_SENSORS.PRIMARY;
+  const dates = await ThermalService.getAvailableDates(sensorId);
 
-// Get last complete date
-const getLastCompleteDate = async (req, res) => {
-  try {
-    const sensorId = req.query.sensorId || '20004_TL2';
-    const date = await ThermalService.getLastCompleteDate(sensorId);
-    
-    res.json({
-      success: true,
-      date: date
-    });
-  } catch (error) {
-    console.error('Error in getLastCompleteDate:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch last complete date'
-    });
-  }
-};
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.DATES]: dates
+  });
+});
 
-// Get daily data for a single sensor
-const getDailyData = async (req, res) => {
-  try {
-    const { sensorId, date } = req.params;
-    
-    if (!sensorId || !date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing sensorId or date parameter'
-      });
-    }
-    
-    const data = await ThermalService.getDailyData(sensorId, date);
-    
-    res.json({
-      success: true,
-      sensorId: sensorId,
-      date: date,
-      count: data.length,
-      data: data
-    });
-  } catch (error) {
-    console.error('Error in getDailyData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch daily data'
-    });
-  }
-};
+/**
+ * Get last complete date with full day of data
+ */
+const getLastCompleteDate = asyncHandler(async (req, res) => {
+  const sensorId = req.query[THERMAL_QUERY_PARAMS.SENSOR_ID] || DEFAULT_SENSORS.PRIMARY;
+  const date = await ThermalService.getLastCompleteDate(sensorId);
 
-// Get daily data for multiple sensors
-const getMultipleSensorsDailyData = async (req, res) => {
-  try {
-    const { date } = req.params;
-    const sensorIds = req.query.sensors ? req.query.sensors.split(',') : ['20004_TL2', '20005_TL2', '20006_TL2'];
-    
-    if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing date parameter'
-      });
-    }
-    
-    const data = await ThermalService.getMultipleSensorsDailyData(sensorIds, date);
-    
-    res.json({
-      success: true,
-      date: date,
-      sensors: sensorIds,
-      data: data
-    });
-  } catch (error) {
-    console.error('Error in getMultipleSensorsDailyData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch multiple sensors data'
-    });
-  }
-};
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.DATE]: date
+  });
+});
 
-// Get aggregated data for multiple sensors (date range)
-const getMultipleSensorsAggregatedData = async (req, res) => {
-  try {
-    const { dateFrom, dateTo } = req.params;
-    const sensorIds = req.query.sensors ? req.query.sensors.split(',') : ['20004_TL2', '20005_TL2', '20006_TL2'];
-    
-    if (!dateFrom || !dateTo) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing dateFrom or dateTo parameter'
-      });
-    }
-    
-    // Calculate date difference
-    const from = new Date(dateFrom);
-    const to = new Date(dateTo);
-    const diffDays = Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1;
-    
-    // Limit to 30 days
-    if (diffDays > 30) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date range cannot exceed 30 days'
-      });
-    }
-    
-    const data = await ThermalService.getMultipleSensorsAggregatedData(sensorIds, dateFrom, dateTo);
-    
-    res.json({
-      success: true,
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-      days: diffDays,
-      sensors: sensorIds,
-      data: data
-    });
-  } catch (error) {
-    console.error('Error in getMultipleSensorsAggregatedData:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch aggregated data'
-    });
+/**
+ * Get daily data for a single sensor (96 records per day)
+ */
+const getDailyData = asyncHandler(async (req, res) => {
+  const { sensorId, date } = req.params;
+
+  // Validate required parameters
+  const validation = validateRequiredParams({ sensorId, date }, ['sensorId', 'date']);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, THERMAL_ERROR_MESSAGES.MISSING_SENSOR_DATE);
   }
-};
+
+  const data = await ThermalService.getDailyData(sensorId, date);
+
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.SENSOR_ID]: sensorId,
+    [THERMAL_RESPONSE_FIELDS.DATE]: date,
+    [THERMAL_RESPONSE_FIELDS.COUNT]: data.length,
+    [THERMAL_RESPONSE_FIELDS.DATA]: data
+  });
+});
+
+/**
+ * Get daily data for multiple sensors
+ */
+const getMultipleSensorsDailyData = asyncHandler(async (req, res) => {
+  const { date } = req.params;
+
+  // Validate required parameters
+  const validation = validateRequiredParams({ date }, ['date']);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, THERMAL_ERROR_MESSAGES.MISSING_DATE);
+  }
+
+  // Parse sensor IDs from query or use defaults
+  const sensorIds = parseSensorIds(
+    req.query[THERMAL_QUERY_PARAMS.SENSORS],
+    DEFAULT_SENSOR_LIST
+  );
+
+  const data = await ThermalService.getMultipleSensorsDailyData(sensorIds, date);
+
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.DATE]: date,
+    [THERMAL_RESPONSE_FIELDS.SENSORS]: sensorIds,
+    [THERMAL_RESPONSE_FIELDS.DATA]: data
+  });
+});
+
+/**
+ * Get aggregated data for multiple sensors (date range)
+ * Returns high/low/avg/open/close per day for each sensor
+ */
+const getMultipleSensorsAggregatedData = asyncHandler(async (req, res) => {
+  const { dateFrom, dateTo } = req.params;
+
+  // Validate required parameters
+  const paramValidation = validateRequiredParams({ dateFrom, dateTo }, ['dateFrom', 'dateTo']);
+  if (!paramValidation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, THERMAL_ERROR_MESSAGES.MISSING_DATE_RANGE);
+  }
+
+  // Validate date range limit
+  const rangeValidation = validateDateRangeLimit(dateFrom, dateTo);
+  if (!rangeValidation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, rangeValidation.error);
+  }
+
+  // Parse sensor IDs from query or use defaults
+  const sensorIds = parseSensorIds(
+    req.query[THERMAL_QUERY_PARAMS.SENSORS],
+    DEFAULT_SENSOR_LIST
+  );
+
+  const data = await ThermalService.getMultipleSensorsAggregatedData(sensorIds, dateFrom, dateTo);
+
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.DATE_FROM]: dateFrom,
+    [THERMAL_RESPONSE_FIELDS.DATE_TO]: dateTo,
+    [THERMAL_RESPONSE_FIELDS.DAYS]: rangeValidation.days,
+    [THERMAL_RESPONSE_FIELDS.SENSORS]: sensorIds,
+    [THERMAL_RESPONSE_FIELDS.DATA]: data
+  });
+});
 
 module.exports = {
   getAvailableDates,
