@@ -89,7 +89,9 @@ export const ALGORITHM_TIERS = [
         requirements: [
             '1 year historical data',
             '70% data completeness'
-        ]
+        ],
+        formula: 'Y(t+h) = L(t) + h×T(t) + S(t+h-m)',
+        description: 'Triple exponential smoothing that captures level (L), trend (T), and seasonal (S) components. Uses α, β, γ parameters to weight recent vs historical data. Ideal for data with clear weekly patterns.'
     },
     {
         tier: 2,
@@ -104,7 +106,9 @@ export const ALGORITHM_TIERS = [
         requirements: [
             'Last year same period',
             'Recent 30 days data'
-        ]
+        ],
+        formula: 'Y = 0.3×LastYear + 0.5×LastWeek + 0.2×Avg30Days',
+        description: 'Weighted average combining last year\'s same period (seasonal pattern), last week\'s same day (recent trend), and 30-day average (baseline). Balances seasonal and recent patterns.'
     },
     {
         tier: 3,
@@ -118,7 +122,9 @@ export const ALGORITHM_TIERS = [
         ],
         requirements: [
             'Recent 30 days data'
-        ]
+        ],
+        formula: 'Y = a×t + b',
+        description: 'Simple linear regression on recent 30 days. Calculates slope (a) and intercept (b) to project future trend. Best for short-term predictions when seasonal data unavailable.'
     },
     {
         tier: 4,
@@ -132,6 +138,8 @@ export const ALGORITHM_TIERS = [
         ],
         requirements: [
             'Recent 7 days data'
-        ]
+        ],
+        formula: 'Y = (Σ last 7 days) / 7',
+        description: 'Simple average of last 7 days. Assumes future will match recent average. Fallback method when insufficient data for more sophisticated algorithms.'
     }
 ];
