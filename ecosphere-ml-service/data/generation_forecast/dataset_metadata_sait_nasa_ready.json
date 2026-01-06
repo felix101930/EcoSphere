@@ -1,0 +1,11 @@
+{
+  "created": "2025-12-24T11:17:54.165391",
+  "samples": 9760,
+  "features": 22,
+  "date_range": {
+    "start": "2019-03-09T06:00:00",
+    "end": "2020-11-07T21:00:00"
+  },
+  "target_variable": "total_solar_kw",
+  "description": "SAIT solar + NASA weather combined dataset for ML training"
+}

@@ -1,0 +1,66 @@
+{
+  "model_info": {
+    "name": "RandomForest",
+    "type": "RandomForestRegressor",
+    "performance": {
+      "r2": 0.6932793141066783,
+      "mae": 1.99323714076068,
+      "rmse": 2.710179504930708,
+      "mape": 142.7435841396612,
+      "mean_actual": 5.2343608964228885,
+      "mean_predicted": 4.9641173450118155
+    },
+    "features": [
+      "uv_index",
+      "temperature_c",
+      "humidity_pct",
+      "pressure_kpa",
+      "dew_point_c",
+      "wind_speed_ms",
+      "wind_direction_deg",
+      "precipitation_mmh",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "is_daylight",
+      "season",
+      "day_of_year_sin",
+      "day_of_year_cos",
+      "day_length_hours"
+    ],
+    "feature_count": 17
+  },
+  "training_data": {
+    "samples": 3156,
+    "date_range": {
+      "start": "2019-03-09",
+      "end": "2020-11-07"
+    },
+    "target_mean_kw": 6.325085766841686,
+    "uv_mean": 1.6774144486692015
+  },
+  "usage": {
+    "api_compatibility": "OpenWeather One Call API 3.0",
+    "required_features": [
+      "uv_index",
+      "temperature_c",
+      "humidity_pct",
+      "pressure_kpa",
+      "dew_point_c",
+      "wind_speed_ms",
+      "wind_direction_deg",
+      "precipitation_mmh",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "is_daylight",
+      "season",
+      "day_of_year_sin",
+      "day_of_year_cos",
+      "day_length_hours"
+    ],
+    "prediction_steps": "1. Get hourly forecast from OpenWeather -> 2. Convert to features -> 3. Predict using model -> 4. Convert log1p to kW"
+  }
+}
