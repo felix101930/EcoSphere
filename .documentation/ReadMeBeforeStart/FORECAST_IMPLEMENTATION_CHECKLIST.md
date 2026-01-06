@@ -1,369 +1,203 @@
 # Forecast Implementation Checklist
 
-**Purpose**: Ensure smooth implementation of forecast features for Water and Thermal modules
-**Created**: 2026-01-04
-**Based on**: Electricity Forecast implementation lessons learned
+**Document Purpose**: Step-by-step guide for implementing forecast features in Water and Thermal modules
+**Reference Implementation**: Electricity Report Forecast Tab
+**Last Updated**: 2026-01-05
+**Target Reader**: AI Assistants and Development Team
 
 ---
 
-## Pre-Implementation Checklist
+## Overview
 
-### 1. Review Reference Implementation
+This document provides a comprehensive checklist for implementing forecast functionality in Water and Thermal modules, based on the successful implementation in the Electricity module. The Electricity forecast serves as the reference implementation with proven patterns and best practices.
 
-- [ ] Read Electricity Forecast implementation in `4.CURRENT_STATE.md`
-- [ ] Review `react-nextjs-enterprise-standards.md` Section 4: Multi-Tab Data Management Pattern
-- [ ] Study existing forecast components in `ecosphere-frontend/src/components/Forecast/`
-
-### 2. Understand Data Requirements
-
-- [ ] Identify data source tables (e.g., TL93 for water, TL2 sensors for thermal)
-- [ ] Determine data granularity (hourly, daily, etc.)
-- [ ] Check available date range in database
-- [ ] Understand data completeness issues
-
-### 3. Backend Preparation
-
-- [ ] Verify backend service can fetch historical data
-- [ ] Ensure date formatting uses `T12:00:00` pattern (timezone safety)
-- [ ] Check if data aggregation is needed
+**Forecast Types**:
+- **Consumption Forecast**: Multi-tier algorithm system (Holt-Winters, Seasonal Weighted, Trend-Based, Moving Average)
+- **Generation Forecast** (Electricity only): Weather-based linear regression using Open-Meteo API
 
 ---
 
-## Implementation Steps
+## 1. Prerequisites
 
-### Phase 1: Backend Implementation
+### 1.1 Required Knowledge
+- [ ] Understand the Electricity forecast implementation
+- [ ] Review `services/forecastService.js` for algorithm implementations
+- [ ] Review `components/Forecast/` directory for UI components
+- [ ] Understand the 4-tier algorithm system
 
-#### Step 1.1: Install Dependencies (if not already installed)
+### 1.2 Data Requirements
+- [ ] Identify primary data table (e.g., TL341 for electricity consumption)
+- [ ] Verify data availability (minimum 7 days for basic forecast)
+- [ ] Understand data structure (hourly vs daily intervals)
+- [ ] Check for data gaps and completeness
 
-```bash
-cd ecosphere-backend
-npm install timeseries-analysis
+### 1.3 Backend Standards
+- [ ] Review `utils/controllerHelper.js` for reusable utilities
+- [ ] Understand `asyncHandler`, `createDataFetcher` patterns
+- [ ] Follow code standards (no magic numbers, DRY principle)
+- [ ] Controllers < 150 lines, Functions < 50 lines
+
+---
+
+## 2. Backend Implementation
+
+### 2.1 Create Forecast Routes
+
+**File**: `routes/[module]ForecastRoutes.js` or add to existing `[module]Routes.js`
+
+```javascript
+// Example for Water module
+const express = require('express');
+const router = express.Router();
+const { getWaterForecast } = require('../controllers/waterController');
+
+// Get water consumption forecast
+// Parameters:
+//   - targetDate: YYYY-MM-DD (base date, forecast starts from day after)
+//   - forecastDays: number of days to forecast (1-30)
+router.get('/forecast/:targetDate/:forecastDays', getWaterForecast);
+
+module.exports = router;
 ```
 
-#### Step 1.2: Reuse Existing Services
+**Checklist**:
+- [ ] Create or update routes file
+- [ ] Define forecast endpoint with targetDate and forecastDays parameters
+- [ ] Add route to server.js
+- [ ] Test route accessibility
 
-- [ ] **DO NOT create new forecastService.js** - Reuse `services/forecastService.js`
-- [ ] **DO NOT create new forecastHelpers.js** - Reuse `utils/forecastHelpers.js`
-- [ ] Only create module-specific controller if needed
+### 2.2 Implement Forecast Controller
 
-#### Step 1.3: Create Module-Specific Routes
+**File**: `controllers/[module]Controller.js`
 
-- [ ] Create route file (e.g., `routes/waterForecastRoutes.js` or reuse `forecastRoutes.js`)
-- [ ] Add endpoint: `GET /api/forecast/water/:targetDate/:forecastDays`
-- [ ] Add endpoint: `GET /api/forecast/thermal/:targetDate/:forecastDays`
+**Use Helper Functions**:
+```javascript
+const { asyncHandler, validateParams } = require('../utils/controllerHelper');
 
-#### Step 1.4: Create Module-Specific Controller
+const getWaterForecast = asyncHandler(async (req, res) => {
+    const { targetDate, forecastDays } = req.params;
+    
+    // Validate parameters
+    validateParams({ targetDate, forecastDays });
+    
+    const days = parseInt(forecastDays);
+    if (isNaN(days) || days < 1 || days > 30) {
+        return res.status(400).json({
+            success: false,
+            error: 'forecastDays must be between 1 and 30'
+        });
+    }
+    
+    // Get historical data
+    const historicalData = await WaterService.getConsumptionData(
+        calculateStartDate(targetDate, 365),
+        targetDate
+    );
+    
+    // Generate forecast
+    const forecastResult = await ForecastService.generateForecast(
+        targetDate,
+        days,
+        historicalData
+    );
+    
+    // Return response
+    res.json({
+        success: true,
+        targetDate: targetDate,
+        forecastDays: days,
+        predictions: forecastResult.predictions,
+        metadata: forecastResult.metadata
+    });
+});
+```
 
-- [ ] Create controller (e.g., `controllers/waterForecastController.js`)
-- [ ] Validate inputs (targetDate, forecastDays)
-- [ ] Fetch historical data using existing service
+**Checklist**:
+- [ ] Use `asyncHandler` for automatic error handling
+- [ ] Validate input parameters (targetDate, forecastDays)
+- [ ] Fetch historical data (1 year recommended for Holt-Winters)
 - [ ] Call `ForecastService.generateForecast()`
-- [ ] Return response with predictions and metadata
+- [ ] Return standardized response format
+- [ ] Keep controller < 150 lines
 
-#### Step 1.5: Register Routes in server.js
+### 2.3 Update Forecast Service (if needed)
+
+**File**: `services/forecastService.js`
+
+**Note**: The existing `generateForecast()` method is generic and should work for most modules. Only create module-specific methods if special logic is needed.
+
+**Checklist**:
+- [ ] Review existing `generateForecast()` method
+- [ ] Determine if module-specific logic is needed
+- [ ] If needed, create new method (e.g., `generateWaterForecast()`)
+- [ ] Follow existing patterns (4-tier algorithm system)
+- [ ] Add appropriate comments and documentation
+
+---
+
+## 3. Frontend Implementation
+
+### 3.1 Update Service Layer
+
+**File**: `services/[Module]Service.js`
 
 ```javascript
-const forecastRoutes = require('./routes/forecastRoutes');
-app.use('/api/forecast', forecastRoutes);
+class WaterService {
+    /**
+     * Get water consumption forecast
+     * @param {string} targetDate - Base date (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @returns {Promise<Object>} Forecast result
+     */
+    static async getWaterForecast(targetDate, forecastDays) {
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/water/forecast/${targetDate}/${forecastDays}`
+            );
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch forecast');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching water forecast:', error);
+            throw error;
+        }
+    }
+}
 ```
 
----
+**Checklist**:
+- [ ] Add forecast method to service class
+- [ ] Use correct API endpoint
+- [ ] Handle errors appropriately
+- [ ] Return parsed JSON response
 
-### Phase 2: Frontend Implementation
+### 3.2 Create or Update Custom Hook
 
-#### Step 2.1: Reuse Existing Components
-
-**CRITICAL: DO NOT recreate these components!**
-
-- [ ] Reuse `components/Forecast/ForecastTab.jsx` (modify props)
-- [ ] Reuse `components/Forecast/DataAvailabilityCard.jsx`
-- [ ] Reuse `components/Forecast/ForecastChart.jsx`
-- [ ] Reuse `components/Forecast/DataCompletenessSection.jsx`
-- [ ] Reuse `components/Forecast/AvailableDataChecks.jsx`
-- [ ] Reuse `components/Forecast/MissingPeriodsSection.jsx`
-- [ ] Reuse `components/Forecast/AlgorithmSelectionSection.jsx`
-- [ ] Reuse `components/Forecast/AlgorithmTiersGrid.jsx`
-
-#### Step 2.2: Create Module-Specific Service
-
-- [ ] Create `services/WaterForecastService.js` or `ThermalForecastService.js`
-- [ ] Implement `getWaterForecast()` or `getThermalForecast()`
-- [ ] Reuse `formatDate()` helper
-
-#### Step 2.3: Create Module-Specific Hook
-
-- [ ] Create `lib/hooks/useWaterForecastData.js` or `useThermalForecastData.js`
-- [ ] Follow same pattern as `useForecastData.js`
-- [ ] Include `clearForecast()` function
-
-#### Step 2.4: Reuse Constants
-
-- [ ] Reuse `lib/constants/forecast.js` (no changes needed)
-- [ ] Reuse `lib/utils/forecastUtils.js` (no changes needed)
-
-#### Step 2.5: Integrate into Module Page
-
-- [ ] Add Forecast tab to Water/Thermal Report Page
-- [ ] Pass `dateTo` prop to ForecastTab component
-- [ ] Ensure tab switching works correctly
-
----
-
-## Critical Issues to Avoid
-
-### ❌ Issue 1: Multi-Tab Data Stale State
-
-**Problem**: When user changes date filter, only current tab updates, other tabs show old data
-
-**Solution**:
+**File**: `lib/hooks/use[Module]Data.js`
 
 ```javascript
-const handleApplyFilter = async () => {
-  // CRITICAL: Clear ALL cached data first
-  clearData(); // This clears consumption, generation, net energy, etc.
-  
-  // Then load current tab data
-  switch (activeTab) {
-    case 'TAB_1':
-      await loadTab1Data(dateFrom, dateTo);
-      break;
-    // ...
-  }
-};
-```
-
-**Checklist**:
-
-- [ ] Add `clearData()` function to custom hook
-- [ ] Call `clearData()` in `handleApplyFilter()` BEFORE loading new data
-- [ ] Verify tab switching triggers data reload when data is null
-
----
-
-### ❌ Issue 2: Component Size Exceeds Standards
-
-**Problem**: Components become too large (>150 lines)
-
-**Solution**: Break into smaller components
-
-**Checklist**:
-
-- [ ] Keep main component < 150 lines
-- [ ] Extract sections into separate components
-- [ ] Use composition pattern
-- [ ] Follow single responsibility principle
-
----
-
-### ❌ Issue 3: Magic Numbers and Strings
-
-**Problem**: Hardcoded values scattered throughout code
-
-**Solution**: Centralize in constants file
-
-**Checklist**:
-
-- [ ] All dimensions in constants (CARD_HEIGHT, CHART_HEIGHT)
-- [ ] All labels in constants (FORECAST_PERIOD_LABELS)
-- [ ] All colors in constants (FORECAST_COLORS)
-- [ ] All algorithm configs in constants (ALGORITHM_TIERS)
-
----
-
-### ❌ Issue 4: Duplicate Code
-
-**Problem**: Copying and pasting similar components
-
-**Solution**: Create reusable components with props
-
-**Checklist**:
-
-- [ ] Identify repeated patterns
-- [ ] Extract into reusable component
-- [ ] Pass configuration via props
-- [ ] Use array.map() for repeated elements
-
----
-
-### ❌ Issue 5: Timezone Issues
-
-**Problem**: Date objects shift dates due to timezone conversion
-
-**Solution**: Always use `T12:00:00` pattern
-
-**Checklist**:
-
-- [ ] Add `T12:00:00` when creating Date from string
-- [ ] Use local time methods (getFullYear, getMonth, getDate)
-- [ ] Never use UTC methods for local database times
-- [ ] Document timezone assumptions in comments
-
----
-
-### ❌ Issue 6: Helper Functions in Wrong Place
-
-**Problem**: Pure functions defined inside components or classes
-
-**Solution**: Extract to utils files
-
-**Checklist**:
-
-- [ ] Pure functions → `lib/utils/`
-- [ ] Backend helpers → `utils/`
-- [ ] No business logic in components
-- [ ] No helper functions in service classes
-
----
-
-## Code Quality Checklist
-
-### Component Standards
-
-- [ ] Component < 150 lines (ideal < 100)
-- [ ] All hooks at top (before any conditional logic)
-- [ ] Single responsibility
-- [ ] Props documented (or use PropTypes)
-- [ ] No magic numbers/strings
-- [ ] Reusable where possible
-
-### Hook Standards
-
-- [ ] Named with `use` prefix
-- [ ] Returns object with clear properties
-- [ ] Includes loading, error states
-- [ ] Includes clear/reset functions
-- [ ] Uses useCallback for functions
-
-### Service Standards
-
-- [ ] Static methods for API calls
-- [ ] Error handling with try-catch
-- [ ] Returns consistent response format
-- [ ] No business logic (only API communication)
-
-### Backend Standards
-
-- [ ] Input validation
-- [ ] Error handling
-- [ ] Consistent response format
-- [ ] Helper functions in utils/
-- [ ] No magic numbers/strings
-
----
-
-## Testing Checklist
-
-### Manual Testing
-
-- [ ] Test with different date ranges
-- [ ] Test with missing data
-- [ ] Test tab switching after date change
-- [ ] Test all 4 algorithm tiers (by varying data availability)
-- [ ] Test forecast period selector (7, 14, 30 days)
-- [ ] Test loading states
-- [ ] Test error states
-- [ ] Test responsive design
-
-### Edge Cases
-
-- [ ] No historical data available
-- [ ] Insufficient data (< 7 days)
-- [ ] Data with large gaps
-- [ ] Future dates (should show error)
-- [ ] Invalid date ranges
-
----
-
-## Post-Implementation Checklist
-
-### Documentation
-
-- [ ] Update `4.CURRENT_STATE.md` with new forecast implementation
-- [ ] Add to "Completed Features" section
-- [ ] Update progress percentages
-- [ ] Document any module-specific differences
-
-### Code Review
-
-- [ ] All components < 150 lines
-- [ ] No duplicate code
-- [ ] No magic numbers/strings
-- [ ] All helpers in utils/
-- [ ] Consistent naming conventions
-- [ ] English comments only
-
-### Cleanup
-
-- [ ] Remove console.logs
-- [ ] Remove commented code
-- [ ] Remove unused imports
-- [ ] Remove unused variables
-
----
-
-## Quick Reference: File Structure
-
-### Reusable Files (DO NOT RECREATE)
-
-```
-Frontend:
-├── components/Forecast/
-│   ├── ForecastTab.jsx                    ✅ REUSE (modify props)
-│   ├── DataAvailabilityCard.jsx          ✅ REUSE
-│   ├── ForecastChart.jsx                 ✅ REUSE
-│   ├── DataCompletenessSection.jsx       ✅ REUSE
-│   ├── AvailableDataChecks.jsx           ✅ REUSE
-│   ├── MissingPeriodsSection.jsx         ✅ REUSE
-│   ├── AlgorithmSelectionSection.jsx     ✅ REUSE
-│   └── AlgorithmTiersGrid.jsx            ✅ REUSE
-├── lib/
-│   ├── constants/forecast.js             ✅ REUSE
-│   └── utils/forecastUtils.js            ✅ REUSE
-
-Backend:
-├── services/forecastService.js           ✅ REUSE
-├── utils/forecastHelpers.js              ✅ REUSE
-```
-
-### New Files to Create
-
-```
-Frontend:
-├── services/
-│   ├── WaterForecastService.js           🆕 CREATE
-│   └── ThermalForecastService.js         🆕 CREATE
-├── lib/hooks/
-│   ├── useWaterForecastData.js           🆕 CREATE
-│   └── useThermalForecastData.js         🆕 CREATE
-
-Backend:
-├── controllers/
-│   ├── waterForecastController.js        🆕 CREATE (optional, can extend forecastController)
-│   └── thermalForecastController.js      🆕 CREATE (optional, can extend forecastController)
-├── routes/
-│   └── forecastRoutes.js                 🔧 EXTEND (add water/thermal endpoints)
-```
-
----
-
-## Common Patterns to Follow
-
-### Pattern 1: Custom Hook
-
-```javascript
-export const useModuleForecastData = () => {
+export const useWaterData = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [forecastData, setForecastData] = useState(null);
-
+    const [forecast, setForecast] = useState(null);
+    
     const loadForecast = useCallback(async (targetDate, forecastDays) => {
         try {
             setLoading(true);
             setError(null);
-            const formattedDate = ModuleForecastService.formatDate(targetDate);
-            const response = await ModuleForecastService.getForecast(formattedDate, forecastDays);
+            
+            const formattedDate = formatDate(targetDate);
+            const response = await WaterService.getWaterForecast(
+                formattedDate,
+                forecastDays
+            );
+            
             if (response.success) {
-                setForecastData(response);
+                setForecast(response);
             } else {
                 throw new Error(response.error || 'Failed to load forecast');
             }
@@ -375,145 +209,334 @@ export const useModuleForecastData = () => {
             setLoading(false);
         }
     }, []);
-
-    const clearForecast = useCallback(() => {
-        setForecastData(null);
-        setError(null);
-    }, []);
-
-    return { loading, error, forecastData, loadForecast, clearForecast };
+    
+    return {
+        loading,
+        error,
+        forecast,
+        loadForecast
+    };
 };
 ```
 
-### Pattern 2: Frontend Service
+**Checklist**:
+- [ ] Add forecast state variables
+- [ ] Create `loadForecast` method
+- [ ] Handle loading and error states
+- [ ] Use `useCallback` for performance
+- [ ] Return forecast data and methods
+
+### 3.3 Create Forecast Tab Component
+
+**File**: `components/[Module]/ForecastTab.jsx`
+
+**Reusable Components** (from Electricity):
+- `DataAvailabilityCard.jsx` - Shows data completeness and algorithm selection
+- `AlgorithmTiersGrid.jsx` - Displays 4-tier algorithm system
+- `ForecastChart.jsx` - Line chart for predictions (may need customization)
+
+**Structure**:
+```javascript
+const ForecastTab = ({ dateTo }) => {
+    const [forecastDays, setForecastDays] = useState(FORECAST_PERIODS.SEVEN_DAYS);
+    const { loading, error, forecast, loadForecast } = useWaterData();
+    
+    const handleGenerateForecast = async () => {
+        if (!dateTo) return;
+        try {
+            await loadForecast(dateTo, forecastDays);
+        } catch (err) {
+            console.error('Failed to generate forecast:', err);
+        }
+    };
+    
+    useEffect(() => {
+        if (dateTo) {
+            handleGenerateForecast();
+        }
+    }, [dateTo, forecastDays]);
+    
+    return (
+        <Box>
+            {/* Configuration Card */}
+            {/* Data Availability Card */}
+            {/* Forecast Chart */}
+        </Box>
+    );
+};
+```
+
+**Checklist**:
+- [ ] Create ForecastTab component
+- [ ] Add forecast period selector (7, 14, 30 days)
+- [ ] Implement auto-generate on date/period change
+- [ ] Reuse DataAvailabilityCard component
+- [ ] Reuse or customize ForecastChart component
+- [ ] Add loading and error states
+- [ ] Keep component < 150 lines
+
+### 3.4 Update Constants
+
+**File**: `lib/constants/[module].js`
 
 ```javascript
-class ModuleForecastService {
-    static async getForecast(targetDate, forecastDays) {
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/forecast/module/${targetDate}/${forecastDays}`
-            );
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch forecast');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching forecast:', error);
-            throw error;
-        }
-    }
+// Forecast periods
+export const FORECAST_PERIODS = {
+    SEVEN_DAYS: 7,
+    FOURTEEN_DAYS: 14,
+    THIRTY_DAYS: 30
+};
 
-    static formatDate(date) {
-        if (!date) return null;
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
+// Forecast period labels
+export const FORECAST_PERIOD_LABELS = {
+    [FORECAST_PERIODS.SEVEN_DAYS]: '7 Days',
+    [FORECAST_PERIODS.FOURTEEN_DAYS]: '14 Days',
+    [FORECAST_PERIODS.THIRTY_DAYS]: '30 Days'
+};
+
+// Chart colors
+export const FORECAST_COLORS = {
+    PREDICTED: '#DA291C',  // SAIT Red
+    CONFIDENCE_AREA: 'rgba(218, 41, 28, 0.1)'
+};
+```
+
+**Checklist**:
+- [ ] Add forecast-related constants
+- [ ] Define forecast periods
+- [ ] Define chart colors (use SAIT colors)
+- [ ] Add any module-specific constants
+
+### 3.5 Integrate into Main Page
+
+**File**: `pages/[Module]Page.jsx`
+
+```javascript
+// Add Forecast tab to tab list
+const TABS = {
+    OVERVIEW: 'overview',
+    FORECAST: 'forecast',  // Add this
+    // ... other tabs
+};
+
+// Add Forecast tab panel
+{activeTab === TABS.FORECAST && (
+    <ForecastTab dateTo={dateTo} />
+)}
+```
+
+**Checklist**:
+- [ ] Add FORECAST to tab constants
+- [ ] Add Forecast tab button to UI
+- [ ] Add Forecast tab panel
+- [ ] Pass dateTo prop to ForecastTab
+- [ ] Test tab switching
+
+---
+
+## 4. Testing Checklist
+
+### 4.1 Backend Testing
+- [ ] Test forecast endpoint with valid parameters
+- [ ] Test with different forecast periods (7, 14, 30 days)
+- [ ] Test with insufficient data (should gracefully degrade to lower tier)
+- [ ] Test with invalid parameters (should return 400 error)
+- [ ] Test with missing data (should handle gracefully)
+- [ ] Verify response format matches specification
+
+### 4.2 Frontend Testing
+- [ ] Test forecast generation with different periods
+- [ ] Test auto-generate on date change
+- [ ] Test auto-generate on period change
+- [ ] Test loading states
+- [ ] Test error handling
+- [ ] Test chart rendering
+- [ ] Test data availability card display
+- [ ] Test algorithm tier visualization
+- [ ] Test responsive design (mobile, tablet, desktop)
+
+### 4.3 Integration Testing
+- [ ] Test end-to-end flow (UI → API → Database → Response → UI)
+- [ ] Test with real data from database
+- [ ] Test with edge cases (first day, last day of data)
+- [ ] Test performance with large datasets
+- [ ] Test concurrent requests
+
+---
+
+## 5. Algorithm Tier System
+
+### 5.1 Understanding the 4-Tier System
+
+The forecast system uses a graceful degradation approach based on data availability:
+
+**Tier 1: Holt-Winters Seasonal Smoothing** (Best)
+- **Requirements**: 1 year of data + 70% completeness
+- **Confidence**: 90%
+- **Best for**: Long-term patterns with clear seasonality
+- **Formula**: `Y(t+h) = L(t) + h×T(t) + S(t+h-m)`
+
+**Tier 2: Seasonal Weighted Prediction** (Good)
+- **Requirements**: Last year same period + 30 days recent data
+- **Confidence**: 80%
+- **Best for**: Seasonal patterns without full year
+- **Formula**: `Y = 0.3×LastYear + 0.5×LastWeek + 0.2×Avg30Days`
+
+**Tier 3: Trend-Based Prediction** (Acceptable)
+- **Requirements**: 30 days of recent data
+- **Confidence**: 65%
+- **Best for**: Short-term trends
+- **Formula**: `Y = a×t + b`
+
+**Tier 4: Moving Average** (Fallback)
+- **Requirements**: 7 days of recent data
+- **Confidence**: 50%
+- **Best for**: Baseline when insufficient data
+- **Formula**: `Y = (Σ last 7 days) / 7`
+
+### 5.2 Algorithm Selection Logic
+
+The system automatically selects the best available algorithm:
+
+```javascript
+// Check data availability
+const dataAvailability = analyzeDataAvailability(historicalData, targetDate);
+
+// Select algorithm based on availability
+if (dataAvailability.hasOneYearCycle && dataAvailability.completenessScore >= 70) {
+    return HOLT_WINTERS;  // Tier 1
+} else if (dataAvailability.hasLastYearData && dataAvailability.hasRecent30Days) {
+    return SEASONAL_WEIGHTED;  // Tier 2
+} else if (dataAvailability.hasRecent30Days) {
+    return TREND_BASED;  // Tier 3
+} else if (dataAvailability.hasRecent7Days) {
+    return MOVING_AVERAGE;  // Tier 4
+} else {
+    return INSUFFICIENT_DATA;  // Cannot forecast
 }
 ```
 
-### Pattern 3: Backend Controller
+---
 
-```javascript
-const getModuleForecast = async (req, res) => {
-    try {
-        const { targetDate, forecastDays } = req.params;
+## 6. Common Pitfalls and Solutions
 
-        // Validate inputs
-        if (!targetDate || !forecastDays) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing required parameters'
-            });
-        }
+### 6.1 Data Format Issues
+**Problem**: Hourly data vs daily data mismatch
+**Solution**: Use `aggregateHourlyToDaily()` utility function
 
-        const days = parseInt(forecastDays);
-        if (isNaN(days) || days < 1 || days > 30) {
-            return res.status(400).json({
-                success: false,
-                error: 'forecastDays must be between 1 and 30'
-            });
-        }
+### 6.2 Date Handling
+**Problem**: Timezone issues causing date shifts
+**Solution**: Always use `T12:00:00` pattern (e.g., `2020-11-08T12:00:00`)
 
-        // Get historical data
-        const target = new Date(targetDate + 'T12:00:00');
-        const startDate = new Date(target);
-        startDate.setDate(startDate.getDate() - 365);
+### 6.3 Missing Data
+**Problem**: Gaps in historical data affect forecast quality
+**Solution**: Implement data completeness check and show warnings
 
-        const historicalData = await ModuleService.getData(
-            formatDate(startDate),
-            targetDate
-        );
+### 6.4 Performance
+**Problem**: Large datasets slow down forecast generation
+**Solution**: Limit historical data to 1 year, use daily aggregation
 
-        if (!historicalData || historicalData.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'No historical data available'
-            });
-        }
-
-        // Generate forecast (REUSE ForecastService)
-        const forecastResult = await ForecastService.generateForecast(
-            targetDate,
-            days,
-            historicalData
-        );
-
-        res.json({
-            success: true,
-            targetDate,
-            forecastDays: days,
-            predictions: forecastResult.predictions,
-            metadata: forecastResult.metadata
-        });
-
-    } catch (error) {
-        console.error('Error generating forecast:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message || 'Failed to generate forecast'
-        });
-    }
-};
-```
+### 6.5 Error Handling
+**Problem**: Unhandled errors crash the application
+**Solution**: Use `asyncHandler` and try-catch blocks consistently
 
 ---
 
-## Summary
+## 7. Code Standards Compliance
 
-**Key Principles**:
+### 7.1 Backend Standards
+- [ ] No magic numbers/strings (use constants)
+- [ ] Controllers < 150 lines
+- [ ] Functions < 50 lines
+- [ ] Use `asyncHandler` for error handling
+- [ ] Use helper functions (`createDataFetcher`, etc.)
+- [ ] Consistent error response format
+- [ ] Input validation for all parameters
 
-1. ✅ **Reuse existing forecast components** - Don't recreate
-2. ✅ **Clear all cached data** when filter changes
-3. ✅ **Keep components small** (< 150 lines)
-4. ✅ **Centralize constants** - No magic numbers/strings
-5. ✅ **Extract helpers** to utils files
-6. ✅ **Use T12:00:00** for timezone safety
-7. ✅ **Follow existing patterns** from Electricity implementation
-
-**Before Starting Tomorrow**:
-
-- [ ] Read this checklist completely
-- [ ] Review Electricity Forecast implementation
-- [ ] Understand Multi-Tab Data Management pattern
-- [ ] Prepare data source information (tables, date ranges)
-
-**During Implementation**:
-
-- [ ] Follow checklist step by step
-- [ ] Test frequently
-- [ ] Keep components small
-- [ ] Reuse existing code
-
-**After Implementation**:
-
-- [ ] Update documentation
-- [ ] Code review against checklist
-- [ ] Clean up code
+### 7.2 Frontend Standards
+- [ ] Components < 150 lines
+- [ ] Hooks at top of component
+- [ ] No magic numbers/strings (use constants)
+- [ ] Reuse existing components when possible
+- [ ] Consistent naming conventions
+- [ ] Proper error handling and loading states
+- [ ] Responsive design
 
 ---
 
-**Good luck with Water and Thermal forecast implementation! 🚀**
+## 8. Reference Files
+
+### Backend Reference
+- `services/forecastService.js` - Core forecast algorithms
+- `controllers/electricityController.js` - Reference controller implementation
+- `utils/controllerHelper.js` - Reusable helper functions
+- `routes/forecastRoutes.js` - Forecast route definitions
+
+### Frontend Reference
+- `components/Forecast/ForecastTab.jsx` - Main forecast UI
+- `components/Forecast/DataAvailabilityCard.jsx` - Data analysis display
+- `components/Forecast/AlgorithmTiersGrid.jsx` - Algorithm visualization
+- `components/Forecast/ForecastChart.jsx` - Chart component
+- `lib/hooks/useForecastData.js` - Data fetching hook
+- `lib/constants/forecast.js` - Forecast constants
+
+### Documentation
+- `4.CURRENT_STATE.md` - Current implementation status
+- `FORECAST_IMPLEMENTATION_CHECKLIST.md` - This document
+
+---
+
+## 9. Module-Specific Considerations
+
+### 9.1 Water Module
+**Data Characteristics**:
+- Two separate metrics: Rainwater level (%) and Hot water consumption (L/h)
+- Different data intervals (10-min for rainwater, 1-min for hot water)
+- May need separate forecasts for each metric
+
+**Recommendations**:
+- Create two forecast tabs or use selector
+- Consider different algorithms for level vs consumption
+- Rainwater level may have weather correlation (similar to generation)
+
+### 9.2 Thermal Module
+**Data Characteristics**:
+- Multiple sensors per floor (3-5 sensors)
+- Temperature data (°C)
+- 15-minute intervals
+- Strong seasonal patterns
+
+**Recommendations**:
+- Forecast average temperature per floor
+- Holt-Winters likely to work well (strong seasonality)
+- Consider external temperature correlation
+- May need separate forecasts per floor
+
+---
+
+## 10. Future Enhancements
+
+### Potential Improvements
+- [ ] Add confidence intervals to predictions
+- [ ] Implement ensemble methods (combine multiple algorithms)
+- [ ] Add weather correlation for water/thermal (like generation)
+- [ ] Implement automatic model retraining
+- [ ] Add forecast accuracy tracking
+- [ ] Implement A/B testing for algorithm selection
+- [ ] Add export functionality for forecast data
+- [ ] Implement forecast comparison (actual vs predicted)
+
+---
+
+## Document Maintenance
+
+**How to Update This Document**:
+1. Update after implementing forecast in a new module
+2. Add lessons learned and new patterns discovered
+3. Update reference files if structure changes
+4. Keep checklist items current and accurate
+5. Add module-specific sections as needed
+
+---
+
+**End of Document**
