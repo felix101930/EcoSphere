@@ -1,6 +1,25 @@
 // Water Controller - Handle water data requests
 const WaterService = require('../services/waterService');
 const { TABLE_NAMES } = require('../config/database');
+const { sendSuccess, sendError, sendDataWithMetadata } = require('../utils/responseHelper');
+const { validateDateRange } = require('../utils/validationHelper');
+const { HTTP_STATUS } = require('../utils/constants');
+
+// Water-specific constants
+const WATER_DATA_SOURCES = {
+    RAINWATER: 'TL93 (Rain_Water_Level_POLL)',
+    HOT_WATER: 'TL210 (GBT Domestic Hot Water consumption)'
+};
+
+const WATER_UNITS = {
+    RAINWATER: '%',
+    HOT_WATER: 'L/h'
+};
+
+const WATER_AGGREGATION = {
+    RAINWATER: 'hourly_average',
+    HOT_WATER: 'hourly_sum'
+};
 
 /**
  * Get available date range for water data
@@ -11,6 +30,7 @@ const getAvailableDateRange = async (req, res) => {
         const rainwaterRange = await WaterService.getAvailableDateRange(TABLE_NAMES.RAINWATER_LEVEL);
         const hotWaterRange = await WaterService.getAvailableDateRange(TABLE_NAMES.HOT_WATER_CONSUMPTION);
 
+        // Keep backward compatible response format
         res.json({
             success: true,
             dateRanges: {
@@ -20,10 +40,7 @@ const getAvailableDateRange = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in getAvailableDateRange:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch available date range'
-        });
+        sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch available date range');
     }
 };
 
@@ -34,33 +51,30 @@ const getRainwaterLevelData = async (req, res) => {
     try {
         const { dateFrom, dateTo } = req.params;
 
-        if (!dateFrom || !dateTo) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing dateFrom or dateTo parameter'
-            });
+        // Validate date range
+        const validation = validateDateRange(dateFrom, dateTo);
+        if (!validation.isValid) {
+            return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
         }
 
         const data = await WaterService.getRainwaterLevelData(dateFrom, dateTo);
         const metrics = WaterService.calculateMetrics(data);
 
-        res.json({
-            success: true,
-            dateFrom,
-            dateTo,
-            dataSource: 'TL93 (Rain_Water_Level_POLL)',
-            count: data.length,
-            unit: '%',
-            aggregation: 'hourly_average',
+        sendDataWithMetadata(res, {
             data,
-            metrics
+            metadata: {
+                dateFrom,
+                dateTo,
+                dataSource: WATER_DATA_SOURCES.RAINWATER,
+                count: data.length,
+                unit: WATER_UNITS.RAINWATER,
+                aggregation: WATER_AGGREGATION.RAINWATER,
+                metrics
+            }
         });
     } catch (error) {
         console.error('Error in getRainwaterLevelData:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch rainwater level data'
-        });
+        sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch rainwater level data');
     }
 };
 
@@ -71,33 +85,30 @@ const getHotWaterConsumptionData = async (req, res) => {
     try {
         const { dateFrom, dateTo } = req.params;
 
-        if (!dateFrom || !dateTo) {
-            return res.status(400).json({
-                success: false,
-                error: 'Missing dateFrom or dateTo parameter'
-            });
+        // Validate date range
+        const validation = validateDateRange(dateFrom, dateTo);
+        if (!validation.isValid) {
+            return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
         }
 
         const data = await WaterService.getHotWaterConsumptionData(dateFrom, dateTo);
         const metrics = WaterService.calculateMetrics(data);
 
-        res.json({
-            success: true,
-            dateFrom,
-            dateTo,
-            dataSource: 'TL210 (GBT Domestic Hot Water consumption)',
-            count: data.length,
-            unit: 'L/h',
-            aggregation: 'hourly_sum',
+        sendDataWithMetadata(res, {
             data,
-            metrics
+            metadata: {
+                dateFrom,
+                dateTo,
+                dataSource: WATER_DATA_SOURCES.HOT_WATER,
+                count: data.length,
+                unit: WATER_UNITS.HOT_WATER,
+                aggregation: WATER_AGGREGATION.HOT_WATER,
+                metrics
+            }
         });
     } catch (error) {
         console.error('Error in getHotWaterConsumptionData:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch hot water consumption data'
-        });
+        sendError(res, HTTP_STATUS.SERVER_ERROR, 'Failed to fetch hot water consumption data');
     }
 };
 
