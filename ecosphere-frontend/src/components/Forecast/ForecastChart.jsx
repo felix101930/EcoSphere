@@ -1,43 +1,80 @@
-// Forecast Chart - Displays predicted values with data labels
+// Forecast Chart - Displays consumption and generation predictions
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { FORECAST_COLORS, CHART_HEIGHT } from '../../lib/constants/forecast';
+import {
+    FORECAST_COLORS,
+    CHART_HEIGHT
+} from '../../lib/constants/forecast';
 
-const ForecastChart = ({ predictions, targetDate }) => {
-    if (!predictions || predictions.length === 0) {
+const ForecastChart = ({ consumptionData, generationData }) => {
+    // Check if we have any data
+    const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
+    const hasGeneration = generationData && generationData.predictions && generationData.predictions.length > 0;
+
+    if (!hasConsumption && !hasGeneration) {
         return null;
     }
 
-    // Prepare chart data
-    const labels = predictions.map(p => p.date);
+    // Prepare labels (use whichever dataset is available)
+    const labels = hasConsumption
+        ? consumptionData.predictions.map(p => p.date)
+        : generationData.predictions.map(p => p.date);
+
+    // Prepare datasets
+    const datasets = [];
+
+    if (hasConsumption) {
+        datasets.push({
+            label: 'Consumption Forecast',
+            data: consumptionData.predictions.map(p => p.value),
+            borderColor: FORECAST_COLORS.PREDICTED_CONSUMPTION,
+            backgroundColor: FORECAST_COLORS.PREDICTED_CONSUMPTION,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.1,
+            datalabels: {
+                display: true,
+                align: 'top',
+                anchor: 'end',
+                formatter: (value) => Math.round(value),
+                font: {
+                    size: 10,
+                    weight: 'bold'
+                },
+                color: FORECAST_COLORS.PREDICTED_CONSUMPTION
+            }
+        });
+    }
+
+    if (hasGeneration) {
+        datasets.push({
+            label: 'Generation Forecast',
+            data: generationData.predictions.map(p => p.value),
+            borderColor: FORECAST_COLORS.PREDICTED_GENERATION,
+            backgroundColor: FORECAST_COLORS.PREDICTED_GENERATION,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.1,
+            datalabels: {
+                display: true,
+                align: 'bottom',
+                anchor: 'start',
+                formatter: (value) => Math.round(value),
+                font: {
+                    size: 10,
+                    weight: 'bold'
+                },
+                color: FORECAST_COLORS.PREDICTED_GENERATION
+            }
+        });
+    }
 
     const chartData = {
         labels,
-        datasets: [
-            // Predicted values
-            {
-                label: 'Predicted',
-                data: predictions.map(p => p.value),
-                borderColor: FORECAST_COLORS.PREDICTED,
-                backgroundColor: FORECAST_COLORS.PREDICTED,
-                borderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                tension: 0.1,
-                datalabels: {
-                    display: true,
-                    align: 'top',
-                    anchor: 'end',
-                    formatter: (value) => Math.round(value * 10) / 10,
-                    font: {
-                        size: 10,
-                        weight: 'bold'
-                    },
-                    color: FORECAST_COLORS.PREDICTED
-                }
-            }
-        ]
+        datasets
     };
 
     const options = {
@@ -56,7 +93,17 @@ const ForecastChart = ({ predictions, targetDate }) => {
                 }
             },
             tooltip: {
-                enabled: false
+                enabled: true,
+                callbacks: {
+                    label: function (context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += Math.round(context.parsed.y).toLocaleString() + ' Wh';
+                        return label;
+                    }
+                }
             }
         },
         scales: {
@@ -74,45 +121,91 @@ const ForecastChart = ({ predictions, targetDate }) => {
                 display: true,
                 title: {
                     display: true,
-                    text: 'Daily Electricity Consumption (Wh/day)'
+                    text: 'Daily Energy (Wh/day)'
                 },
                 beginAtZero: true,
                 grid: {
                     color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                    callback: function (value) {
+                        return value.toLocaleString();
+                    }
                 }
             }
         }
     };
 
     return (
-        <Card sx={{ mb: 3 }}>
+        <Card>
             <CardContent>
                 <Typography variant="h6" gutterBottom>
-                    📊 Forecast Results
-                </Typography>
-
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Base Date: {targetDate} | Forecast Period: {predictions.length} days
+                    📈 Forecast Results
                 </Typography>
 
                 <Box sx={{ height: CHART_HEIGHT, position: 'relative' }}>
-                    <Line data={chartData} options={options} plugins={[ChartDataLabels]} />
+                    <Line
+                        data={chartData}
+                        options={options}
+                        plugins={[ChartDataLabels]}
+                    />
                 </Box>
 
-                {/* Legend explanation */}
-                <Box sx={{ mt: 2, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box
-                            sx={{
-                                width: 30,
-                                height: 3,
-                                bgcolor: FORECAST_COLORS.PREDICTED
-                            }}
-                        />
-                        <Typography variant="caption">
-                            Predicted values (based on historical data)
-                        </Typography>
-                    </Box>
+                {/* Summary Statistics */}
+                <Box sx={{ mt: 3, display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                    {hasConsumption && (
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Consumption Forecast
+                            </Typography>
+                            <Typography variant="body2">
+                                Total: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} Wh
+                            </Typography>
+                            <Typography variant="body2">
+                                Avg/day: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} Wh
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Strategy: {consumptionData.metadata.strategyName}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {hasGeneration && (
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Generation Forecast
+                            </Typography>
+                            <Typography variant="body2">
+                                Total: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} Wh
+                            </Typography>
+                            <Typography variant="body2">
+                                Avg/day: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} Wh
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Strategy: {generationData.metadata.strategyName}
+                            </Typography>
+                            <Typography variant="caption" display="block" color="text.secondary">
+                                R²: {generationData.metadata.accuracy?.toFixed(4) || 'N/A'}
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {hasConsumption && hasGeneration && (
+                        <Box>
+                            <Typography variant="subtitle2" color="text.secondary">
+                                Net Energy
+                            </Typography>
+                            <Typography variant="body2">
+                                Total: {Math.round(
+                                    consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) -
+                                    generationData.predictions.reduce((sum, p) => sum + p.value, 0)
+                                ).toLocaleString()} Wh
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                (Consumption - Generation)
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
             </CardContent>
         </Card>

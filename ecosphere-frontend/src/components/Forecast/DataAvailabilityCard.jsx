@@ -6,7 +6,7 @@ import MissingPeriodsSection from './MissingPeriodsSection';
 import AlgorithmSelectionSection from './AlgorithmSelectionSection';
 import AlgorithmTiersGrid from './AlgorithmTiersGrid';
 
-const DataAvailabilityCard = ({ metadata }) => {
+const DataAvailabilityCard = ({ metadata, title = 'Data Availability Analysis' }) => {
     if (!metadata) return null;
 
     const { dataAvailability, strategy, strategyName, confidence, accuracy, warning } = metadata;
@@ -15,17 +15,21 @@ const DataAvailabilityCard = ({ metadata }) => {
         <Card sx={{ mb: 3 }}>
             <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    📊 Data Availability Analysis
+                    📊 {title}
                 </Typography>
 
-                {/* Data Completeness */}
-                <DataCompletenessSection completenessScore={dataAvailability.completenessScore} />
+                {/* Data Completeness (only for consumption forecast) */}
+                {dataAvailability && (
+                    <>
+                        <DataCompletenessSection completenessScore={dataAvailability.completenessScore} />
 
-                {/* Available Data Checks */}
-                <AvailableDataChecks dataAvailability={dataAvailability} />
+                        {/* Available Data Checks */}
+                        <AvailableDataChecks dataAvailability={dataAvailability} />
 
-                {/* Missing Periods */}
-                <MissingPeriodsSection missingPeriods={dataAvailability.missingPeriods} />
+                        {/* Missing Periods */}
+                        <MissingPeriodsSection missingPeriods={dataAvailability.missingPeriods} />
+                    </>
+                )}
 
                 {/* Algorithm Selection */}
                 <AlgorithmSelectionSection

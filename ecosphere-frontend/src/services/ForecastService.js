@@ -28,6 +28,31 @@ class ForecastService {
     }
 
     /**
+     * Get solar generation forecast (weather-based)
+     * @param {string} targetDate - Base date (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @returns {Promise<Object>} Forecast result with predictions and metadata
+     */
+    static async getGenerationForecast(targetDate, forecastDays) {
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/forecast/generation/${targetDate}/${forecastDays}`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch generation forecast');
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching generation forecast:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Format date to YYYY-MM-DD
      */
     static formatDate(date) {

@@ -16,21 +16,41 @@ import {
 import DataAvailabilityCard from './DataAvailabilityCard';
 import ForecastChart from './ForecastChart';
 import { useForecastData } from '../../lib/hooks/useForecastData';
-import { FORECAST_PERIODS, FORECAST_PERIOD_LABELS } from '../../lib/constants/forecast';
+import {
+    FORECAST_PERIODS,
+    FORECAST_PERIOD_LABELS,
+    FORECAST_TYPES,
+    FORECAST_TYPE_LABELS
+} from '../../lib/constants/forecast';
 
 const ForecastTab = ({ dateTo }) => {
     // State
     const [forecastDays, setForecastDays] = useState(FORECAST_PERIODS.SEVEN_DAYS);
+    const [forecastType, setForecastType] = useState(FORECAST_TYPES.BOTH);
 
     // Custom hook
-    const { loading, error, forecastData, loadElectricityForecast } = useForecastData();
+    const {
+        loading,
+        error,
+        consumptionForecast,
+        generationForecast,
+        loadConsumptionForecast,
+        loadGenerationForecast,
+        loadBothForecasts
+    } = useForecastData();
 
     // Handle generate forecast
     const handleGenerateForecast = async () => {
         if (!dateTo) return;
 
         try {
-            await loadElectricityForecast(dateTo, forecastDays);
+            if (forecastType === FORECAST_TYPES.CONSUMPTION) {
+                await loadConsumptionForecast(dateTo, forecastDays);
+            } else if (forecastType === FORECAST_TYPES.GENERATION) {
+                await loadGenerationForecast(dateTo, forecastDays);
+            } else {
+                await loadBothForecasts(dateTo, forecastDays);
+            }
         } catch (err) {
             console.error('Failed to generate forecast:', err);
         }
@@ -42,7 +62,7 @@ const ForecastTab = ({ dateTo }) => {
             handleGenerateForecast();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateTo, forecastDays]);
+    }, [dateTo, forecastDays, forecastType]);
 
     return (
         <Box>
@@ -54,6 +74,26 @@ const ForecastTab = ({ dateTo }) => {
                     </Typography>
 
                     <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end', mt: 2 }}>
+                        {/* Forecast Type Selector */}
+                        <FormControl sx={{ minWidth: 150 }}>
+                            <InputLabel>Forecast Type</InputLabel>
+                            <Select
+                                value={forecastType}
+                                label="Forecast Type"
+                                onChange={(e) => setForecastType(e.target.value)}
+                            >
+                                <MenuItem value={FORECAST_TYPES.CONSUMPTION}>
+                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.CONSUMPTION]}
+                                </MenuItem>
+                                <MenuItem value={FORECAST_TYPES.GENERATION}>
+                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.GENERATION]}
+                                </MenuItem>
+                                <MenuItem value={FORECAST_TYPES.BOTH}>
+                                    {FORECAST_TYPE_LABELS[FORECAST_TYPES.BOTH]}
+                                </MenuItem>
+                            </Select>
+                        </FormControl>
+
                         {/* Forecast Period Selector */}
                         <FormControl sx={{ minWidth: 150 }}>
                             <InputLabel>Forecast Period</InputLabel>
@@ -87,8 +127,9 @@ const ForecastTab = ({ dateTo }) => {
 
                     {/* Info Alert */}
                     <Alert severity="info" sx={{ mt: 2 }}>
-                        ℹ️ The forecast will predict the next {forecastDays} days starting from the selected end date above.
-                        Using historical data from 2019-2020 for demonstration.
+                        The forecast will predict the next {forecastDays} days starting from the last day available in the DB (2020-11-09).
+                        {forecastType === FORECAST_TYPES.GENERATION && ' Generation forecast uses weather data from Open-Meteo API.'}
+                        {forecastType === FORECAST_TYPES.BOTH && ' Consumption uses historical patterns, Generation uses weather data.'}
                     </Alert>
                 </CardContent>
             </Card>
@@ -108,21 +149,32 @@ const ForecastTab = ({ dateTo }) => {
             )}
 
             {/* Forecast Results */}
-            {!loading && forecastData && (
+            {!loading && (consumptionForecast || generationForecast) && (
                 <>
-                    {/* Data Availability Card */}
-                    <DataAvailabilityCard metadata={forecastData.metadata} />
+                    {/* Data Availability Cards */}
+                    {consumptionForecast && (
+                        <DataAvailabilityCard
+                            metadata={consumptionForecast.metadata}
+                            title="Consumption Forecast"
+                        />
+                    )}
+                    {generationForecast && (
+                        <DataAvailabilityCard
+                            metadata={generationForecast.metadata}
+                            title="Generation Forecast"
+                        />
+                    )}
 
                     {/* Forecast Chart */}
                     <ForecastChart
-                        predictions={forecastData.predictions}
-                        targetDate={forecastData.targetDate}
+                        consumptionData={consumptionForecast}
+                        generationData={generationForecast}
                     />
                 </>
             )}
 
             {/* No Data State */}
-            {!loading && !forecastData && !error && (
+            {!loading && !consumptionForecast && !generationForecast && !error && (
                 <Card>
                     <CardContent>
                         <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -130,7 +182,7 @@ const ForecastTab = ({ dateTo }) => {
                                 📊 Ready to Generate Forecast
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Select a date range above and forecast period, then click "Generate Forecast" button
+                                Select forecast type, period, then click "Generate Forecast" button
                             </Typography>
                         </Box>
                     </CardContent>

@@ -532,6 +532,217 @@ class ForecastService {
         // Fallback: return average of all available data
         return this.getAverageDailyTotal(data, SHORT_TERM_DAYS, new Date(data[data.length - 1].ts), true);
     }
+
+    /**
+     * ========================================================================
+     * GENERATION FORECAST (Weather-based)
+     * ========================================================================
+     */
+
+    /**
+     * Generate solar generation forecast using weather data
+     * @param {string} targetDate - Base date for forecast (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @param {Array} historicalGeneration - Historical generation data
+     * @param {Object} historicalWeather - Historical weather data (daily aggregated)
+     * @param {Object} forecastWeather - Forecast weather data (daily aggregated)
+     * @returns {Object} Forecast result with predictions and metadata
+     */
+    static async generateGenerationForecast(
+        targetDate,
+        forecastDays,
+        historicalGeneration,
+        historicalWeather,
+        forecastWeather
+    ) {
+        try {
+            // 1. Train linear regression model using historical data
+            const model = this.trainWeatherModel(historicalGeneration, historicalWeather);
+
+            // 2. Generate predictions using forecast weather
+            const predictions = this.predictWithWeatherModel(
+                targetDate,
+                forecastDays,
+                model,
+                forecastWeather
+            );
+
+            // 3. Return result with metadata
+            return {
+                success: true,
+                predictions: predictions,
+                metadata: {
+                    strategy: 'WEATHER_BASED_LINEAR_REGRESSION',
+                    strategyName: 'Weather-Based Linear Regression',
+                    confidence: model.confidence,
+                    accuracy: model.r_squared,
+                    model: {
+                        coefficients: model.coefficients,
+                        intercept: model.intercept,
+                        r_squared: model.r_squared
+                    },
+                    trainingDays: model.trainingDays,
+                    warning: model.trainingDays < 30
+                        ? 'Limited training data may affect accuracy'
+                        : null
+                }
+            };
+        } catch (error) {
+            console.error('Generation forecast error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Train linear regression model: generation = f(weather)
+     * Model: generation = a*direct_radiation + b*temperature + c*(100-cloud_cover) + d
+     */
+    static trainWeatherModel(historicalGeneration, historicalWeather) {
+        // Aggregate generation to daily
+        const dailyGeneration = {};
+        historicalGeneration.forEach(item => {
+            const date = item.ts.split(' ')[0]; // Extract date part (YYYY-MM-DD)
+            if (!dailyGeneration[date]) {
+                dailyGeneration[date] = 0;
+            }
+            dailyGeneration[date] += item.value;
+        });
+
+        // Prepare training data
+        const dates = Object.keys(dailyGeneration).sort();
+        const trainingData = [];
+
+        dates.forEach(date => {
+            if (historicalWeather[date]) {
+                trainingData.push({
+                    date: date,
+                    generation: dailyGeneration[date],
+                    direct_radiation: historicalWeather[date].total_direct_radiation,
+                    temperature: historicalWeather[date].avg_temperature,
+                    cloud_cover: historicalWeather[date].avg_cloud_cover
+                });
+            }
+        });
+
+        if (trainingData.length < 7) {
+            throw new Error('Insufficient training data (minimum 7 days required)');
+        }
+
+        // Perform multiple linear regression
+        // Y = a*X1 + b*X2 + c*X3 + d
+        const n = trainingData.length;
+        const Y = trainingData.map(d => d.generation);
+        const X1 = trainingData.map(d => d.direct_radiation);
+        const X2 = trainingData.map(d => d.temperature);
+        const X3 = trainingData.map(d => 100 - d.cloud_cover); // Inverted cloud cover
+
+        // Calculate means
+        const meanY = Y.reduce((a, b) => a + b, 0) / n;
+        const meanX1 = X1.reduce((a, b) => a + b, 0) / n;
+        const meanX2 = X2.reduce((a, b) => a + b, 0) / n;
+        const meanX3 = X3.reduce((a, b) => a + b, 0) / n;
+
+        // Build matrices for normal equations
+        // Using simplified approach for 3 variables
+        let sumX1Y = 0, sumX2Y = 0, sumX3Y = 0;
+        let sumX1X1 = 0, sumX2X2 = 0, sumX3X3 = 0;
+        let sumX1X2 = 0, sumX1X3 = 0, sumX2X3 = 0;
+
+        for (let i = 0; i < n; i++) {
+            const y = Y[i] - meanY;
+            const x1 = X1[i] - meanX1;
+            const x2 = X2[i] - meanX2;
+            const x3 = X3[i] - meanX3;
+
+            sumX1Y += x1 * y;
+            sumX2Y += x2 * y;
+            sumX3Y += x3 * y;
+
+            sumX1X1 += x1 * x1;
+            sumX2X2 += x2 * x2;
+            sumX3X3 += x3 * x3;
+
+            sumX1X2 += x1 * x2;
+            sumX1X3 += x1 * x3;
+            sumX2X3 += x2 * x3;
+        }
+
+        // Solve using simplified method (assuming variables are relatively independent)
+        const a = sumX1X1 > 0 ? sumX1Y / sumX1X1 : 0;
+        const b = sumX2X2 > 0 ? sumX2Y / sumX2X2 : 0;
+        const c = sumX3X3 > 0 ? sumX3Y / sumX3X3 : 0;
+        const d = meanY - (a * meanX1 + b * meanX2 + c * meanX3);
+
+        // Calculate R-squared
+        let ssTotal = 0, ssResidual = 0;
+        for (let i = 0; i < n; i++) {
+            const predicted = a * X1[i] + b * X2[i] + c * X3[i] + d;
+            ssTotal += Math.pow(Y[i] - meanY, 2);
+            ssResidual += Math.pow(Y[i] - predicted, 2);
+        }
+        const rSquared = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
+
+        return {
+            coefficients: {
+                direct_radiation: a,
+                temperature: b,
+                cloud_cover_inverted: c
+            },
+            intercept: d,
+            r_squared: Math.max(0, Math.min(1, rSquared)),
+            confidence: rSquared > 0.7 ? CONFIDENCE.HIGH :
+                rSquared > 0.5 ? CONFIDENCE.MEDIUM :
+                    CONFIDENCE.LOW,
+            trainingDays: n
+        };
+    }
+
+    /**
+     * Predict generation using trained weather model
+     */
+    static predictWithWeatherModel(targetDate, forecastDays, model, forecastWeather) {
+        const predictions = [];
+        const target = new Date(targetDate + 'T12:00:00');
+
+        for (let i = 1; i <= forecastDays; i++) {
+            const forecastDate = addDays(target, i);
+            const dateStr = formatDate(forecastDate);
+
+            if (forecastWeather[dateStr]) {
+                const weather = forecastWeather[dateStr];
+
+                // Apply model: generation = a*X1 + b*X2 + c*X3 + d
+                const predictedGeneration =
+                    model.coefficients.direct_radiation * weather.total_direct_radiation +
+                    model.coefficients.temperature * weather.avg_temperature +
+                    model.coefficients.cloud_cover_inverted * (100 - weather.avg_cloud_cover) +
+                    model.intercept;
+
+                // Ensure non-negative
+                const finalPrediction = Math.max(0, predictedGeneration);
+
+                predictions.push({
+                    date: dateStr,
+                    value: finalPrediction,
+                    weather: {
+                        direct_radiation: weather.total_direct_radiation,
+                        temperature: weather.avg_temperature,
+                        cloud_cover: weather.avg_cloud_cover
+                    }
+                });
+            } else {
+                // Fallback: use average if weather data not available
+                console.warn(`No weather data for ${dateStr}, using fallback`);
+                predictions.push({
+                    date: dateStr,
+                    value: 0,
+                    warning: 'No weather data available'
+                });
+            }
+        }
+
+        return predictions;
+    }
 }
 
 module.exports = ForecastService;

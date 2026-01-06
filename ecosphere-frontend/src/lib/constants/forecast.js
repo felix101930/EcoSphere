@@ -1,5 +1,19 @@
 // Forecast Constants
 
+// Forecast types
+export const FORECAST_TYPES = {
+    CONSUMPTION: 'consumption',
+    GENERATION: 'generation',
+    BOTH: 'both'
+};
+
+// Forecast type labels
+export const FORECAST_TYPE_LABELS = {
+    [FORECAST_TYPES.CONSUMPTION]: 'Consumption',
+    [FORECAST_TYPES.GENERATION]: 'Generation',
+    [FORECAST_TYPES.BOTH]: 'Both'
+};
+
 // Forecast periods
 export const FORECAST_PERIODS = {
     SEVEN_DAYS: 7,
@@ -20,6 +34,7 @@ export const STRATEGY_NAMES = {
     SEASONAL_WEIGHTED: 'Weighted Seasonal Prediction',
     TREND_BASED: 'Trend-Based Prediction',
     MOVING_AVERAGE: 'Moving Average',
+    WEATHER_BASED: 'Weather-Based Linear Regression',
     INSUFFICIENT_DATA: 'Insufficient Data'
 };
 
@@ -42,8 +57,10 @@ export const CONFIDENCE_LABELS = {
 
 // Chart colors
 export const FORECAST_COLORS = {
-    ACTUAL: '#005EB8',        // SAIT Blue
-    PREDICTED: '#DA291C',     // SAIT Red
+    CONSUMPTION: '#005EB8',        // SAIT Blue
+    GENERATION: '#FDB913',         // SAIT Yellow/Gold
+    PREDICTED_CONSUMPTION: '#DA291C',     // SAIT Red
+    PREDICTED_GENERATION: '#FF6B35',      // Orange
     CONFIDENCE_AREA: 'rgba(218, 41, 28, 0.1)'  // Light red
 };
 
