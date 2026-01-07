@@ -218,12 +218,14 @@ export const TIME_CONTROL_CONFIG = {
 export const TEMPERATURE_CONFIG = {
   // Temperature ranges for color coding
   RANGES: [
-    { max: 20, color: '#0066FF', label: '< 20°C' },
+    { max: 0, color: '#000000', label: '< 0°C' },        // Black for freezing
+    { min: 0, max: 20, color: '#0066FF', label: '0-20°C' },
     { min: 20, max: 22, color: '#00CCFF', label: '20-22°C' },
     { min: 22, max: 23, color: '#00FF00', label: '22-23°C' },
     { min: 23, max: 24, color: '#FFFF00', label: '23-24°C' },
     { min: 24, max: 25, color: '#FF9900', label: '24-25°C' },
-    { min: 25, color: '#FF3300', label: '> 25°C' }
+    { min: 25, max: 35, color: '#FF3300', label: '25-35°C' },
+    { min: 35, color: '#800080', label: '> 35°C' }       // Purple for extreme heat
   ],
 
   // Display format

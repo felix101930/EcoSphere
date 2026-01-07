@@ -133,20 +133,32 @@ export const useThermalData = (selectedFloor) => {
       setAggregatedData(aggData);
       setOutdoorTemperature(outdoorTemp);
 
-      // Load detailed 15-min data for all days in range
+      // Load detailed 15-min data and hourly outdoor temperature for all days in range
       const dates = Object.keys(aggData).sort();
       const detailDataPromises = dates.map(date =>
         ThermalService.getMultipleSensorsDailyData(date, floorSensorIds)
       );
-      const detailDataResults = await Promise.all(detailDataPromises);
+      const outdoorTempHourlyPromises = dates.map(date =>
+        WeatherService.getOutdoorTemperatureHourly(date).catch(() => [])
+      );
 
-      // Organize by date
+      const [detailDataResults, outdoorTempHourlyResults] = await Promise.all([
+        Promise.all(detailDataPromises),
+        Promise.all(outdoorTempHourlyPromises)
+      ]);
+
+      // Organize thermal data by date
       const detailDataByDate = {};
       dates.forEach((date, index) => {
         detailDataByDate[date] = detailDataResults[index];
       });
 
       setMultipleDaysDetailData(detailDataByDate);
+
+      // Combine all hourly outdoor temperature data into a single array
+      // Each day has 24 hours, so we concatenate them in order
+      const allOutdoorTempHourly = outdoorTempHourlyResults.flat();
+      setOutdoorTemperatureHourly(allOutdoorTempHourly);
 
       setLoading(false);
       return { aggData, detailDataByDate };

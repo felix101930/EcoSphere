@@ -90,12 +90,14 @@ class ThermalService {
       return '#CCCCCC'; // Gray for no data
     }
 
+    if (temp < 0) return '#000000';       // Freezing - Black
     if (temp < 20) return '#0066FF';      // Cold - Blue
     if (temp < 22) return '#00CCFF';      // Cool - Light Blue
     if (temp < 23) return '#00FF00';      // Comfortable - Green
     if (temp < 24) return '#FFFF00';      // Warm - Yellow
     if (temp < 25) return '#FF9900';      // Hot - Orange
-    return '#FF3300';                     // Very Hot - Red
+    if (temp < 35) return '#FF3300';      // Very Hot - Red
+    return '#800080';                     // Extreme Heat - Purple
   }
 
   /**

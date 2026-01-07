@@ -20,7 +20,7 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureH
   const floorImage = floorImages[floor];
 
   // Get current outdoor temperature based on time index
-  // Hourly data has 24 entries, 15-min data has 96 entries
+  // Hourly data has 24 entries per day, 15-min data has 96 entries per day
   // Map 96 intervals to 24 hours: hourIndex = floor(timeIndex / 4)
   const hourIndex = Math.floor(currentTimeIndex / 4);
   const currentOutdoorTemp = outdoorTemperatureHourly[hourIndex]?.temperature || null;
