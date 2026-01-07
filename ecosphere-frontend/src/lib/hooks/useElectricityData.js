@@ -1,13 +1,19 @@
 // Custom Hook for Electricity Data Management
 import { useState, useEffect, useCallback } from 'react';
 import ElectricityReportService from '../../services/ElectricityReportService';
+import {
+  calculateNetEnergyFromData,
+  calculateNetEnergyMetrics,
+  calculateSelfSufficiencyRate,
+  calculateAverageSelfSufficiencyRate
+} from '../../utils/electricityCalculations';
 
 export const useElectricityData = () => {
   // State
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  
+
   // Data states
   const [overviewData, setOverviewData] = useState(null);
   const [consumptionData, setConsumptionData] = useState(null);
@@ -46,15 +52,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getElectricityOverview(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         setOverviewData(response);
       } else {
@@ -76,15 +82,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getConsumptionData(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         setConsumptionData(response);
       } else {
@@ -106,15 +112,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getGenerationData(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         setGenerationData(response);
       } else {
@@ -131,24 +137,54 @@ export const useElectricityData = () => {
 
   /**
    * Load net energy data
+   * Note: Database net energy values are incorrect, so we calculate from consumption + generation
    */
   const loadNetEnergyData = useCallback(async (dateFrom, dateTo) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
-      const response = await ElectricityReportService.getNetEnergyData(
-        formattedFrom,
-        formattedTo
-      );
-      
-      if (response.success) {
-        setNetEnergyData(response);
+
+      // Fetch consumption and generation data
+      const [consumptionResponse, generationResponse] = await Promise.all([
+        ElectricityReportService.getConsumptionData(formattedFrom, formattedTo),
+        ElectricityReportService.getGenerationData(formattedFrom, formattedTo)
+      ]);
+
+      if (consumptionResponse.success && generationResponse.success) {
+        const consumptionData = consumptionResponse.data;
+        const generationData = generationResponse.data;
+
+        // Calculate net energy from consumption and generation (ignore database values)
+        const netEnergyData = calculateNetEnergyFromData(consumptionData, generationData);
+
+        // Calculate self-sufficiency rate for each time point
+        const selfSufficiencyRateData = calculateSelfSufficiencyRate(consumptionData, generationData);
+
+        // Calculate average self-sufficiency rate
+        const avgSelfSufficiencyRate = calculateAverageSelfSufficiencyRate(selfSufficiencyRateData);
+
+        // Calculate net energy metrics (preserve sign)
+        const calculatedMetrics = calculateNetEnergyMetrics(netEnergyData);
+        calculatedMetrics.avgSelfSufficiencyRate = avgSelfSufficiencyRate;
+
+        // Build response
+        const enhancedResponse = {
+          success: true,
+          data: netEnergyData,
+          selfSufficiencyRate: selfSufficiencyRateData,
+          metrics: calculatedMetrics,
+          count: netEnergyData.length,
+          dateFrom: formattedFrom,
+          dateTo: formattedTo,
+          dataSource: 'Calculated from Consumption + Generation'
+        };
+
+        setNetEnergyData(enhancedResponse);
       } else {
-        throw new Error(response.error || 'Failed to load net energy data');
+        throw new Error('Failed to load consumption or generation data');
       }
     } catch (err) {
       console.error('Error loading net energy data:', err);
@@ -166,15 +202,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getPhaseBreakdownData(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         // Store the full response (includes data, metrics, warning)
         setPhaseBreakdownData(response);
@@ -197,15 +233,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getEquipmentBreakdownData(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         // Store the full response (includes data, metrics, warning)
         setEquipmentBreakdownData(response);
@@ -228,15 +264,15 @@ export const useElectricityData = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const formattedFrom = ElectricityReportService.formatDate(dateFrom);
       const formattedTo = ElectricityReportService.formatDate(dateTo);
-      
+
       const response = await ElectricityReportService.getSolarSourceBreakdownData(
         formattedFrom,
         formattedTo
       );
-      
+
       if (response.success) {
         // Store the full response (includes data, metrics, warning)
         setSolarBreakdownData(response);
@@ -271,7 +307,7 @@ export const useElectricityData = () => {
     loading,
     error,
     dateRange,
-    
+
     // Data
     overviewData,
     consumptionData,
@@ -280,7 +316,7 @@ export const useElectricityData = () => {
     phaseBreakdownData,
     equipmentBreakdownData,
     solarBreakdownData,
-    
+
     // Actions
     loadOverview,
     loadConsumptionData,

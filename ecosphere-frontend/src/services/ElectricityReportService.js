@@ -71,10 +71,13 @@ class ElectricityReportService {
    */
   async getNetEnergyData(dateFrom, dateTo) {
     try {
-      const response = await fetch(`${API_BASE_URL}/net-energy/${dateFrom}/${dateTo}`);
+      const url = `${API_BASE_URL}/net-energy/${dateFrom}/${dateTo}`;
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error('Failed to fetch net energy data');
       }
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching net energy data:', error);

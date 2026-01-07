@@ -44,13 +44,66 @@ const getGenerationData = createDataFetcher({
 });
 
 /**
- * Get net energy data (overall)
+ * Get net energy data (overall) with self-sufficiency rate
  * Note: Uses special metrics calculation that preserves sign
+ * Also calculates self-sufficiency rate for each time point
  */
-const getNetEnergyData = createDataFetcher({
-  fetchDataFn: ElectricityService.getNetEnergyData.bind(ElectricityService),
-  calculateMetricsFn: ElectricityService.calculateNetEnergyMetrics.bind(ElectricityService),
-  dataSource: DATA_SOURCES.NET_ENERGY
+const getNetEnergyData = asyncHandler(async (req, res) => {
+  const { dateFrom, dateTo } = req.params;
+
+  // Validate date range
+  const validation = validateDateRange(dateFrom, dateTo);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
+  }
+
+  // Fetch net energy, consumption, and generation data in parallel
+  const [netEnergyData, consumptionData, generationData] = await Promise.all([
+    ElectricityService.getNetEnergyData(dateFrom, dateTo),
+    ElectricityService.getConsumptionData(dateFrom, dateTo),
+    ElectricityService.getGenerationData(dateFrom, dateTo)
+  ]);
+
+  // Calculate net energy metrics
+  const metrics = ElectricityService.calculateNetEnergyMetrics(netEnergyData);
+
+  // Calculate self-sufficiency rate for each time point
+  const selfSufficiencyRateData = [];
+  const minLength = Math.min(consumptionData.length, generationData.length);
+
+  for (let i = 0; i < minLength; i++) {
+    const consumption = Math.abs(consumptionData[i].value);
+    const generation = Math.abs(generationData[i].value);
+
+    // Calculate rate: (generation / consumption) * 100
+    // If consumption is 0, set rate to 0 to avoid division by zero
+    const rate = consumption > 0 ? (generation / consumption) * 100 : 0;
+
+    selfSufficiencyRateData.push({
+      ts: consumptionData[i].ts,
+      value: rate
+    });
+  }
+
+  // Calculate average self-sufficiency rate
+  const avgSelfSufficiencyRate = selfSufficiencyRateData.length > 0
+    ? selfSufficiencyRateData.reduce((sum, d) => sum + d.value, 0) / selfSufficiencyRateData.length
+    : 0;
+
+  const responseData = {
+    data: netEnergyData,
+    selfSufficiencyRate: selfSufficiencyRateData,
+    metrics: {
+      ...metrics,
+      avgSelfSufficiencyRate: avgSelfSufficiencyRate
+    },
+    count: netEnergyData.length,
+    dateFrom,
+    dateTo,
+    dataSource: DATA_SOURCES.NET_ENERGY
+  };
+
+  sendDataWithMetadata(res, responseData);
 });
 
 /**

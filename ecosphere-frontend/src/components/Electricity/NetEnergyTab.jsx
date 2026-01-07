@@ -1,7 +1,7 @@
 // Net Energy Tab Component - Net energy analysis (Generation - Consumption)
 import { Box, CircularProgress, Alert, Paper, Typography } from '@mui/material';
 import NetEnergyMetricsCards from './NetEnergyMetricsCards';
-import OverallTrendChart from './OverallTrendChart';
+import NetEnergyWithSelfSufficiencyChart from './NetEnergyWithSelfSufficiencyChart';
 
 const NetEnergyTab = ({ data, loading }) => {
   // Loading state
@@ -35,21 +35,22 @@ const NetEnergyTab = ({ data, loading }) => {
           • <strong>Negative values</strong> (red): Building consumes more than it generates → Grid dependency
           <br />
           • <strong>Positive values</strong> (green): Building generates more than it consumes → Grid export
+          <br />
+          • <strong>Self-Sufficiency Rate</strong> = (Generation / Consumption) × 100%
+          <br />
+          • <strong>100%</strong>: Self-sufficient | <strong>&gt;100%</strong>: Surplus | <strong>&lt;100%</strong>: Grid dependent
         </Typography>
       </Paper>
 
-      {/* Overall Trend Chart */}
-      <OverallTrendChart
-        data={data.data}
-        title="Net Energy Trend"
-        dataLabel="Net Energy (Wh)"
-        color="#9C27B0"
-        preserveSign={true}
+      {/* Net Energy & Self-Sufficiency Rate Combined Chart */}
+      <NetEnergyWithSelfSufficiencyChart
+        netEnergyData={data.data}
+        selfSufficiencyData={data.selfSufficiencyRate}
       />
 
       {/* Data Source Info */}
       <Alert severity="info" sx={{ mt: 2 }}>
-        Data Source: {data.dataSource} | Records: {data.count} | 
+        Data Source: {data.dataSource} | Records: {data.count} |
         Date Range: {data.dateFrom} to {data.dateTo}
       </Alert>
     </Box>
