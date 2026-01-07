@@ -118,6 +118,7 @@ const RainwaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecas
                         yAxisLabel="Daily Average Rainwater Level (%)"
                         unit="%"
                         consumptionLabel="Rainwater Level Forecast"
+                        showTotal={false}
                     />
                 </>
             )}

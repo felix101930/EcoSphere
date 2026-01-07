@@ -13,7 +13,8 @@ const ForecastChart = ({
     yAxisLabel = 'Daily Energy (Wh/day)',
     unit = 'Wh',
     consumptionLabel = 'Consumption Forecast',
-    generationLabel = 'Generation Forecast'
+    generationLabel = 'Generation Forecast',
+    showTotal = true
 }) => {
     // Check if we have any data
     const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
@@ -165,12 +166,25 @@ const ForecastChart = ({
                             <Typography variant="subtitle2" color="text.secondary">
                                 Consumption Forecast
                             </Typography>
-                            <Typography variant="body2">
-                                Total: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
-                            </Typography>
-                            <Typography variant="body2">
-                                Avg/day: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} {unit}
-                            </Typography>
+                            {showTotal ? (
+                                <>
+                                    <Typography variant="body2">
+                                        Total: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        Avg/day: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} {unit}
+                                    </Typography>
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="body2">
+                                        Average: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} {unit}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        Range: {Math.round(Math.min(...consumptionData.predictions.map(p => p.value))).toLocaleString()} - {Math.round(Math.max(...consumptionData.predictions.map(p => p.value))).toLocaleString()} {unit}
+                                    </Typography>
+                                </>
+                            )}
                             <Typography variant="caption" color="text.secondary">
                                 Strategy: {consumptionData.metadata.strategyName}
                             </Typography>
@@ -182,19 +196,32 @@ const ForecastChart = ({
                             <Typography variant="subtitle2" color="text.secondary">
                                 Generation Forecast
                             </Typography>
-                            <Typography variant="body2">
-                                Total: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
-                            </Typography>
-                            <Typography variant="body2">
-                                Avg/day: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} {unit}
-                            </Typography>
+                            {showTotal ? (
+                                <>
+                                    <Typography variant="body2">
+                                        Total: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        Avg/day: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} {unit}
+                                    </Typography>
+                                </>
+                            ) : (
+                                <>
+                                    <Typography variant="body2">
+                                        Average: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} {unit}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        Range: {Math.round(Math.min(...generationData.predictions.map(p => p.value))).toLocaleString()} - {Math.round(Math.max(...generationData.predictions.map(p => p.value))).toLocaleString()} {unit}
+                                    </Typography>
+                                </>
+                            )}
                             <Typography variant="caption" color="text.secondary">
                                 Strategy: {generationData.metadata.strategyName}
                             </Typography>
                         </Box>
                     )}
 
-                    {hasConsumption && hasGeneration && (
+                    {hasConsumption && hasGeneration && showTotal && (
                         <Box>
                             <Typography variant="subtitle2" color="text.secondary">
                                 Net Energy
