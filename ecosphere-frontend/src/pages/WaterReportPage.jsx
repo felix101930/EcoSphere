@@ -28,9 +28,11 @@ const WaterReportPage = () => {
         rainwaterData,
         hotWaterData,
         hotWaterForecast,
+        rainwaterForecast,
         loadRainwaterData,
         loadHotWaterData,
-        loadHotWaterForecast
+        loadHotWaterForecast,
+        loadRainwaterForecast
     } = useWaterData();
 
     // Set default date range when dateRange is loaded
@@ -205,6 +207,11 @@ const WaterReportPage = () => {
                     <RainwaterTab
                         data={rainwaterData}
                         loading={loading}
+                        dateTo={dateTo}
+                        forecast={rainwaterForecast}
+                        forecastLoading={loading}
+                        forecastError={error}
+                        onLoadForecast={loadRainwaterForecast}
                     />
                 )}
                 {activeTab === TAB_TYPES.HOT_WATER && (

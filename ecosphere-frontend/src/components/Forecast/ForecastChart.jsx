@@ -7,7 +7,14 @@ import {
     CHART_HEIGHT
 } from '../../lib/constants/forecast';
 
-const ForecastChart = ({ consumptionData, generationData, yAxisLabel = 'Daily Energy (Wh/day)', unit = 'Wh' }) => {
+const ForecastChart = ({
+    consumptionData,
+    generationData,
+    yAxisLabel = 'Daily Energy (Wh/day)',
+    unit = 'Wh',
+    consumptionLabel = 'Consumption Forecast',
+    generationLabel = 'Generation Forecast'
+}) => {
     // Check if we have any data
     const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
     const hasGeneration = generationData && generationData.predictions && generationData.predictions.length > 0;
@@ -26,7 +33,7 @@ const ForecastChart = ({ consumptionData, generationData, yAxisLabel = 'Daily En
 
     if (hasConsumption) {
         datasets.push({
-            label: 'Consumption Forecast',
+            label: consumptionLabel,
             data: consumptionData.predictions.map(p => p.value),
             borderColor: FORECAST_COLORS.PREDICTED_CONSUMPTION,
             backgroundColor: FORECAST_COLORS.PREDICTED_CONSUMPTION,
@@ -50,7 +57,7 @@ const ForecastChart = ({ consumptionData, generationData, yAxisLabel = 'Daily En
 
     if (hasGeneration) {
         datasets.push({
-            label: 'Generation Forecast',
+            label: generationLabel,
             data: generationData.predictions.map(p => p.value),
             borderColor: FORECAST_COLORS.PREDICTED_GENERATION,
             backgroundColor: FORECAST_COLORS.PREDICTED_GENERATION,

@@ -1,4 +1,4 @@
-// Hot Water Forecast View - Display hot water consumption forecast
+// Rainwater Forecast View - Display rainwater level forecast
 import { useState, useEffect } from 'react';
 import {
     Box,
@@ -13,15 +13,14 @@ import {
     CircularProgress,
     Alert
 } from '@mui/material';
-import DataAvailabilityCard from '../Forecast/DataAvailabilityCard';
-import AlgorithmTiersGrid from '../Forecast/AlgorithmTiersGrid';
+import RainwaterForecastInfo from '../Forecast/RainwaterForecastInfo';
 import ForecastChart from '../Forecast/ForecastChart';
 import {
     FORECAST_PERIODS,
     FORECAST_PERIOD_LABELS
 } from '../../lib/constants/forecast';
 
-const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast }) => {
+const RainwaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast }) => {
     const [forecastDays, setForecastDays] = useState(FORECAST_PERIODS.SEVEN_DAYS);
 
     // Handle generate forecast
@@ -86,8 +85,8 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
 
                     {/* Info Alert */}
                     <Alert severity="info" sx={{ mt: 2 }}>
-                        The forecast will predict the next {forecastDays} days of hot water consumption
-                        based on historical usage patterns.
+                        The forecast will predict the next {forecastDays} days of rainwater tank level
+                        based on weather forecast (precipitation).
                     </Alert>
                 </CardContent>
             </Card>
@@ -109,19 +108,16 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
             {/* Forecast Results */}
             {!loading && forecast && (
                 <>
-                    {/* Data Availability Card */}
-                    <DataAvailabilityCard
-                        metadata={forecast.metadata}
-                        title="Hot Water Consumption Forecast"
-                    />
+                    {/* Model Information Card */}
+                    <RainwaterForecastInfo metadata={forecast.metadata} />
 
                     {/* Forecast Chart */}
                     <ForecastChart
                         consumptionData={forecast}
                         generationData={null}
-                        yAxisLabel="Hot Water Consumption (L/h)"
-                        unit="L/h"
-                        consumptionLabel="Hot Water Consumption Forecast"
+                        yAxisLabel="Daily Average Rainwater Level (%)"
+                        unit="%"
+                        consumptionLabel="Rainwater Level Forecast"
                     />
                 </>
             )}
@@ -132,7 +128,7 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
                     <CardContent>
                         <Box sx={{ textAlign: 'center', py: 4 }}>
                             <Typography variant="h6" color="text.secondary" gutterBottom>
-                                📊 Ready to Generate Forecast
+                                🌧️ Ready to Generate Forecast
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Select forecast period and click "Generate Forecast" button
@@ -145,4 +141,4 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
     );
 };
 
-export default HotWaterForecastView;
+export default RainwaterForecastView;

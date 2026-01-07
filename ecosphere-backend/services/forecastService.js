@@ -713,6 +713,197 @@ class ForecastService {
 
         return predictions;
     }
+
+    /**
+     * ========================================================================
+     * RAINWATER FORECAST (Weather-based)
+     * ========================================================================
+     */
+
+    /**
+     * Generate rainwater level forecast using weather data (precipitation)
+     * @param {string} targetDate - Base date for forecast (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @param {Array} historicalRainwater - Historical rainwater level data
+     * @param {Object} historicalWeather - Historical weather data (daily aggregated)
+     * @param {Object} forecastWeather - Forecast weather data (daily aggregated)
+     * @returns {Object} Forecast result with predictions and metadata
+     */
+    static async generateRainwaterForecast(
+        targetDate,
+        forecastDays,
+        historicalRainwater,
+        historicalWeather,
+        forecastWeather
+    ) {
+        try {
+            // 1. Train linear regression model using historical data
+            const model = this.trainRainwaterModel(historicalRainwater, historicalWeather);
+
+            // 2. Generate predictions using forecast weather
+            const predictions = this.predictWithRainwaterModel(
+                targetDate,
+                forecastDays,
+                model,
+                forecastWeather
+            );
+
+            // 3. Return result with metadata
+            return {
+                success: true,
+                predictions: predictions,
+                metadata: {
+                    strategy: 'WEATHER_BASED_LINEAR_REGRESSION',
+                    strategyName: 'Weather-Based Linear Regression',
+                    confidence: model.confidence,
+                    accuracy: model.r_squared,
+                    model: {
+                        coefficients: model.coefficients,
+                        intercept: model.intercept,
+                        r_squared: model.r_squared
+                    },
+                    trainingDays: model.trainingDays,
+                    warning: model.trainingDays < 30
+                        ? 'Limited training data may affect accuracy'
+                        : null
+                }
+            };
+        } catch (error) {
+            console.error('Rainwater forecast error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Train linear regression model: rainwater_level = f(precipitation)
+     * Model: rainwater_level = a*precipitation + b
+     */
+    static trainRainwaterModel(historicalRainwater, historicalWeather) {
+        // Aggregate rainwater to daily average
+        const dailyRainwater = {};
+        historicalRainwater.forEach(item => {
+            const date = item.ts.split(' ')[0]; // Extract date part (YYYY-MM-DD)
+            if (!dailyRainwater[date]) {
+                dailyRainwater[date] = {
+                    values: [],
+                    count: 0
+                };
+            }
+            dailyRainwater[date].values.push(item.value);
+            dailyRainwater[date].count++;
+        });
+
+        // Calculate daily average rainwater level
+        Object.keys(dailyRainwater).forEach(date => {
+            const data = dailyRainwater[date];
+            dailyRainwater[date] = data.values.reduce((a, b) => a + b, 0) / data.count;
+        });
+
+        // Prepare training data
+        const dates = Object.keys(dailyRainwater).sort();
+        const trainingData = [];
+
+        dates.forEach(date => {
+            if (historicalWeather[date]) {
+                trainingData.push({
+                    date: date,
+                    rainwater_level: dailyRainwater[date],
+                    precipitation: historicalWeather[date].total_precipitation
+                });
+            }
+        });
+
+        if (trainingData.length < 7) {
+            throw new Error('Insufficient training data (minimum 7 days required)');
+        }
+
+        // Simple linear regression: Y = a*X + b
+        const n = trainingData.length;
+        const Y = trainingData.map(d => d.rainwater_level);
+        const X = trainingData.map(d => d.precipitation);
+
+        // Calculate means
+        const meanY = Y.reduce((a, b) => a + b, 0) / n;
+        const meanX = X.reduce((a, b) => a + b, 0) / n;
+
+        // Calculate slope (a) and intercept (b)
+        let numerator = 0;
+        let denominator = 0;
+
+        for (let i = 0; i < n; i++) {
+            numerator += (X[i] - meanX) * (Y[i] - meanY);
+            denominator += (X[i] - meanX) * (X[i] - meanX);
+        }
+
+        const a = denominator > 0 ? numerator / denominator : 0;
+        const b = meanY - (a * meanX);
+
+        // Calculate R-squared
+        let ssTotal = 0, ssResidual = 0;
+        for (let i = 0; i < n; i++) {
+            const predicted = a * X[i] + b;
+            ssTotal += Math.pow(Y[i] - meanY, 2);
+            ssResidual += Math.pow(Y[i] - predicted, 2);
+        }
+        const rSquared = ssTotal > 0 ? 1 - (ssResidual / ssTotal) : 0;
+
+        return {
+            coefficients: {
+                precipitation: a
+            },
+            intercept: b,
+            r_squared: Math.max(0, Math.min(1, rSquared)),
+            confidence: rSquared > 0.7 ? CONFIDENCE.HIGH :
+                rSquared > 0.5 ? CONFIDENCE.MEDIUM :
+                    CONFIDENCE.LOW,
+            trainingDays: n
+        };
+    }
+
+    /**
+     * Predict rainwater level using trained weather model
+     */
+    static predictWithRainwaterModel(targetDate, forecastDays, model, forecastWeather) {
+        const predictions = [];
+        const target = new Date(targetDate + 'T12:00:00');
+
+        for (let i = 1; i <= forecastDays; i++) {
+            const forecastDate = addDays(target, i);
+            const dateStr = formatDate(forecastDate);
+
+            if (forecastWeather[dateStr]) {
+                const weather = forecastWeather[dateStr];
+
+                // Apply model: rainwater_level = a*precipitation + b
+                const predictedLevel =
+                    model.coefficients.precipitation * weather.total_precipitation +
+                    model.intercept;
+
+                // Ensure level is between 0 and 100 (percentage)
+                const finalPrediction = Math.max(0, Math.min(100, predictedLevel));
+
+                predictions.push({
+                    date: dateStr,
+                    value: finalPrediction,
+                    weather: {
+                        precipitation: weather.total_precipitation,
+                        rain: weather.total_rain,
+                        temperature: weather.avg_temperature
+                    }
+                });
+            } else {
+                // Fallback: use intercept if weather data not available
+                console.warn(`No weather data for ${dateStr}, using fallback`);
+                predictions.push({
+                    date: dateStr,
+                    value: Math.max(0, Math.min(100, model.intercept)),
+                    warning: 'No weather data available'
+                });
+            }
+        }
+
+        return predictions;
+    }
 }
 
 module.exports = ForecastService;

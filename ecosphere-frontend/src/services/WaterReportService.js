@@ -83,6 +83,32 @@ class WaterReportService {
     }
 
     /**
+     * Get rainwater level forecast
+     * @param {string} targetDate - Base date (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @returns {Promise<Object>} Forecast result
+     */
+    async getRainwaterForecast(targetDate, forecastDays) {
+        try {
+            const formattedDate = this.formatDate(targetDate);
+
+            const response = await fetch(
+                `${API_BASE_URL}/rainwater/forecast/${formattedDate}/${forecastDays}`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch rainwater forecast');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching rainwater forecast:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Format date to YYYY-MM-DD (timezone-safe)
      * Uses local date components to avoid timezone conversion issues
      */

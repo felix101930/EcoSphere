@@ -6,13 +6,12 @@ const WaterController = require('../controllers/waterController');
 // Get available date range
 router.get('/date-range', WaterController.getAvailableDateRange);
 
-// Get rainwater level data
-router.get('/rainwater/:dateFrom/:dateTo', WaterController.getRainwaterLevelData);
-
-// Get hot water consumption data
-router.get('/hot-water/:dateFrom/:dateTo', WaterController.getHotWaterConsumptionData);
-
-// Get hot water consumption forecast
+// Forecast routes (must come before generic data routes)
 router.get('/hot-water/forecast/:targetDate/:forecastDays', WaterController.getHotWaterForecast);
+router.get('/rainwater/forecast/:targetDate/:forecastDays', WaterController.getRainwaterForecast);
+
+// Data routes
+router.get('/rainwater/:dateFrom/:dateTo', WaterController.getRainwaterLevelData);
+router.get('/hot-water/:dateFrom/:dateTo', WaterController.getHotWaterConsumptionData);
 
 module.exports = router;

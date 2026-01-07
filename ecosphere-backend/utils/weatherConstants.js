@@ -31,6 +31,13 @@ const WEATHER_VARIABLES = {
         'shortwave_radiation',      // Total solar radiation (W/m²)
         'direct_radiation',         // Direct solar radiation (W/m²)
         'diffuse_radiation'         // Diffuse solar radiation (W/m²)
+    ],
+    HOURLY_RAIN: [
+        'temperature_2m',           // Temperature at 2m (°C)
+        'precipitation',            // Total precipitation (rain + snow) (mm)
+        'rain',                     // Rain (mm)
+        'showers',                  // Showers (mm)
+        'weather_code'              // Weather condition code
     ]
 };
 
@@ -42,7 +49,11 @@ const WEATHER_FIELDS = {
     CLOUD_COVER: 'cloud_cover',
     SHORTWAVE_RADIATION: 'shortwave_radiation',
     DIRECT_RADIATION: 'direct_radiation',
-    DIFFUSE_RADIATION: 'diffuse_radiation'
+    DIFFUSE_RADIATION: 'diffuse_radiation',
+    PRECIPITATION: 'precipitation',
+    RAIN: 'rain',
+    SHOWERS: 'showers',
+    WEATHER_CODE: 'weather_code'
 };
 
 /**

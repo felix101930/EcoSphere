@@ -12,15 +12,18 @@ class WeatherService {
      * Fetch historical weather data from Open-Meteo Archive API
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
+     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
      * @returns {Promise<Object>} Weather data with hourly values
      */
-    static async getHistoricalWeather(dateFrom, dateTo) {
+    static async getHistoricalWeather(dateFrom, dateTo, type = 'solar') {
+        const variables = type === 'rain' ? WEATHER_VARIABLES.HOURLY_RAIN : WEATHER_VARIABLES.HOURLY;
+
         const params = new URLSearchParams({
             latitude: LOCATION.LATITUDE,
             longitude: LOCATION.LONGITUDE,
             start_date: dateFrom,
             end_date: dateTo,
-            hourly: WEATHER_VARIABLES.HOURLY.join(','),
+            hourly: variables.join(','),
             timezone: LOCATION.TIMEZONE
         });
 
@@ -28,7 +31,7 @@ class WeatherService {
 
         try {
             const data = await this._fetchFromAPI(url);
-            return this._parseWeatherData(data);
+            return this._parseWeatherData(data, type);
         } catch (error) {
             console.error('Error fetching historical weather:', error.message);
             throw new Error(`${WEATHER_ERROR_MESSAGES.FETCH_FAILED}: ${error.message}`);
@@ -39,15 +42,18 @@ class WeatherService {
      * Fetch weather forecast from Open-Meteo Forecast API
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
+     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
      * @returns {Promise<Object>} Weather forecast data with hourly values
      */
-    static async getForecastWeather(dateFrom, dateTo) {
+    static async getForecastWeather(dateFrom, dateTo, type = 'solar') {
+        const variables = type === 'rain' ? WEATHER_VARIABLES.HOURLY_RAIN : WEATHER_VARIABLES.HOURLY;
+
         const params = new URLSearchParams({
             latitude: LOCATION.LATITUDE,
             longitude: LOCATION.LONGITUDE,
             start_date: dateFrom,
             end_date: dateTo,
-            hourly: WEATHER_VARIABLES.HOURLY.join(','),
+            hourly: variables.join(','),
             timezone: LOCATION.TIMEZONE
         });
 
@@ -55,7 +61,7 @@ class WeatherService {
 
         try {
             const data = await this._fetchFromAPI(url);
-            return this._parseWeatherData(data);
+            return this._parseWeatherData(data, type);
         } catch (error) {
             console.error('Error fetching weather forecast:', error.message);
             throw new Error(`${WEATHER_ERROR_MESSAGES.FETCH_FAILED}: ${error.message}`);
@@ -66,9 +72,10 @@ class WeatherService {
      * Get weather data (automatically choose historical or forecast)
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
+     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
      * @returns {Promise<Object>} Weather data
      */
-    static async getWeatherData(dateFrom, dateTo) {
+    static async getWeatherData(dateFrom, dateTo, type = 'solar') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const toDate = new Date(dateTo + 'T12:00:00');
@@ -76,18 +83,29 @@ class WeatherService {
         // If end date is in the past, use historical data
         // Otherwise use forecast data
         if (toDate <= today) {
-            return this.getHistoricalWeather(dateFrom, dateTo);
+            return this.getHistoricalWeather(dateFrom, dateTo, type);
         } else {
-            return this.getForecastWeather(dateFrom, dateTo);
+            return this.getForecastWeather(dateFrom, dateTo, type);
         }
     }
 
     /**
      * Aggregate hourly weather data to daily
      * @param {Object} weatherData - Hourly weather data
+     * @param {string} type - Weather type: 'solar' or 'rain'
      * @returns {Object} Daily aggregated weather data
      */
-    static aggregateToDaily(weatherData) {
+    static aggregateToDaily(weatherData, type = 'solar') {
+        if (type === 'rain') {
+            return this._aggregateRainToDaily(weatherData);
+        }
+        return this._aggregateSolarToDaily(weatherData);
+    }
+
+    /**
+     * Private: Aggregate solar weather data to daily
+     */
+    static _aggregateSolarToDaily(weatherData) {
         const dailyData = {};
 
         weatherData.hourly.time.forEach((timestamp, index) => {
@@ -130,6 +148,46 @@ class WeatherService {
     }
 
     /**
+     * Private: Aggregate rain weather data to daily
+     */
+    static _aggregateRainToDaily(weatherData) {
+        const dailyData = {};
+
+        weatherData.hourly.time.forEach((timestamp, index) => {
+            const date = timestamp.split('T')[0];
+
+            if (!dailyData[date]) {
+                dailyData[date] = {
+                    temperature: [],
+                    precipitation: [],
+                    rain: [],
+                    showers: []
+                };
+            }
+
+            dailyData[date].temperature.push(weatherData.hourly.temperature_2m[index] || 0);
+            dailyData[date].precipitation.push(weatherData.hourly.precipitation[index] || 0);
+            dailyData[date].rain.push(weatherData.hourly.rain[index] || 0);
+            dailyData[date].showers.push(weatherData.hourly.showers[index] || 0);
+        });
+
+        // Calculate daily aggregates
+        const result = {};
+        Object.keys(dailyData).forEach(date => {
+            const data = dailyData[date];
+            result[date] = {
+                avg_temperature: this._average(data.temperature),
+                total_precipitation: this._sum(data.precipitation),
+                total_rain: this._sum(data.rain),
+                total_showers: this._sum(data.showers),
+                rainy_hours: data.precipitation.filter(p => p > 0).length
+            };
+        });
+
+        return result;
+    }
+
+    /**
      * Private: Fetch data from API using https
      */
     static _fetchFromAPI(url) {
@@ -165,20 +223,30 @@ class WeatherService {
     /**
      * Private: Parse weather data into consistent format
      */
-    static _parseWeatherData(data) {
+    static _parseWeatherData(data, type = 'solar') {
         if (!data.hourly || !data.hourly.time) {
             throw new Error('Invalid weather data format');
         }
 
+        const hourly = {
+            time: data.hourly.time,
+            temperature_2m: data.hourly.temperature_2m || []
+        };
+
+        if (type === 'rain') {
+            hourly.precipitation = data.hourly.precipitation || [];
+            hourly.rain = data.hourly.rain || [];
+            hourly.showers = data.hourly.showers || [];
+            hourly.weather_code = data.hourly.weather_code || [];
+        } else {
+            hourly.cloud_cover = data.hourly.cloud_cover || [];
+            hourly.shortwave_radiation = data.hourly.shortwave_radiation || [];
+            hourly.direct_radiation = data.hourly.direct_radiation || [];
+            hourly.diffuse_radiation = data.hourly.diffuse_radiation || [];
+        }
+
         return {
-            hourly: {
-                time: data.hourly.time,
-                temperature_2m: data.hourly.temperature_2m || [],
-                cloud_cover: data.hourly.cloud_cover || [],
-                shortwave_radiation: data.hourly.shortwave_radiation || [],
-                direct_radiation: data.hourly.direct_radiation || [],
-                diffuse_radiation: data.hourly.diffuse_radiation || []
-            },
+            hourly,
             metadata: {
                 latitude: data.latitude,
                 longitude: data.longitude,
