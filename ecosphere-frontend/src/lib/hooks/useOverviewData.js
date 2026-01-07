@@ -87,27 +87,64 @@ export default function useOverviewData() {
                 };
             }
 
-            const [consumptionRaw, generationRaw, netEnergyRaw] = await Promise.all([
+            const [consumptionRaw, generationRaw] = await Promise.all([
                 ElectricityReportService.getConsumptionData(fromStr, toStr),
-                ElectricityReportService.getGenerationData(fromStr, toStr),
-                ElectricityReportService.getNetEnergyData(fromStr, toStr)
+                ElectricityReportService.getGenerationData(fromStr, toStr)
             ]);
 
+            if (!consumptionRaw?.data || !generationRaw?.data) {
+                return {
+                    consumption: null,
+                    generation: null,
+                    netEnergy: null
+                };
+            }
+
+            // Import calculation utilities
+            const {
+                calculateNetEnergyFromData,
+                calculateNetEnergyMetrics,
+                calculateSelfSufficiencyRate,
+                calculateAverageSelfSufficiencyRate
+            } = await import('../../utils/electricityCalculations');
+
+            // Calculate net energy from consumption + generation (don't use database values)
+            const netEnergyCalculated = calculateNetEnergyFromData(
+                consumptionRaw.data,
+                generationRaw.data
+            );
+
+            // Calculate self-sufficiency rate
+            const selfSufficiencyRateData = calculateSelfSufficiencyRate(
+                consumptionRaw.data,
+                generationRaw.data
+            );
+
+            const avgSelfSufficiencyRate = calculateAverageSelfSufficiencyRate(selfSufficiencyRateData);
+
+            // Calculate net energy metrics
+            const netEnergyMetrics = calculateNetEnergyMetrics(netEnergyCalculated);
+            netEnergyMetrics.avgSelfSufficiencyRate = avgSelfSufficiencyRate;
+
             // Aggregate to daily data
-            const consumption = consumptionRaw?.data ? {
+            const consumption = {
                 data: aggregateToDaily(consumptionRaw.data),
                 metrics: calculateDailyMetrics(aggregateToDaily(consumptionRaw.data))
-            } : null;
+            };
 
-            const generation = generationRaw?.data ? {
+            const generation = {
                 data: aggregateToDaily(generationRaw.data),
                 metrics: calculateDailyMetrics(aggregateToDaily(generationRaw.data))
-            } : null;
+            };
 
-            const netEnergy = netEnergyRaw?.data ? {
-                data: aggregateToDaily(netEnergyRaw.data),
-                metrics: calculateDailyMetrics(aggregateToDaily(netEnergyRaw.data))
-            } : null;
+            const netEnergy = {
+                data: aggregateToDaily(netEnergyCalculated),
+                metrics: {
+                    ...calculateDailyMetrics(aggregateToDaily(netEnergyCalculated)),
+                    avgSelfSufficiencyRate: avgSelfSufficiencyRate
+                },
+                selfSufficiencyRate: aggregateToDaily(selfSufficiencyRateData)
+            };
 
             return { consumption, generation, netEnergy };
         } catch (err) {
