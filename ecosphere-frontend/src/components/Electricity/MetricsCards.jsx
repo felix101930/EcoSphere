@@ -16,12 +16,14 @@ const MetricCard = ({ title, value, unit, icon: IconComponent, color = 'primary'
           {title}
         </Typography>
       </Box>
-      <Typography variant="h4" sx={{ fontWeight: 'bold', color: `${color}.main` }}>
-        {value !== null && value !== undefined ? value.toLocaleString() : 'N/A'}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {unit}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: `${color}.main` }}>
+          {value !== null && value !== undefined ? value.toLocaleString() : 'N/A'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {unit}
+        </Typography>
+      </Box>
     </Paper>
   );
 };
