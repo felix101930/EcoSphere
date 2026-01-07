@@ -11,6 +11,7 @@ export const useWaterData = () => {
     // Data states
     const [rainwaterData, setRainwaterData] = useState(null);
     const [hotWaterData, setHotWaterData] = useState(null);
+    const [hotWaterForecast, setHotWaterForecast] = useState(null);
 
     /**
      * Load available date range on mount
@@ -89,11 +90,41 @@ export const useWaterData = () => {
     }, []);
 
     /**
+     * Load hot water consumption forecast
+     */
+    const loadHotWaterForecast = useCallback(async (targetDate, forecastDays) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const formattedDate = WaterReportService.formatDate(targetDate);
+
+            const response = await WaterReportService.getHotWaterForecast(
+                formattedDate,
+                forecastDays
+            );
+
+            if (response.success) {
+                setHotWaterForecast(response);
+            } else {
+                throw new Error(response.error || 'Failed to load hot water forecast');
+            }
+        } catch (err) {
+            console.error('Error loading hot water forecast:', err);
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    /**
      * Clear all data
      */
     const clearData = useCallback(() => {
         setRainwaterData(null);
         setHotWaterData(null);
+        setHotWaterForecast(null);
         setError(null);
     }, []);
 
@@ -106,10 +137,12 @@ export const useWaterData = () => {
         // Data
         rainwaterData,
         hotWaterData,
+        hotWaterForecast,
 
         // Actions
         loadRainwaterData,
         loadHotWaterData,
+        loadHotWaterForecast,
         clearData
     };
 };

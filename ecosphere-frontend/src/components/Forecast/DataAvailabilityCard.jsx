@@ -21,7 +21,10 @@ const DataAvailabilityCard = ({ metadata, title = 'Data Availability Analysis' }
                 {/* Data Completeness (only for consumption forecast) */}
                 {dataAvailability && (
                     <>
-                        <DataCompletenessSection completenessScore={dataAvailability.completenessScore} />
+                        <DataCompletenessSection
+                            completenessScore={dataAvailability.completenessScore}
+                            totalDataPoints={dataAvailability.totalDataPoints}
+                        />
 
                         {/* Available Data Checks */}
                         <AvailableDataChecks dataAvailability={dataAvailability} />

@@ -1,5 +1,5 @@
 // Available Data Checks - Shows which data requirements are met
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Alert } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -49,6 +49,24 @@ const AvailableDataChecks = ({ dataAvailability }) => {
                     </Box>
                 ))}
             </Box>
+
+            {/* Legend */}
+            <Alert severity="info" sx={{ mt: 2, py: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <CheckCircleIcon fontSize="small" color="success" />
+                        <Typography variant="caption">Available</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <ErrorIcon fontSize="small" color="error" />
+                        <Typography variant="caption">Critical data missing</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <WarningIcon fontSize="small" color="warning" />
+                        <Typography variant="caption">Optional data missing</Typography>
+                    </Box>
+                </Box>
+            </Alert>
         </Box>
     );
 };

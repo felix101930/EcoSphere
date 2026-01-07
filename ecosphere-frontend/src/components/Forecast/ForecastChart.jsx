@@ -7,7 +7,7 @@ import {
     CHART_HEIGHT
 } from '../../lib/constants/forecast';
 
-const ForecastChart = ({ consumptionData, generationData }) => {
+const ForecastChart = ({ consumptionData, generationData, yAxisLabel = 'Daily Energy (Wh/day)', unit = 'Wh' }) => {
     // Check if we have any data
     const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
     const hasGeneration = generationData && generationData.predictions && generationData.predictions.length > 0;
@@ -100,7 +100,7 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                         if (label) {
                             label += ': ';
                         }
-                        label += Math.round(context.parsed.y).toLocaleString() + ' Wh';
+                        label += Math.round(context.parsed.y).toLocaleString() + ' ' + unit;
                         return label;
                     }
                 }
@@ -121,7 +121,7 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                 display: true,
                 title: {
                     display: true,
-                    text: 'Daily Energy (Wh/day)'
+                    text: yAxisLabel
                 },
                 beginAtZero: true,
                 grid: {
@@ -129,7 +129,7 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                 },
                 ticks: {
                     callback: function (value) {
-                        return value.toLocaleString();
+                        return value.toLocaleString() + ' ' + unit;
                     }
                 }
             }
@@ -159,10 +159,10 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                                 Consumption Forecast
                             </Typography>
                             <Typography variant="body2">
-                                Total: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} Wh
+                                Total: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
                             </Typography>
                             <Typography variant="body2">
-                                Avg/day: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} Wh
+                                Avg/day: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} {unit}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                                 Strategy: {consumptionData.metadata.strategyName}
@@ -176,10 +176,10 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                                 Generation Forecast
                             </Typography>
                             <Typography variant="body2">
-                                Total: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} Wh
+                                Total: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0)).toLocaleString()} {unit}
                             </Typography>
                             <Typography variant="body2">
-                                Avg/day: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} Wh
+                                Avg/day: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} {unit}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                                 Strategy: {generationData.metadata.strategyName}
@@ -196,7 +196,7 @@ const ForecastChart = ({ consumptionData, generationData }) => {
                                 Total: {Math.round(
                                     consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) -
                                     generationData.predictions.reduce((sum, p) => sum + p.value, 0)
-                                ).toLocaleString()} Wh
+                                ).toLocaleString()} {unit}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                                 (Consumption - Generation)

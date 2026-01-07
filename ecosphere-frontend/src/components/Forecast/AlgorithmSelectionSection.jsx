@@ -44,7 +44,7 @@ const AlgorithmSelectionSection = ({ strategyName, confidence, accuracy, warning
             {/* Info Message */}
             {confidence < 90 && (
                 <Alert severity="info" sx={{ mt: 2 }}>
-                    ℹ️ Note: Due to some missing historical data, the system is using {strategyName}.
+                    Note: Due to some missing historical data, the system is using {strategyName}.
                     The prediction results are still reliable, but accuracy may be slightly lower than with complete data.
                 </Alert>
             )}

@@ -12,4 +12,7 @@ router.get('/rainwater/:dateFrom/:dateTo', WaterController.getRainwaterLevelData
 // Get hot water consumption data
 router.get('/hot-water/:dateFrom/:dateTo', WaterController.getHotWaterConsumptionData);
 
+// Get hot water consumption forecast
+router.get('/hot-water/forecast/:targetDate/:forecastDays', WaterController.getHotWaterForecast);
+
 module.exports = router;

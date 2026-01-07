@@ -57,6 +57,32 @@ class WaterReportService {
     }
 
     /**
+     * Get hot water consumption forecast
+     * @param {string} targetDate - Base date (YYYY-MM-DD)
+     * @param {number} forecastDays - Number of days to forecast
+     * @returns {Promise<Object>} Forecast result
+     */
+    async getHotWaterForecast(targetDate, forecastDays) {
+        try {
+            const formattedDate = this.formatDate(targetDate);
+
+            const response = await fetch(
+                `${API_BASE_URL}/hot-water/forecast/${formattedDate}/${forecastDays}`
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to fetch hot water forecast');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching hot water forecast:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Format date to YYYY-MM-DD (timezone-safe)
      * Uses local date components to avoid timezone conversion issues
      */
