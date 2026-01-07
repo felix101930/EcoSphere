@@ -27,6 +27,10 @@ async function testThermalForecast() {
         console.log('Forecast Days:', data.forecastDays);
         console.log('Floor:', data.floor);
         console.log('Sensor Count:', data.sensorCount);
+        console.log('Has outdoorTemperature array:', !!data.outdoorTemperature);
+        if (data.outdoorTemperature) {
+            console.log('Outdoor Temperature array length:', data.outdoorTemperature.length);
+        }
         console.log('');
 
         console.log('=== METADATA ===');

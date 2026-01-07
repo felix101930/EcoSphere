@@ -243,6 +243,7 @@ const getThermalForecast = asyncHandler(async (req, res) => {
     floor: floor,
     sensorCount: sensorIds.length,
     predictions: forecastResult.predictions,
+    outdoorTemperature: forecastResult.outdoorTemperature,
     metadata: forecastResult.metadata
   });
 });

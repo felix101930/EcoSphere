@@ -123,9 +123,11 @@ const ThermalForecastView = ({
                     <ForecastChart
                         consumptionData={forecast}
                         generationData={null}
+                        outdoorTemperatureData={forecast.outdoorTemperature}
                         yAxisLabel="Indoor Temperature (°C)"
                         unit="°C"
                         consumptionLabel="Temperature Forecast"
+                        outdoorTemperatureLabel="Outdoor Temperature"
                         showTotal={false}
                         decimalPlaces={1}
                     />

@@ -947,10 +947,17 @@ class ForecastService {
                 forecastWeather
             );
 
-            // 4. Return result with metadata
+            // 4. Extract outdoor temperature for comparison
+            const outdoorTemperature = predictions.map(p => ({
+                date: p.date,
+                value: p.weather?.outdoor_temp || null
+            }));
+
+            // 5. Return result with metadata
             return {
                 success: true,
                 predictions: predictions,
+                outdoorTemperature: outdoorTemperature,
                 metadata: {
                     strategy: 'HYBRID_HISTORICAL_WEATHER',
                     strategyName: 'Hybrid Model (Historical + Weather)',
