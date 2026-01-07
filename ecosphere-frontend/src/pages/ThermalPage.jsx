@@ -40,6 +40,7 @@ const ThermalPage = () => {
     forecastLoading,
     forecastError,
     outdoorTemperature,
+    outdoorTemperatureHourly,
     loadSingleDayData,
     loadMultipleDaysData,
     validateDateRange,
@@ -271,6 +272,8 @@ const ThermalPage = () => {
             <ThermalFloorPlan
               currentData={currentData}
               floor={selectedFloor}
+              outdoorTemperatureHourly={outdoorTemperatureHourly}
+              currentTimeIndex={currentTimeIndex}
             />
 
             {/* Time/Date Slider */}

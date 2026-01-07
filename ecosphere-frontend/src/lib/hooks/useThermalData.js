@@ -20,6 +20,7 @@ export const useThermalData = (selectedFloor) => {
   const [forecastLoading, setForecastLoading] = useState(false);
   const [forecastError, setForecastError] = useState(null);
   const [outdoorTemperature, setOutdoorTemperature] = useState([]);
+  const [outdoorTemperatureHourly, setOutdoorTemperatureHourly] = useState([]);
 
   // Get sensor IDs for current floor
   const sensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
@@ -48,8 +49,17 @@ export const useThermalData = (selectedFloor) => {
 
         // Load data for that date using initial floor
         const initialSensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
-        const data = await ThermalService.getMultipleSensorsDailyData(lastDateStr, initialSensorIds);
+
+        // Load thermal data and outdoor temperature in parallel
+        const [data, outdoorTemp, outdoorTempHourly] = await Promise.all([
+          ThermalService.getMultipleSensorsDailyData(lastDateStr, initialSensorIds),
+          WeatherService.getOutdoorTemperature(lastDateStr, lastDateStr).catch(() => []),
+          WeatherService.getOutdoorTemperatureHourly(lastDateStr).catch(() => [])
+        ]);
+
         setDailyData(data);
+        setOutdoorTemperature(outdoorTemp);
+        setOutdoorTemperatureHourly(outdoorTempHourly);
 
         setLoading(false);
       } catch (err) {
@@ -75,14 +85,16 @@ export const useThermalData = (selectedFloor) => {
       const day = String(date.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
 
-      // Load thermal data and outdoor temperature in parallel
-      const [data, outdoorTemp] = await Promise.all([
+      // Load thermal data, daily outdoor temp, and hourly outdoor temp in parallel
+      const [data, outdoorTemp, outdoorTempHourly] = await Promise.all([
         ThermalService.getMultipleSensorsDailyData(dateStr, floorSensorIds),
-        WeatherService.getOutdoorTemperature(dateStr, dateStr).catch(() => [])
+        WeatherService.getOutdoorTemperature(dateStr, dateStr).catch(() => []),
+        WeatherService.getOutdoorTemperatureHourly(dateStr).catch(() => [])
       ]);
 
       setDailyData(data);
       setOutdoorTemperature(outdoorTemp);
+      setOutdoorTemperatureHourly(outdoorTempHourly);
       setSelectedDate(date);
 
       setLoading(false);
@@ -216,6 +228,7 @@ export const useThermalData = (selectedFloor) => {
     forecastLoading,
     forecastError,
     outdoorTemperature,
+    outdoorTemperatureHourly,
 
     // Actions
     loadSingleDayData,
