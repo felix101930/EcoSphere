@@ -18,11 +18,11 @@ const ThermalControlPanel = ({
   // Floor props
   selectedFloor,
   onFloorChange,
-  
+
   // View mode props
   viewMode,
   onViewModeChange,
-  
+
   // Date props
   selectedDate,
   dateFrom,
@@ -31,7 +31,7 @@ const ThermalControlPanel = ({
   onDateFromChange,
   onDateToChange,
   shouldDisableDate,
-  
+
   // Multiple days props
   onGenerateChart,
   dateRangeError,
@@ -82,6 +82,9 @@ const ThermalControlPanel = ({
             <ToggleButton value={VIEW_MODES.MULTIPLE} aria-label="multiple days">
               {VIEW_MODE_LABELS[VIEW_MODES.MULTIPLE]}
             </ToggleButton>
+            <ToggleButton value={VIEW_MODES.FORECAST} aria-label="forecast">
+              {VIEW_MODE_LABELS[VIEW_MODES.FORECAST]}
+            </ToggleButton>
           </ToggleButtonGroup>
         </Box>
 
@@ -104,7 +107,7 @@ const ThermalControlPanel = ({
                 }}
               />
             </Box>
-          ) : (
+          ) : viewMode === VIEW_MODES.MULTIPLE ? (
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -150,7 +153,24 @@ const ThermalControlPanel = ({
                 Generate Chart
               </Button>
             </Box>
-          )}
+          ) : viewMode === VIEW_MODES.FORECAST ? (
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Target Date
+              </Typography>
+              <DatePicker
+                value={selectedDate}
+                onChange={onDateChange}
+                shouldDisableDate={shouldDisableDate}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: { width: 200 }
+                  }
+                }}
+              />
+            </Box>
+          ) : null}
         </LocalizationProvider>
       </Box>
 
@@ -163,9 +183,11 @@ const ThermalControlPanel = ({
 
       {/* Info Text */}
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
-        {viewMode === VIEW_MODES.SINGLE 
+        {viewMode === VIEW_MODES.SINGLE
           ? 'View 15-minute interval data for a single day'
-          : `View daily data for up to ${DATE_CONFIG.MAX_DATE_RANGE_DAYS} days`}
+          : viewMode === VIEW_MODES.MULTIPLE
+            ? `View daily data for up to ${DATE_CONFIG.MAX_DATE_RANGE_DAYS} days`
+            : 'Predict future indoor temperature based on historical patterns and weather forecast'}
       </Typography>
     </Box>
   );

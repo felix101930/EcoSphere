@@ -6,8 +6,12 @@ const {
   getLastCompleteDate,
   getDailyData,
   getMultipleSensorsDailyData,
-  getMultipleSensorsAggregatedData
+  getMultipleSensorsAggregatedData,
+  getThermalForecast
 } = require('../controllers/thermalController');
+
+// Forecast routes (must come before generic data routes)
+router.get('/forecast/:floor/:targetDate/:forecastDays', getThermalForecast);
 
 // Get available dates
 router.get('/available-dates', getAvailableDates);

@@ -61,83 +61,83 @@ export const SENSOR_POSITIONS = {
 
 export const SENSOR_COLORS = {
   // Basement sensors - SAIT Official Colors
-  '20004_TL2': { 
+  '20004_TL2': {
     rgb: '218, 41, 28',
     hex: '#DA291C',
     name: 'Sensor 20004',
     description: 'Red - SAIT Official'
   },
-  '20005_TL2': { 
+  '20005_TL2': {
     rgb: '0, 94, 184',
     hex: '#005EB8',
     name: 'Sensor 20005',
     description: 'Blue - SAIT Official'
   },
-  '20006_TL2': { 
+  '20006_TL2': {
     rgb: '109, 32, 119',
     hex: '#6D2077',
     name: 'Sensor 20006',
     description: 'Purple - SAIT Official'
   },
-  
+
   // Level 1 sensors - Additional Colors
-  '20007_TL2': { 
+  '20007_TL2': {
     rgb: '0, 166, 81',
     hex: '#00A651',
     name: 'Sensor 20007',
     description: 'Green'
   },
-  '20008_TL2': { 
+  '20008_TL2': {
     rgb: '255, 105, 0',
     hex: '#FF6900',
     name: 'Sensor 20008',
     description: 'Orange'
   },
-  '20009_TL2': { 
+  '20009_TL2': {
     rgb: '255, 193, 7',
     hex: '#FFC107',
     name: 'Sensor 20009',
     description: 'Yellow'
   },
-  '20010_TL2': { 
+  '20010_TL2': {
     rgb: '156, 39, 176',
     hex: '#9C27B0',
     name: 'Sensor 20010',
     description: 'Magenta'
   },
-  '20011_TL2': { 
+  '20011_TL2': {
     rgb: '0, 188, 212',
     hex: '#00BCD4',
     name: 'Sensor 20011',
     description: 'Cyan'
   },
-  
+
   // Level 2 sensors - Additional Colors
-  '20012_TL2': { 
+  '20012_TL2': {
     rgb: '233, 30, 99',
     hex: '#E91E63',
     name: 'Sensor 20012',
     description: 'Pink'
   },
-  '20013_TL2': { 
+  '20013_TL2': {
     rgb: '103, 58, 183',
     hex: '#673AB7',
     name: 'Sensor 20013',
     description: 'Deep Purple'
   },
-  '20014_TL2': { 
+  '20014_TL2': {
     rgb: '63, 81, 181',
     hex: '#3F51B5',
     name: 'Sensor 20014',
     description: 'Indigo'
   },
-  '20015_TL2': { 
+  '20015_TL2': {
     rgb: '0, 150, 136',
     hex: '#009688',
     name: 'Sensor 20015',
     description: 'Teal'
   },
-  '20016_TL2': { 
+  '20016_TL2': {
     rgb: '205, 220, 57',
     hex: '#CDDC39',
     name: 'Sensor 20016',
@@ -167,10 +167,10 @@ export const DATE_CONFIG = {
   MAX_DATE_RANGE_DAYS: 30,
   MIN_DATE: '2019-01-01',
   MAX_DATE: '2020-11-07',
-  
+
   // Default dates
   DEFAULT_FALLBACK_DATE: '2020-11-07',
-  
+
   // Time intervals
   RECORDS_PER_DAY: 96, // 15-minute intervals
   MINUTES_PER_INTERVAL: 15
@@ -182,12 +182,14 @@ export const DATE_CONFIG = {
 
 export const VIEW_MODES = {
   SINGLE: 'single',
-  MULTIPLE: 'multiple'
+  MULTIPLE: 'multiple',
+  FORECAST: 'forecast'
 };
 
 export const VIEW_MODE_LABELS = {
   [VIEW_MODES.SINGLE]: 'Single Day',
-  [VIEW_MODES.MULTIPLE]: 'Multiple Days'
+  [VIEW_MODES.MULTIPLE]: 'Multiple Days',
+  [VIEW_MODES.FORECAST]: 'Forecast'
 };
 
 // ============================================================================
@@ -198,7 +200,7 @@ export const TIME_CONTROL_CONFIG = {
   // Animation speeds (milliseconds)
   ANIMATION_SPEED_SINGLE: 500,
   ANIMATION_SPEED_MULTIPLE: 500,
-  
+
   // Slider marks for single day mode (96 intervals)
   SINGLE_DAY_MARKS: [
     { value: 0, label: '00:00' },
@@ -223,7 +225,7 @@ export const TEMPERATURE_CONFIG = {
     { min: 24, max: 25, color: '#FF9900', label: '24-25°C' },
     { min: 25, color: '#FF3300', label: '> 25°C' }
   ],
-  
+
   // Display format
   DECIMAL_PLACES: 1,
   UNIT: '°C'
@@ -236,11 +238,11 @@ export const TEMPERATURE_CONFIG = {
 export const UI_CONFIG = {
   // Loading states
   LOADING_TEXT: 'Loading time control data...',
-  
+
   // Chart heights
   CHART_HEIGHT: 400,
   TREND_CHART_HEIGHT: 350,
-  
+
   // Error messages
   ERROR_MESSAGES: {
     NO_DATES: 'Please select both From and To dates',

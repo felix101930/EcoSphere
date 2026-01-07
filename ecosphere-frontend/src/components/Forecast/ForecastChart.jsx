@@ -14,7 +14,8 @@ const ForecastChart = ({
     unit = 'Wh',
     consumptionLabel = 'Consumption Forecast',
     generationLabel = 'Generation Forecast',
-    showTotal = true
+    showTotal = true,
+    decimalPlaces = 0
 }) => {
     // Check if we have any data
     const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
@@ -46,7 +47,7 @@ const ForecastChart = ({
                 display: true,
                 align: 'top',
                 anchor: 'end',
-                formatter: (value) => Math.round(value),
+                formatter: (value) => decimalPlaces > 0 ? value.toFixed(decimalPlaces) : Math.round(value),
                 font: {
                     size: 10,
                     weight: 'bold'
@@ -70,7 +71,7 @@ const ForecastChart = ({
                 display: true,
                 align: 'bottom',
                 anchor: 'start',
-                formatter: (value) => Math.round(value),
+                formatter: (value) => decimalPlaces > 0 ? value.toFixed(decimalPlaces) : Math.round(value),
                 font: {
                     size: 10,
                     weight: 'bold'
@@ -178,10 +179,10 @@ const ForecastChart = ({
                             ) : (
                                 <>
                                     <Typography variant="body2">
-                                        Average: {Math.round(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toLocaleString()} {unit}
+                                        Average: {(consumptionData.predictions.reduce((sum, p) => sum + p.value, 0) / consumptionData.predictions.length).toFixed(decimalPlaces)} {unit}
                                     </Typography>
                                     <Typography variant="body2">
-                                        Range: {Math.round(Math.min(...consumptionData.predictions.map(p => p.value))).toLocaleString()} - {Math.round(Math.max(...consumptionData.predictions.map(p => p.value))).toLocaleString()} {unit}
+                                        Range: {Math.min(...consumptionData.predictions.map(p => p.value)).toFixed(decimalPlaces)} - {Math.max(...consumptionData.predictions.map(p => p.value)).toFixed(decimalPlaces)} {unit}
                                     </Typography>
                                 </>
                             )}
@@ -208,10 +209,10 @@ const ForecastChart = ({
                             ) : (
                                 <>
                                     <Typography variant="body2">
-                                        Average: {Math.round(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toLocaleString()} {unit}
+                                        Average: {(generationData.predictions.reduce((sum, p) => sum + p.value, 0) / generationData.predictions.length).toFixed(decimalPlaces)} {unit}
                                     </Typography>
                                     <Typography variant="body2">
-                                        Range: {Math.round(Math.min(...generationData.predictions.map(p => p.value))).toLocaleString()} - {Math.round(Math.max(...generationData.predictions.map(p => p.value))).toLocaleString()} {unit}
+                                        Range: {Math.min(...generationData.predictions.map(p => p.value)).toFixed(decimalPlaces)} - {Math.max(...generationData.predictions.map(p => p.value)).toFixed(decimalPlaces)} {unit}
                                     </Typography>
                                 </>
                             )}

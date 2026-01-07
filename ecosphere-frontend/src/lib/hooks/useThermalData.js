@@ -15,6 +15,9 @@ export const useThermalData = (selectedFloor) => {
   const [dailyData, setDailyData] = useState({});
   const [aggregatedData, setAggregatedData] = useState({});
   const [multipleDaysDetailData, setMultipleDaysDetailData] = useState({});
+  const [forecast, setForecast] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
+  const [forecastError, setForecastError] = useState(null);
 
   // Get sensor IDs for current floor
   const sensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
@@ -161,6 +164,32 @@ export const useThermalData = (selectedFloor) => {
     setDailyData({});
   }, []);
 
+  // Load thermal forecast
+  const loadThermalForecast = useCallback(async (floor, targetDate, forecastDays) => {
+    try {
+      setForecastLoading(true);
+      setForecastError(null);
+
+      // Format date as YYYY-MM-DD (timezone-safe)
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      // Load forecast
+      const result = await ThermalService.getThermalForecast(floor, dateStr, forecastDays);
+      setForecast(result);
+
+      setForecastLoading(false);
+      return result;
+    } catch (err) {
+      console.error('Error loading thermal forecast:', err);
+      setForecastError(err.message);
+      setForecastLoading(false);
+      throw err;
+    }
+  }, []);
+
   return {
     // State
     loading,
@@ -171,6 +200,9 @@ export const useThermalData = (selectedFloor) => {
     aggregatedData,
     multipleDaysDetailData,
     sensorIds,
+    forecast,
+    forecastLoading,
+    forecastError,
 
     // Actions
     loadSingleDayData,
@@ -178,6 +210,7 @@ export const useThermalData = (selectedFloor) => {
     validateDateRange,
     clearMultipleDaysData,
     clearSingleDayData,
+    loadThermalForecast,
     setSelectedDate,
     setError
   };

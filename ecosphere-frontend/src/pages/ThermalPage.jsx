@@ -7,6 +7,7 @@ import ThermalControlPanel from '../components/Thermal/ThermalControlPanel';
 import ThermalChartSection from '../components/Thermal/ThermalChartSection';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
 import ThermalTimeSlider from '../components/Thermal/ThermalTimeSlider';
+import ThermalForecastView from '../components/Thermal/ThermalForecastView';
 import { VIEW_MODES } from '../lib/constants/thermal';
 import { useThermalData } from '../lib/hooks/useThermalData';
 import { useFloorManagement } from '../lib/hooks/useFloorManagement';
@@ -35,9 +36,13 @@ const ThermalPage = () => {
     aggregatedData,
     multipleDaysDetailData,
     sensorIds,
+    forecast,
+    forecastLoading,
+    forecastError,
     loadSingleDayData,
     loadMultipleDaysData,
     validateDateRange,
+    loadThermalForecast,
     setSelectedDate
   } = useThermalData(selectedFloor);
   const timeControl = useTimeControl(
@@ -226,7 +231,7 @@ const ThermalPage = () => {
           onFloorChange={handleFloorChange}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          selectedDate={viewMode === VIEW_MODES.SINGLE ? selectedDate : null}
+          selectedDate={viewMode === VIEW_MODES.SINGLE || viewMode === VIEW_MODES.FORECAST ? selectedDate : null}
           dateFrom={dateFrom}
           dateTo={dateTo}
           onDateChange={handleDateChange}
@@ -238,33 +243,48 @@ const ThermalPage = () => {
           loading={loading}
         />
 
-        {/* Chart Section */}
-        <ThermalChartSection
-          viewMode={viewMode}
-          dailyData={dailyData}
-          aggregatedData={aggregatedData}
-          onTimeClick={handleTimeClick}
-          onDateClick={handleDateClick}
-        />
+        {/* Conditional Rendering based on View Mode */}
+        {viewMode === VIEW_MODES.FORECAST ? (
+          /* Forecast View */
+          <ThermalForecastView
+            selectedFloor={selectedFloor}
+            dateTo={selectedDate}
+            loading={forecastLoading}
+            error={forecastError}
+            forecast={forecast}
+            onLoadForecast={loadThermalForecast}
+          />
+        ) : (
+          <>
+            {/* Chart Section */}
+            <ThermalChartSection
+              viewMode={viewMode}
+              dailyData={dailyData}
+              aggregatedData={aggregatedData}
+              onTimeClick={handleTimeClick}
+              onDateClick={handleDateClick}
+            />
 
-        {/* Floor Plan */}
-        <ThermalFloorPlan
-          currentData={currentData}
-          floor={selectedFloor}
-        />
+            {/* Floor Plan */}
+            <ThermalFloorPlan
+              currentData={currentData}
+              floor={selectedFloor}
+            />
 
-        {/* Time/Date Slider */}
-        <ThermalTimeSlider
-          currentIndex={currentTimeIndex}
-          maxIndex={viewMode === VIEW_MODES.SINGLE ? maxTimeIndex : maxMultipleDaysTimeIndex}
-          onIndexChange={setCurrentTimeIndex}
-          currentTime={currentTime}
-          mode={viewMode}
-          dateList={viewMode === VIEW_MODES.MULTIPLE ? Object.keys(aggregatedData).sort() : []}
-          detailData={viewMode === VIEW_MODES.MULTIPLE ? multipleDaysDetailData : {}}
-          sensorIds={sensorIds}
-          loading={loading}
-        />
+            {/* Time/Date Slider */}
+            <ThermalTimeSlider
+              currentIndex={currentTimeIndex}
+              maxIndex={viewMode === VIEW_MODES.SINGLE ? maxTimeIndex : maxMultipleDaysTimeIndex}
+              onIndexChange={setCurrentTimeIndex}
+              currentTime={currentTime}
+              mode={viewMode}
+              dateList={viewMode === VIEW_MODES.MULTIPLE ? Object.keys(aggregatedData).sort() : []}
+              detailData={viewMode === VIEW_MODES.MULTIPLE ? multipleDaysDetailData : {}}
+              sensorIds={sensorIds}
+              loading={loading}
+            />
+          </>
+        )}
       </Box>
     </>
   );

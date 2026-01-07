@@ -12,11 +12,15 @@ class WeatherService {
      * Fetch historical weather data from Open-Meteo Archive API
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
-     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
+     * @param {string} type - Weather type: 'solar', 'rain', or 'thermal' (default: 'solar')
      * @returns {Promise<Object>} Weather data with hourly values
      */
     static async getHistoricalWeather(dateFrom, dateTo, type = 'solar') {
-        const variables = type === 'rain' ? WEATHER_VARIABLES.HOURLY_RAIN : WEATHER_VARIABLES.HOURLY;
+        const variables = type === 'rain'
+            ? WEATHER_VARIABLES.HOURLY_RAIN
+            : type === 'thermal'
+                ? WEATHER_VARIABLES.HOURLY_THERMAL
+                : WEATHER_VARIABLES.HOURLY;
 
         const params = new URLSearchParams({
             latitude: LOCATION.LATITUDE,
@@ -42,11 +46,15 @@ class WeatherService {
      * Fetch weather forecast from Open-Meteo Forecast API
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
-     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
+     * @param {string} type - Weather type: 'solar', 'rain', or 'thermal' (default: 'solar')
      * @returns {Promise<Object>} Weather forecast data with hourly values
      */
     static async getForecastWeather(dateFrom, dateTo, type = 'solar') {
-        const variables = type === 'rain' ? WEATHER_VARIABLES.HOURLY_RAIN : WEATHER_VARIABLES.HOURLY;
+        const variables = type === 'rain'
+            ? WEATHER_VARIABLES.HOURLY_RAIN
+            : type === 'thermal'
+                ? WEATHER_VARIABLES.HOURLY_THERMAL
+                : WEATHER_VARIABLES.HOURLY;
 
         const params = new URLSearchParams({
             latitude: LOCATION.LATITUDE,
@@ -72,7 +80,7 @@ class WeatherService {
      * Get weather data (automatically choose historical or forecast)
      * @param {string} dateFrom - Start date (YYYY-MM-DD)
      * @param {string} dateTo - End date (YYYY-MM-DD)
-     * @param {string} type - Weather type: 'solar' or 'rain' (default: 'solar')
+     * @param {string} type - Weather type: 'solar', 'rain', or 'thermal' (default: 'solar')
      * @returns {Promise<Object>} Weather data
      */
     static async getWeatherData(dateFrom, dateTo, type = 'solar') {
@@ -92,12 +100,14 @@ class WeatherService {
     /**
      * Aggregate hourly weather data to daily
      * @param {Object} weatherData - Hourly weather data
-     * @param {string} type - Weather type: 'solar' or 'rain'
+     * @param {string} type - Weather type: 'solar', 'rain', or 'thermal'
      * @returns {Object} Daily aggregated weather data
      */
     static aggregateToDaily(weatherData, type = 'solar') {
         if (type === 'rain') {
             return this._aggregateRainToDaily(weatherData);
+        } else if (type === 'thermal') {
+            return this._aggregateThermalToDaily(weatherData);
         }
         return this._aggregateSolarToDaily(weatherData);
     }
@@ -188,6 +198,42 @@ class WeatherService {
     }
 
     /**
+     * Private: Aggregate thermal weather data to daily
+     */
+    static _aggregateThermalToDaily(weatherData) {
+        const dailyData = {};
+
+        weatherData.hourly.time.forEach((timestamp, index) => {
+            const date = timestamp.split('T')[0];
+
+            if (!dailyData[date]) {
+                dailyData[date] = {
+                    temperature: [],
+                    shortwave_radiation: []
+                };
+            }
+
+            dailyData[date].temperature.push(weatherData.hourly.temperature_2m[index] || 0);
+            dailyData[date].shortwave_radiation.push(weatherData.hourly.shortwave_radiation[index] || 0);
+        });
+
+        // Calculate daily aggregates
+        const result = {};
+        Object.keys(dailyData).forEach(date => {
+            const data = dailyData[date];
+            result[date] = {
+                avg_temperature: this._average(data.temperature),
+                max_temperature: Math.max(...data.temperature),
+                min_temperature: Math.min(...data.temperature),
+                avg_shortwave_radiation: this._average(data.shortwave_radiation),
+                total_shortwave_radiation: this._sum(data.shortwave_radiation)
+            };
+        });
+
+        return result;
+    }
+
+    /**
      * Private: Fetch data from API using https
      */
     static _fetchFromAPI(url) {
@@ -238,6 +284,8 @@ class WeatherService {
             hourly.rain = data.hourly.rain || [];
             hourly.showers = data.hourly.showers || [];
             hourly.weather_code = data.hourly.weather_code || [];
+        } else if (type === 'thermal') {
+            hourly.shortwave_radiation = data.hourly.shortwave_radiation || [];
         } else {
             hourly.cloud_cover = data.hourly.cloud_cover || [];
             hourly.shortwave_radiation = data.hourly.shortwave_radiation || [];

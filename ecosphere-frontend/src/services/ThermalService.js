@@ -89,7 +89,7 @@ class ThermalService {
     if (temp === null || temp === undefined || isNaN(temp)) {
       return '#CCCCCC'; // Gray for no data
     }
-    
+
     if (temp < 20) return '#0066FF';      // Cold - Blue
     if (temp < 22) return '#00CCFF';      // Cool - Light Blue
     if (temp < 23) return '#00FF00';      // Comfortable - Green
@@ -118,6 +118,28 @@ class ThermalService {
     const time = this.parseTime(timestamp);
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 4 + minutes / 15;
+  }
+
+  /**
+   * Get thermal forecast for a floor
+   */
+  async getThermalForecast(floor, targetDate, forecastDays) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/forecast/${floor}/${targetDate}/${forecastDays}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch thermal forecast');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching thermal forecast:', error);
+      throw error;
+    }
   }
 }
 

@@ -38,6 +38,10 @@ const WEATHER_VARIABLES = {
         'rain',                     // Rain (mm)
         'showers',                  // Showers (mm)
         'weather_code'              // Weather condition code
+    ],
+    HOURLY_THERMAL: [
+        'temperature_2m',           // Temperature at 2m (°C)
+        'shortwave_radiation'       // Solar radiation affecting building heat gain (W/m²)
     ]
 };
 
@@ -57,12 +61,13 @@ const WEATHER_FIELDS = {
 };
 
 /**
- * Training period for generation forecast model
+ * Training period for forecast models
  * Use last 60 days of historical data
  */
 const TRAINING_PERIOD = {
     DAYS: 60,
-    MIN_DAYS_REQUIRED: 30  // Minimum days needed for reliable model
+    MIN_DAYS_REQUIRED: 30,  // Minimum days needed for reliable model
+    THERMAL_DAYS: 60        // Thermal forecast uses 60 days (same as weather-based models)
 };
 
 /**
