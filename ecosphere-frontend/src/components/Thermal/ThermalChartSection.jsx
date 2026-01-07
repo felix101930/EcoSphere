@@ -12,13 +12,15 @@ const ThermalChartSection = ({
   viewMode,
   dailyData,
   aggregatedData,
+  outdoorTemperature,
   onTimeClick,
   onDateClick
 }) => {
   if (viewMode === VIEW_MODES.SINGLE) {
     return (
-      <ThermalTrendChart 
+      <ThermalTrendChart
         data={dailyData}
+        outdoorTemperature={outdoorTemperature}
         onTimeClick={onTimeClick}
       />
     );
@@ -27,8 +29,9 @@ const ThermalChartSection = ({
   // Multiple Days mode
   if (Object.keys(aggregatedData).length > 0) {
     return (
-      <ThermalCandlestickChart 
+      <ThermalCandlestickChart
         data={aggregatedData}
+        outdoorTemperature={outdoorTemperature}
         onDateClick={onDateClick}
       />
     );
@@ -36,11 +39,11 @@ const ThermalChartSection = ({
 
   // No data state for multiple days
   return (
-    <Box sx={{ 
-      p: 4, 
-      bgcolor: 'white', 
-      borderRadius: 1, 
-      boxShadow: 1, 
+    <Box sx={{
+      p: 4,
+      bgcolor: 'white',
+      borderRadius: 1,
+      boxShadow: 1,
       textAlign: 'center',
       mb: 3
     }}>

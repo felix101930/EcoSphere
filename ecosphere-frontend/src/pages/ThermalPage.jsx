@@ -39,6 +39,7 @@ const ThermalPage = () => {
     forecast,
     forecastLoading,
     forecastError,
+    outdoorTemperature,
     loadSingleDayData,
     loadMultipleDaysData,
     validateDateRange,
@@ -261,6 +262,7 @@ const ThermalPage = () => {
               viewMode={viewMode}
               dailyData={dailyData}
               aggregatedData={aggregatedData}
+              outdoorTemperature={outdoorTemperature}
               onTimeClick={handleTimeClick}
               onDateClick={handleDateClick}
             />

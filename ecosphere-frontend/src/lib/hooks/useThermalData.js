@@ -1,6 +1,7 @@
 // useThermalData - Custom hook for managing thermal data loading
 import { useState, useEffect, useCallback } from 'react';
 import ThermalService from '../../services/ThermalService';
+import WeatherService from '../../services/WeatherService';
 import { FLOOR_CONFIGS, DATE_CONFIG, UI_CONFIG } from '../constants/thermal';
 
 /**
@@ -18,6 +19,7 @@ export const useThermalData = (selectedFloor) => {
   const [forecast, setForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(false);
   const [forecastError, setForecastError] = useState(null);
+  const [outdoorTemperature, setOutdoorTemperature] = useState([]);
 
   // Get sensor IDs for current floor
   const sensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
@@ -73,9 +75,14 @@ export const useThermalData = (selectedFloor) => {
       const day = String(date.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
 
-      // Load data
-      const data = await ThermalService.getMultipleSensorsDailyData(dateStr, floorSensorIds);
+      // Load thermal data and outdoor temperature in parallel
+      const [data, outdoorTemp] = await Promise.all([
+        ThermalService.getMultipleSensorsDailyData(dateStr, floorSensorIds),
+        WeatherService.getOutdoorTemperature(dateStr, dateStr).catch(() => [])
+      ]);
+
       setDailyData(data);
+      setOutdoorTemperature(outdoorTemp);
       setSelectedDate(date);
 
       setLoading(false);
@@ -105,9 +112,14 @@ export const useThermalData = (selectedFloor) => {
       const dateFromStr = formatDate(dateFrom);
       const dateToStr = formatDate(dateTo);
 
-      // Load aggregated data for chart
-      const aggData = await ThermalService.getAggregatedData(dateFromStr, dateToStr, floorSensorIds);
+      // Load aggregated data for chart and outdoor temperature in parallel
+      const [aggData, outdoorTemp] = await Promise.all([
+        ThermalService.getAggregatedData(dateFromStr, dateToStr, floorSensorIds),
+        WeatherService.getOutdoorTemperature(dateFromStr, dateToStr).catch(() => [])
+      ]);
+
       setAggregatedData(aggData);
+      setOutdoorTemperature(outdoorTemp);
 
       // Load detailed 15-min data for all days in range
       const dates = Object.keys(aggData).sort();
@@ -203,6 +215,7 @@ export const useThermalData = (selectedFloor) => {
     forecast,
     forecastLoading,
     forecastError,
+    outdoorTemperature,
 
     // Actions
     loadSingleDayData,

@@ -26,21 +26,30 @@ ChartJS.register(
   Legend
 );
 
-const ThermalCandlestickChart = ({ data, onDateClick }) => {
+const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
   // Extract dates and prepare chart data
   const dates = Object.keys(data).sort();
-  
+
   // Get available sensor IDs from first date
   const availableSensorIds = dates.length > 0 ? Object.keys(data[dates[0]]) : [];
-  
+
+  // Calculate average indoor temperature for color determination
+  let avgIndoorTemp = null;
+  if (dates.length > 0 && availableSensorIds.length > 0) {
+    const allAvgs = dates.flatMap(date =>
+      availableSensorIds.map(sensorId => data[date][sensorId]?.avg || 0)
+    );
+    avgIndoorTemp = allAvgs.reduce((sum, temp) => sum + temp, 0) / allAvgs.length;
+  }
+
   // Create datasets dynamically for each sensor
   const datasets = [];
-  
+
   availableSensorIds.forEach(sensorId => {
     const colorInfo = SENSOR_COLORS[sensorId];
     const rgb = colorInfo ? colorInfo.rgb : '128, 128, 128';
     const name = colorInfo ? colorInfo.name : `Sensor ${sensorId}`;
-    
+
     // Low boundary (draw first)
     datasets.push({
       label: `${name} Low`,
@@ -55,7 +64,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       fill: false,
       order: 3
     });
-    
+
     // High boundary (fill down to Low)
     datasets.push({
       label: `${name} High`,
@@ -70,7 +79,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       fill: '-1', // Fill to previous dataset (Low)
       order: 3
     });
-    
+
     // Average line
     datasets.push({
       label: `${name} Avg`,
@@ -85,6 +94,97 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       order: 1
     });
   });
+
+  // Add outdoor temperature line if available
+  if (outdoorTemperature && outdoorTemperature.length > 0) {
+    // Create a map for quick lookup
+    const outdoorTempMap = {};
+    outdoorTemperature.forEach(item => {
+      outdoorTempMap[item.date] = {
+        avg: item.avg || item.temperature,
+        high: item.high,
+        low: item.low
+      };
+    });
+
+    // Calculate average outdoor temperature for color determination
+    const avgOutdoorTemp = outdoorTemperature.reduce((sum, item) => sum + (item.avg || item.temperature), 0) / outdoorTemperature.length;
+
+    // Determine color based on comparison with indoor average
+    let outdoorColor;
+    if (avgIndoorTemp !== null) {
+      outdoorColor = avgOutdoorTemp > avgIndoorTemp ? '#F44336' : '#2196F3'; // Red : Blue
+    } else {
+      outdoorColor = '#FF9800'; // Orange fallback
+    }
+
+    // Extract RGB values from hex color for transparency
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+    const rgb = hexToRgb(outdoorColor);
+    const rgbString = rgb ? `${rgb.r}, ${rgb.g}, ${rgb.b}` : '255, 152, 0';
+
+    // Low boundary (draw first)
+    datasets.push({
+      label: 'Outdoor Temperature Low',
+      data: dates.map(date => {
+        const temp = outdoorTempMap[date];
+        return temp && temp.low !== undefined ? temp.low : null;
+      }),
+      borderColor: `rgba(${rgbString}, 0.3)`,
+      backgroundColor: `rgba(${rgbString}, 0)`,
+      borderWidth: 1,
+      borderDash: [2, 2],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      tension: 0.3,
+      fill: false,
+      order: 3
+    });
+
+    // High boundary (fill down to Low)
+    datasets.push({
+      label: 'Outdoor Temperature High',
+      data: dates.map(date => {
+        const temp = outdoorTempMap[date];
+        return temp && temp.high !== undefined ? temp.high : null;
+      }),
+      borderColor: `rgba(${rgbString}, 0.3)`,
+      backgroundColor: `rgba(${rgbString}, 0.15)`,
+      borderWidth: 1,
+      borderDash: [2, 2],
+      pointRadius: 0,
+      pointHoverRadius: 0,
+      tension: 0.3,
+      fill: '-1', // Fill to previous dataset (Low)
+      order: 3
+    });
+
+    // Average line
+    datasets.push({
+      label: 'Outdoor Temperature',
+      data: dates.map(date => {
+        const temp = outdoorTempMap[date];
+        return temp ? temp.avg : null;
+      }),
+      outdoorTempData: outdoorTempMap, // Store full data for tooltip
+      borderColor: outdoorColor,
+      backgroundColor: outdoorColor,
+      borderWidth: 2.5,
+      borderDash: [5, 5],
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.3,
+      fill: false,
+      order: 2
+    });
+  }
 
   const chartData = {
     labels: dates.map(date => {
@@ -116,26 +216,45 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
           font: {
             size: 12
           },
-          filter: function(item) {
+          filter: function (item) {
             // Only show Average lines in legend, hide High/Low/Range
-            return item.text.includes('Avg');
+            return item.text.includes('Avg') || (item.text === 'Outdoor Temperature');
           }
         },
-        onClick: function(_e, legendItem, legend) {
+        onClick: function (_e, legendItem, legend) {
           const chart = legend.chart;
-          const clickedLabel = legendItem.text; // e.g., "Sensor 20004 Avg"
-          
-          // Extract sensor identifier from label
+          const clickedLabel = legendItem.text;
+
+          // Handle Outdoor Temperature
+          if (clickedLabel === 'Outdoor Temperature') {
+            // Get the current visibility state of the Avg line (the clicked item)
+            const avgDatasetIndex = chart.data.datasets.findIndex(ds => ds.label === 'Outdoor Temperature');
+            const avgMeta = chart.getDatasetMeta(avgDatasetIndex);
+            const newHiddenState = avgMeta.hidden === null ? true : null;
+
+            // Apply the same state to all outdoor temperature datasets
+            chart.data.datasets.forEach((dataset, index) => {
+              if (dataset.label.includes('Outdoor Temperature')) {
+                const meta = chart.getDatasetMeta(index);
+                meta.hidden = newHiddenState;
+              }
+            });
+
+            chart.update();
+            return;
+          }
+
+          // Handle sensor datasets
           const match = clickedLabel.match(/Sensor (\d+)/);
           if (!match) return;
-          
+
           const sensorNumber = match[1];
-          
+
           // Get the current visibility state of the Avg line (the clicked item)
           const avgDatasetIndex = chart.data.datasets.findIndex(ds => ds.label === clickedLabel);
           const avgMeta = chart.getDatasetMeta(avgDatasetIndex);
           const newHiddenState = avgMeta.hidden === null ? true : null;
-          
+
           // Apply the same state to all datasets of this sensor
           chart.data.datasets.forEach((dataset, index) => {
             if (dataset.label.includes(`Sensor ${sensorNumber}`)) {
@@ -143,7 +262,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
               meta.hidden = newHiddenState;
             }
           });
-          
+
           chart.update();
         }
       },
@@ -152,34 +271,52 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
       },
       tooltip: {
         callbacks: {
-          title: function(context) {
+          title: function (context) {
             return context[0].label;
           },
-          label: function(context) {
+          label: function (context) {
             const datasetLabel = context.dataset.label;
-            
-            // Only show tooltip for Average lines
+            const dateIndex = context.dataIndex;
+            const date = dates[dateIndex];
+
+            // Handle Outdoor Temperature
+            if (datasetLabel === 'Outdoor Temperature') {
+              const outdoorData = context.dataset.outdoorTempData[date];
+              if (outdoorData && outdoorData.high !== undefined && outdoorData.low !== undefined) {
+                return [
+                  'Outdoor Temperature:',
+                  `Avg: ${outdoorData.avg.toFixed(1)}°C`,
+                  `High: ${outdoorData.high.toFixed(1)}°C`,
+                  `Low: ${outdoorData.low.toFixed(1)}°C`
+                ];
+              } else {
+                // Fallback if high/low not available
+                const temp = context.parsed.y;
+                return [
+                  'Outdoor Temperature:',
+                  `Avg: ${temp.toFixed(1)}°C`
+                ];
+              }
+            }
+
+            // Handle sensor Average lines
             if (datasetLabel.includes('Avg')) {
               const sensorName = datasetLabel.replace(' Avg', '');
-              const dateIndex = context.dataIndex;
-              const date = dates[dateIndex];
-              
+
               // Extract sensor ID from label
               const match = sensorName.match(/Sensor (\d+)/);
               if (!match) return null;
-              
+
               const sensorId = `${match[1]}_TL2`;
               const sensorData = data[date][sensorId];
-              
+
               if (!sensorData) return null;
-              
+
               return [
                 `${sensorName}:`,
-                `High: ${sensorData.high.toFixed(1)}°C`,
                 `Avg: ${sensorData.avg.toFixed(1)}°C`,
-                `Low: ${sensorData.low.toFixed(1)}°C`,
-                `Open: ${sensorData.open.toFixed(1)}°C`,
-                `Close: ${sensorData.close.toFixed(1)}°C`
+                `High: ${sensorData.high.toFixed(1)}°C`,
+                `Low: ${sensorData.low.toFixed(1)}°C`
               ];
             }
             return null;
@@ -195,7 +332,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
           text: 'Temperature (°C)'
         },
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return value.toFixed(1) + '°C';
           }
         }
@@ -215,7 +352,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
         Temperature Range Chart
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
-        Days: {dates.length} | Shaded area = High-Low range | Line = Average temperature | Click to select a day
+        Days: {dates.length} | Shaded area = High-Low range | Line = Average temperature | Hover to see the details
       </Typography>
       <Box sx={{ height: 400, mt: 2 }}>
         {dates.length > 0 ? (
@@ -226,7 +363,7 @@ const ThermalCandlestickChart = ({ data, onDateClick }) => {
           </Typography>
         )}
       </Box>
-      
+
       {/* Legend explanation */}
       <Box sx={{ mt: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
         <Typography variant="caption" color="text.secondary">
