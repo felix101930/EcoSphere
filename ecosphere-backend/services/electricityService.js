@@ -2,6 +2,7 @@
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const cache = require('../utils/cache');
 
 const {
   buildSqlcmdCommand,
@@ -11,11 +12,22 @@ const {
   TABLE_NAMES
 } = require('../config/database');
 
+// Cache TTL constants
+const CACHE_TTL = {
+  DATE_RANGE: 24 * 60 * 60 * 1000,    // 24 hours (rarely changes)
+  HISTORICAL_DATA: Infinity,           // Never expire (historical data doesn't change)
+  RECENT_DATA: 5 * 60 * 1000          // 5 minutes (for data within last 7 days)
+};
+
 class ElectricityService {
   /**
    * Get available date range for a table
    */
   static async getAvailableDateRange(tableName) {
+    const cacheKey = cache.constructor.generateKey('elecDateRange', tableName);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const fullTableName = getFullTableName(tableName);
 
     const query = `SELECT MIN(CONVERT(varchar, ts, 23)) as minDate, MAX(CONVERT(varchar, ts, 23)) as maxDate FROM [${fullTableName}]`;
@@ -27,10 +39,13 @@ class ElectricityService {
 
       if (lines.length > 0) {
         const parts = lines[0].split(QUERY_CONSTANTS.CSV_DELIMITER).map(p => p.trim());
-        return {
+        const data = {
           minDate: parts[0],
           maxDate: parts[1]
         };
+
+        cache.set(cacheKey, data, CACHE_TTL.DATE_RANGE);
+        return data;
       }
 
       return null;
@@ -45,6 +60,10 @@ class ElectricityService {
    * Primary data source: 634 days (2019-02-13 to 2020-11-08)
    */
   static async getConsumptionData(dateFrom, dateTo) {
+    const cacheKey = cache.constructor.generateKey('consumption', dateFrom, dateTo);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const tableName = TABLE_NAMES.CONSUMPTION;
 
     const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
@@ -65,6 +84,10 @@ class ElectricityService {
         return null;
       }).filter(item => item !== null);
 
+      // Determine cache TTL based on date
+      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, results, ttl);
+
       return results;
     } catch (error) {
       console.error('Error getting consumption data:', error.message);
@@ -77,6 +100,10 @@ class ElectricityService {
    * Primary data source: 634 days (2019-02-13 to 2020-11-08)
    */
   static async getGenerationData(dateFrom, dateTo) {
+    const cacheKey = cache.constructor.generateKey('generation', dateFrom, dateTo);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const tableName = TABLE_NAMES.GENERATION;
 
     const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
@@ -97,6 +124,9 @@ class ElectricityService {
         return null;
       }).filter(item => item !== null);
 
+      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, results, ttl);
+
       return results;
     } catch (error) {
       console.error('Error getting generation data:', error.message);
@@ -109,6 +139,10 @@ class ElectricityService {
    * Primary data source: 634 days (2019-02-13 to 2020-11-08)
    */
   static async getNetEnergyData(dateFrom, dateTo) {
+    const cacheKey = cache.constructor.generateKey('netEnergy', dateFrom, dateTo);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const tableName = TABLE_NAMES.NET_ENERGY;
 
     const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
@@ -128,6 +162,9 @@ class ElectricityService {
         }
         return null;
       }).filter(item => item !== null);
+
+      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, results, ttl);
 
       return results;
     } catch (error) {
@@ -341,6 +378,16 @@ class ElectricityService {
     if (totalConsumption === 0) return 0;
 
     return (totalGeneration / totalConsumption) * 100;
+  }
+
+  /**
+   * Check if date is within last 7 days (recent data)
+   */
+  static isRecentData(dateTo) {
+    const date = new Date(dateTo);
+    const now = new Date();
+    const daysDiff = (now - date) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 7;
   }
 }
 

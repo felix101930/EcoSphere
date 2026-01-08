@@ -1,11 +1,18 @@
-// Weather Service - Fetch weather data from Open-Meteo API
+// Weather Service - Fetch weather data from Open-Meteo API with caching
 const https = require('https');
+const cache = require('../utils/cache');
 const {
     LOCATION,
     API_ENDPOINTS,
     WEATHER_VARIABLES,
     WEATHER_ERROR_MESSAGES
 } = require('../utils/weatherConstants');
+
+// Cache TTL constants
+const CACHE_TTL = {
+    HISTORICAL: 24 * 60 * 60 * 1000,  // 24 hours (historical data doesn't change)
+    FORECAST: 60 * 60 * 1000           // 1 hour (forecast updates frequently)
+};
 
 class WeatherService {
     /**
@@ -16,6 +23,12 @@ class WeatherService {
      * @returns {Promise<Object>} Weather data with hourly values
      */
     static async getHistoricalWeather(dateFrom, dateTo, type = 'solar') {
+        const cacheKey = cache.constructor.generateKey('weatherHistorical', dateFrom, dateTo, type);
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         const variables = type === 'rain'
             ? WEATHER_VARIABLES.HOURLY_RAIN
             : type === 'thermal'
@@ -35,7 +48,10 @@ class WeatherService {
 
         try {
             const data = await this._fetchFromAPI(url);
-            return this._parseWeatherData(data, type);
+            const parsed = this._parseWeatherData(data, type);
+
+            cache.set(cacheKey, parsed, CACHE_TTL.HISTORICAL);
+            return parsed;
         } catch (error) {
             console.error('Error fetching historical weather:', error.message);
             throw new Error(`${WEATHER_ERROR_MESSAGES.FETCH_FAILED}: ${error.message}`);
@@ -50,6 +66,12 @@ class WeatherService {
      * @returns {Promise<Object>} Weather forecast data with hourly values
      */
     static async getForecastWeather(dateFrom, dateTo, type = 'solar') {
+        const cacheKey = cache.constructor.generateKey('weatherForecast', dateFrom, dateTo, type);
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         const variables = type === 'rain'
             ? WEATHER_VARIABLES.HOURLY_RAIN
             : type === 'thermal'
@@ -69,7 +91,10 @@ class WeatherService {
 
         try {
             const data = await this._fetchFromAPI(url);
-            return this._parseWeatherData(data, type);
+            const parsed = this._parseWeatherData(data, type);
+
+            cache.set(cacheKey, parsed, CACHE_TTL.FORECAST);
+            return parsed;
         } catch (error) {
             console.error('Error fetching weather forecast:', error.message);
             throw new Error(`${WEATHER_ERROR_MESSAGES.FETCH_FAILED}: ${error.message}`);

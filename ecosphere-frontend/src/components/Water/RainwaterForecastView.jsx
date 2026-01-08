@@ -119,6 +119,7 @@ const RainwaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecas
                         unit="%"
                         consumptionLabel="Rainwater Level Forecast"
                         showTotal={false}
+                        decimalPlaces={2}
                     />
                 </>
             )}

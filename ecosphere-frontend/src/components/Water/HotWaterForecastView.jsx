@@ -122,6 +122,7 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
                         yAxisLabel="Hot Water Consumption (L/h)"
                         unit="L/h"
                         consumptionLabel="Hot Water Consumption Forecast"
+                        decimalPlaces={2}
                     />
                 </>
             )}

@@ -2,6 +2,7 @@
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const cache = require('../utils/cache');
 
 const {
   buildSqlcmdCommand,
@@ -13,11 +14,22 @@ const {
   TABLE_NAMES
 } = require('../config/database');
 
+// Cache TTL constants
+const CACHE_TTL = {
+  DATE_RANGE: 24 * 60 * 60 * 1000,      // 24 hours for date ranges
+  HISTORICAL_DATA: Infinity,             // Never expire historical data
+  RECENT_DATA: 5 * 60 * 1000            // 5 minutes for recent data
+};
+
 class ThermalService {
   /**
    * Get available dates with data for a sensor
    */
   static async getAvailableDates(sensorId = TABLE_NAMES.THERMAL_DEFAULT) {
+    const cacheKey = cache.constructor.generateKey('thermalDates', sensorId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const fullTableName = getFullTableName(sensorId);
 
     const query = `SELECT DISTINCT CONVERT(varchar, ts, 23) as date FROM [${fullTableName}] ORDER BY date`;
@@ -26,7 +38,10 @@ class ThermalService {
     try {
       const { stdout } = await execPromise(command);
       const lines = filterOutputLines(stdout);
-      return lines.map(line => line.trim());
+      const result = lines.map(line => line.trim());
+
+      cache.set(cacheKey, result, CACHE_TTL.DATE_RANGE);
+      return result;
     } catch (error) {
       console.error('Error getting available dates:', error.message);
       throw error;
@@ -37,6 +52,10 @@ class ThermalService {
    * Get daily data for a specific sensor and date
    */
   static async getDailyData(sensorId, date) {
+    const cacheKey = cache.constructor.generateKey('thermalDaily', sensorId, date);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const fullTableName = getFullTableName(sensorId);
 
     const query = `SELECT seq, CONVERT(varchar, ts, 120) as ts, value FROM [${fullTableName}] WHERE CONVERT(varchar, ts, 23) = '${date}' ORDER BY ts`;
@@ -58,6 +77,10 @@ class ThermalService {
         return null;
       }).filter(item => item !== null);
 
+      // Use appropriate TTL based on data recency
+      const ttl = this.isRecentData(date) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, results, ttl);
+
       return results;
     } catch (error) {
       console.error('Error getting daily data:', error.message);
@@ -69,6 +92,10 @@ class ThermalService {
    * Get data for multiple sensors on a specific date
    */
   static async getMultipleSensorsDailyData(sensorIds, date) {
+    const cacheKey = cache.constructor.generateKey('thermalMultiDaily', sensorIds.join(','), date);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     try {
       const dataPromises = sensorIds.map(sensorId =>
         this.getDailyData(sensorId, date)
@@ -82,6 +109,10 @@ class ThermalService {
         dataMap[sensorId] = results[index];
       });
 
+      // Use appropriate TTL based on data recency
+      const ttl = this.isRecentData(date) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, dataMap, ttl);
+
       return dataMap;
     } catch (error) {
       console.error('Error getting multiple sensors data:', error.message);
@@ -93,6 +124,10 @@ class ThermalService {
    * Get aggregated data for multiple days (High/Low/Avg/Open/Close per day)
    */
   static async getAggregatedData(sensorId, dateFrom, dateTo) {
+    const cacheKey = cache.constructor.generateKey('thermalAggregated', sensorId, dateFrom, dateTo);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const fullTableName = getFullTableName(sensorId);
 
     // Get aggregated data with open (00:00) and close (23:45)
@@ -121,6 +156,10 @@ class ThermalService {
         return null;
       }).filter(item => item !== null);
 
+      // Use appropriate TTL based on data recency
+      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, results, ttl);
+
       return results;
     } catch (error) {
       console.error('Error getting aggregated data:', error.message);
@@ -132,6 +171,10 @@ class ThermalService {
    * Get aggregated data for multiple sensors
    */
   static async getMultipleSensorsAggregatedData(sensorIds, dateFrom, dateTo) {
+    const cacheKey = cache.constructor.generateKey('thermalMultiAggregated', sensorIds.join(','), dateFrom, dateTo);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     try {
       const dataPromises = sensorIds.map(sensorId =>
         this.getAggregatedData(sensorId, dateFrom, dateTo).catch(err => {
@@ -160,6 +203,10 @@ class ThermalService {
         });
       });
 
+      // Use appropriate TTL based on data recency
+      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+      cache.set(cacheKey, dataByDate, ttl);
+
       return dataByDate;
     } catch (error) {
       console.error('Error getting multiple sensors aggregated data:', error.message);
@@ -171,6 +218,10 @@ class ThermalService {
    * Get the last available date with complete data
    */
   static async getLastCompleteDate(sensorId = TABLE_NAMES.THERMAL_DEFAULT) {
+    const cacheKey = cache.constructor.generateKey('thermalLastComplete', sensorId);
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
     const fullTableName = getFullTableName(sensorId);
 
     // Get dates with 96 records (complete day)
@@ -190,7 +241,9 @@ class ThermalService {
 
       if (lines.length > 0) {
         const parts = lines[0].split(QUERY_CONSTANTS.CSV_DELIMITER).map(p => p.trim());
-        return parts[0]; // Return the date
+        const result = parts[0]; // Return the date
+        cache.set(cacheKey, result, CACHE_TTL.DATE_RANGE);
+        return result;
       }
 
       return FALLBACK_VALUES.DEFAULT_DATE;
@@ -198,6 +251,18 @@ class ThermalService {
       console.error('Error getting last complete date:', error.message);
       return FALLBACK_VALUES.DEFAULT_DATE;
     }
+  }
+
+  /**
+   * Check if data is recent (within last 7 days)
+   * @param {string} date - Date in YYYY-MM-DD format
+   * @returns {boolean}
+   */
+  static isRecentData(date) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const dateToCheck = new Date(date);
+    return dateToCheck >= sevenDaysAgo;
   }
 }
 

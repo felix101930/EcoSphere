@@ -2,6 +2,7 @@
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
+const cache = require('../utils/cache');
 
 const {
     buildSqlcmdCommand,
@@ -10,11 +11,22 @@ const {
     TABLE_NAMES
 } = require('../config/database');
 
+// Cache TTL constants
+const CACHE_TTL = {
+    DATE_RANGE: 24 * 60 * 60 * 1000,
+    HISTORICAL_DATA: Infinity,
+    RECENT_DATA: 5 * 60 * 1000
+};
+
 class WaterService {
     /**
      * Get available date range for a table
      */
     static async getAvailableDateRange(tableName) {
+        const cacheKey = cache.constructor.generateKey('waterDateRange', tableName);
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
+
         const query = `SELECT MIN(CONVERT(varchar, ts, 23)) as minDate, MAX(CONVERT(varchar, ts, 23)) as maxDate FROM [${tableName}]`;
         const command = buildSqlcmdCommand(query);
 
@@ -24,10 +36,12 @@ class WaterService {
 
             if (lines.length > 0) {
                 const parts = lines[0].split(QUERY_CONSTANTS.CSV_DELIMITER).map(p => p.trim());
-                return {
+                const result = {
                     minDate: parts[0],
                     maxDate: parts[1]
                 };
+                cache.set(cacheKey, result, CACHE_TTL.DATE_RANGE);
+                return result;
             }
 
             return null;
@@ -45,6 +59,10 @@ class WaterService {
      * Unit: Percentage (%)
      */
     static async getRainwaterLevelData(dateFrom, dateTo) {
+        const cacheKey = cache.constructor.generateKey('rainwaterLevel', dateFrom, dateTo);
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
+
         const tableName = TABLE_NAMES.RAINWATER_LEVEL;
 
         // Aggregate 10-minute data to hourly averages using DATEPART
@@ -66,6 +84,10 @@ class WaterService {
                 return null;
             }).filter(item => item !== null);
 
+            // Use appropriate TTL based on data recency
+            const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+            cache.set(cacheKey, results, ttl);
+
             return results;
         } catch (error) {
             console.error('Error getting rainwater level data:', error.message);
@@ -81,6 +103,10 @@ class WaterService {
      * Unit: Liters per hour (L/h)
      */
     static async getHotWaterConsumptionData(dateFrom, dateTo) {
+        const cacheKey = cache.constructor.generateKey('hotWaterConsumption', dateFrom, dateTo);
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
+
         const tableName = TABLE_NAMES.HOT_WATER_CONSUMPTION;
 
         // Aggregate 1-minute data to hourly sums using DATEPART
@@ -101,6 +127,10 @@ class WaterService {
                 }
                 return null;
             }).filter(item => item !== null);
+
+            // Use appropriate TTL based on data recency
+            const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+            cache.set(cacheKey, results, ttl);
 
             return results;
         } catch (error) {
@@ -136,6 +166,18 @@ class WaterService {
             peak,
             min
         };
+    }
+
+    /**
+     * Check if data is recent (within last 7 days)
+     * @param {string} dateTo - End date in YYYY-MM-DD format
+     * @returns {boolean}
+     */
+    static isRecentData(dateTo) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const dateToCheck = new Date(dateTo);
+        return dateToCheck >= sevenDaysAgo;
     }
 }
 

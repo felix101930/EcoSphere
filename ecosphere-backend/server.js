@@ -7,6 +7,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const config = require("./config/config");
+const cache = require("./utils/cache");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
 const waterRoutes = require("./routes/waterRoutes");
@@ -69,6 +70,8 @@ app.use("/api/weather", weatherRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
+  const cacheStats = cache.getStats();
+
   res.json({
     status: "ok",
     message: "EcoSphere Backend is running",
@@ -79,6 +82,7 @@ app.get("/api/health", (req, res) => {
       electricity: "loaded",
       water: "loaded",
     },
+    cache: cacheStats,
   });
 });
 

@@ -1,5 +1,6 @@
 // Forecast Service - Multi-tier prediction with graceful degradation
 const t = require('timeseries-analysis');
+const cache = require('../utils/cache');
 const {
     formatDate,
     addDays,
@@ -30,11 +31,21 @@ const {
     WARNINGS
 } = require('../utils/forecastConstants');
 
+// Cache TTL for forecasts (1 hour)
+const FORECAST_CACHE_TTL = 60 * 60 * 1000;
+
 class ForecastService {
     /**
      * Main forecast function - intelligently selects best algorithm
      */
     static async generateForecast(targetDate, forecastDays, historicalData) {
+        // Check cache first
+        const cacheKey = cache.constructor.generateKey('forecast', targetDate, forecastDays, historicalData.length);
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         try {
             // 1. Assess data availability
             const dataAvailability = this.assessDataAvailability(targetDate, historicalData, forecastDays);
@@ -66,7 +77,7 @@ class ForecastService {
             }
 
             // 4. Return result with metadata
-            return {
+            const result = {
                 success: true,
                 predictions: prediction,
                 metadata: {
@@ -78,6 +89,11 @@ class ForecastService {
                     dataAvailability: dataAvailability
                 }
             };
+
+            // Cache the result
+            cache.set(cacheKey, result, FORECAST_CACHE_TTL);
+
+            return result;
         } catch (error) {
             console.error('Forecast generation error:', error);
             throw error;
@@ -555,6 +571,19 @@ class ForecastService {
         historicalWeather,
         forecastWeather
     ) {
+        // Check cache first
+        const cacheKey = cache.constructor.generateKey(
+            'genForecast',
+            targetDate,
+            forecastDays,
+            historicalGeneration.length,
+            Object.keys(forecastWeather).length
+        );
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
+
         try {
             // 1. Train linear regression model using historical data
             const model = this.trainWeatherModel(historicalGeneration, historicalWeather);
@@ -568,7 +597,7 @@ class ForecastService {
             );
 
             // 3. Return result with metadata
-            return {
+            const result = {
                 success: true,
                 predictions: predictions,
                 metadata: {
@@ -587,6 +616,11 @@ class ForecastService {
                         : null
                 }
             };
+
+            // Cache the result
+            cache.set(cacheKey, result, FORECAST_CACHE_TTL);
+
+            return result;
         } catch (error) {
             console.error('Generation forecast error:', error);
             throw error;
