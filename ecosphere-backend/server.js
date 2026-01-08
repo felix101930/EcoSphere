@@ -57,6 +57,7 @@ const databaseTestRoutes = require("./routes/databaseTestRoutes");
 const thermalRoutes = require("./routes/thermalRoutes");
 const forecastRoutes = require("./routes/forecastRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
+const { forecastLimiter } = require("./middleware/rateLimiter");
 
 // API Routes
 app.use("/api", userRoutes); // This includes /api/auth/login
@@ -65,12 +66,13 @@ app.use("/api/water", waterRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/db", databaseTestRoutes);
 app.use("/api/thermal", thermalRoutes);
-app.use("/api/forecast", forecastRoutes);
+app.use("/api/forecast", forecastLimiter.middleware(), forecastRoutes); // Rate limited
 app.use("/api/weather", weatherRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
   const cacheStats = cache.getStats();
+  const rateLimiterStats = forecastLimiter.getStats();
 
   res.json({
     status: "ok",
@@ -83,6 +85,7 @@ app.get("/api/health", (req, res) => {
       water: "loaded",
     },
     cache: cacheStats,
+    rateLimiter: rateLimiterStats,
   });
 });
 

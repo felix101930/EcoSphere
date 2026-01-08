@@ -9,9 +9,10 @@ const {
   getMultipleSensorsAggregatedData,
   getThermalForecast
 } = require('../controllers/thermalController');
+const { forecastLimiter } = require('../middleware/rateLimiter');
 
-// Forecast routes (must come before generic data routes)
-router.get('/forecast/:floor/:targetDate/:forecastDays', getThermalForecast);
+// Forecast routes (must come before generic data routes) - Rate limited
+router.get('/forecast/:floor/:targetDate/:forecastDays', forecastLimiter.middleware(), getThermalForecast);
 
 // Get available dates
 router.get('/available-dates', getAvailableDates);
