@@ -8,6 +8,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const config = require("./config/config");
 const cache = require("./utils/cache");
+const connectionManager = require("./db/connectionManager");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
 const waterRoutes = require("./routes/waterRoutes");
@@ -73,6 +74,7 @@ app.use("/api/weather", weatherRoutes);
 app.get("/api/health", (req, res) => {
   const cacheStats = cache.getStats();
   const rateLimiterStats = forecastLimiter.getStats();
+  const dbStatus = connectionManager.getStatus();
 
   res.json({
     status: "ok",
@@ -86,6 +88,7 @@ app.get("/api/health", (req, res) => {
     },
     cache: cacheStats,
     rateLimiter: rateLimiterStats,
+    database: dbStatus,
   });
 });
 
@@ -107,6 +110,16 @@ app.use((err, req, res, next) => {
 
 // Start server (only in development, not on Vercel)
 if (process.env.NODE_ENV !== "production") {
+  // Initialize database connection
+  connectionManager.initialize()
+    .then(() => {
+      console.log('✅ Database connection initialized');
+    })
+    .catch((error) => {
+      console.error('⚠️  Database initialization warning:', error.message);
+      console.log('Server will continue with available connection method');
+    });
+
   app.listen(config.port, () => {
     console.log(
       `🚀 EcoSphere Backend running on http://localhost:${config.port}`
