@@ -225,6 +225,36 @@ start.bat
    - Re-download PDF
    - Delete unwanted reports
 
+### 3. Electricity Dashboard
+
+**Four Main Tabs**:
+
+1. **Consumption Tab**: View electricity consumption with breakdown by phase and equipment
+2. **Generation Tab**: View solar generation with breakdown by source (Carport vs Rooftop)
+3. **Net Energy Tab**: View net energy with self-sufficiency rate analysis
+4. **Forecast Tab**: Predict future consumption and generation (7/14/30 days)
+
+### 4. Water Dashboard
+
+**Two Main Tabs**:
+
+1. **Rainwater Harvesting**: Monitor rainwater tank level with weather-based forecast
+2. **Hot Water Consumption**: Track hot water usage with historical pattern forecast
+
+### 5. Thermal Dashboard
+
+**Three View Modes**:
+
+1. **Single Day View**: Hourly temperature data with outdoor temperature overlay
+2. **Multiple Days View**: Aggregated temperature data for date range
+3. **Forecast View**: Predict indoor temperature using hybrid model (7/14/30 days)
+
+**Floor Plan Heat Map**: Real-time temperature visualization with 8-level color coding
+
+### 6. Overview Dashboard
+
+**Unified View**: All three modules (Electricity, Water, Thermal) on single page with consistent time range
+
 ### 3. Data Sources
 
 - **SQL Server Database**: Real-time data from GBTAC building sensors
@@ -232,7 +262,26 @@ start.bat
   - Water data (TL93, TL210)
   - Thermal data (20004-20016_TL2)
 - **Electricity Maps API**: Historical carbon intensity data (Alberta, CA-AB zone)
+- **Open-Meteo API**: Weather data for forecasting (solar radiation, precipitation, temperature)
 - **Mock Data**: User accounts and login logs (will migrate to SQL Server in future)
+
+### 4. Performance Features
+
+**Optimized for 50 Concurrent Users**:
+
+- **In-Memory Caching**: Reduces database load, faster response times
+- **Rate Limiting**: Protects forecast endpoints from abuse (200 requests/minute per IP)
+- **Connection Pool**: Efficient database connection management with automatic fallback
+- **Load Testing**: Built-in tool to test system performance
+
+**Test System Performance**:
+
+```bash
+cd ecosphere-backend
+node test-load.js
+```
+
+This will simulate 50 concurrent users and show performance metrics.
 
 ---
 
@@ -379,9 +428,10 @@ curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
 ## 📝 Version Information
 
 - **Version**: Prototype Phase 3
-- **Last Updated**: 2026-01-04
+- **Last Updated**: 2026-01-07
 - **Status**: In Development
 - **Database**: SQL Server (Electricity, Water, Thermal, Carbon Footprint modules migrated)
+- **Performance**: Optimized for 50 concurrent users
 
 ---
 
@@ -392,14 +442,17 @@ curl http://localhost:3001/api/db/sensor/20004_TL2?limit=5
    - All data modules now use SQL Server database
    - Ensure SQL Server is running and accessible
    - User Management still uses Mock JSON (will migrate in future)
+   - System includes caching for better performance
 2. **Data Security**
 
    - Do not use in production environment
    - Test account passwords are for demonstration only
 3. **Performance**
 
-   - Data loads directly from SQL Server
-   - First load may take a few seconds depending on date range
+   - System optimized for 50 concurrent users
+   - In-memory caching reduces database load
+   - Rate limiting protects forecast endpoints
+   - First load may take a few seconds, subsequent loads are faster (cached)
 
 ---
 
