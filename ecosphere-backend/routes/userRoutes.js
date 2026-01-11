@@ -8,18 +8,18 @@ const {
   adminCreateUser,
   updateUser,
   deleteUser,
-} = require("../controllers/userController"); // Fix import
+  login,
+} = require("../controllers/userController");
 
-const { verifyToken } = require("../controllers/firebaseAuthController");
+// Public routes
+router.post("/auth/login", login); // Simple login route
 
-// Public routes (for auto-creation when users login)
+// Admin routes (no auth middleware for now - simplified)
+router.get("/users", getAllUsers);
+router.get("/users/:id", getUserById);
 router.post("/users", createUser);
-
-// Protected admin routes
-router.get("/users", verifyToken, getAllUsers);
-router.get("/users/:id", verifyToken, getUserById);
-router.post("/users/admin-create", verifyToken, adminCreateUser); // New route for admin-created users
-router.put("/users/:id", verifyToken, updateUser);
-router.delete("/users/:id", verifyToken, deleteUser);
+router.post("/users/admin-create", adminCreateUser);
+router.put("/users/:id", updateUser);
+router.delete("/users/:id", deleteUser);
 
 module.exports = router;

@@ -7,9 +7,11 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const config = require("./config/config");
+const cache = require("./utils/cache");
+const connectionManager = require("./db/connectionManager");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
-const firebaseAuthRoutes = require("./routes/firebaseAuthRoutes");
+const waterRoutes = require("./routes/waterRoutes");
 
 const app = express();
 
@@ -44,6 +46,7 @@ app.get("/", (req, res) => {
       users: "/api/users",
       auth: "/api/auth/login",
       electricity: "/api/electricity/*",
+      water: "/api/water/*",
     },
     documentation: "Visit /api/health for system status",
   });
@@ -51,17 +54,28 @@ app.get("/", (req, res) => {
 
 // Import login log routes
 const loginLogRoutes = require("./routes/loginLogRoutes");
-const carbonFootprintReportRoutes = require("./routes/carbonFootprintReportRoutes");
+const databaseTestRoutes = require("./routes/databaseTestRoutes");
+const thermalRoutes = require("./routes/thermalRoutes");
+const forecastRoutes = require("./routes/forecastRoutes");
+const weatherRoutes = require("./routes/weatherRoutes");
+const { forecastLimiter } = require("./middleware/rateLimiter");
 
 // API Routes
-app.use("/api", userRoutes);
+app.use("/api", userRoutes); // This includes /api/auth/login
 app.use("/api/electricity", electricityRoutes);
+app.use("/api/water", waterRoutes);
 app.use("/api/login-logs", loginLogRoutes);
-app.use("/api/carbon-footprint-reports", carbonFootprintReportRoutes);
-app.use("/api/auth", firebaseAuthRoutes);
+app.use("/api/db", databaseTestRoutes);
+app.use("/api/thermal", thermalRoutes);
+app.use("/api/forecast", forecastLimiter.middleware(), forecastRoutes); // Rate limited
+app.use("/api/weather", weatherRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
+  const cacheStats = cache.getStats();
+  const rateLimiterStats = forecastLimiter.getStats();
+  const dbStatus = connectionManager.getStatus();
+
   res.json({
     status: "ok",
     message: "EcoSphere Backend is running",
@@ -70,7 +84,11 @@ app.get("/api/health", (req, res) => {
     routes: {
       users: "loaded",
       electricity: "loaded",
+      water: "loaded",
     },
+    cache: cacheStats,
+    rateLimiter: rateLimiterStats,
+    database: dbStatus,
   });
 });
 
@@ -92,12 +110,23 @@ app.use((err, req, res, next) => {
 
 // Start server (only in development, not on Vercel)
 if (process.env.NODE_ENV !== "production") {
+  // Initialize database connection
+  connectionManager.initialize()
+    .then(() => {
+      console.log('✅ Database connection initialized');
+    })
+    .catch((error) => {
+      console.error('⚠️  Database initialization warning:', error.message);
+      console.log('Server will continue with available connection method');
+    });
+
   app.listen(config.port, () => {
     console.log(
       `🚀 EcoSphere Backend running on http://localhost:${config.port}`
     );
     console.log(`📁 Users file: ${config.usersFile}`);
     console.log(`🌍 Environment: ${config.env}`);
+    console.log(`🔧 Thermal routes loaded: /api/thermal/*`);
   });
 }
 

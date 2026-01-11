@@ -1,3 +1,4 @@
+// Carbon Footprint Export Report Dialog - Optimized version
 import { useState } from 'react';
 import {
   Dialog,
@@ -16,7 +17,7 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
+const ExportReportDialog = ({ open, onClose }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -24,7 +25,6 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
   const generatePreview = async () => {
     setIsGenerating(true);
     try {
-      // Find the main content area (excluding sidebar and AI panel)
       const contentElement = document.querySelector('[data-export-content]');
       if (!contentElement) {
         throw new Error('Content area not found');
@@ -38,9 +38,9 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
         customCalc.style.display = 'none';
       }
 
-      // Create canvas from the content
+      // Lower scale for smaller file size
       const canvas = await html2canvas(contentElement, {
-        scale: 2, // Higher quality
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
@@ -51,8 +51,8 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
         customCalc.style.display = originalDisplay || '';
       }
 
-      // Create preview URL
-      const previewDataUrl = canvas.toDataURL('image/png');
+      // Use JPEG with compression
+      const previewDataUrl = canvas.toDataURL('image/jpeg', 0.85);
       setPreviewUrl(previewDataUrl);
       setIsPreviewMode(true);
     } catch (error) {
@@ -66,7 +66,6 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
   const downloadPDF = async () => {
     setIsGenerating(true);
     try {
-      // Find the main content area
       const contentElement = document.querySelector('[data-export-content]');
       if (!contentElement) {
         throw new Error('Content area not found');
@@ -80,9 +79,9 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
         customCalc.style.display = 'none';
       }
 
-      // Create canvas from the content
+      // Lower scale for smaller file size (1.5 instead of 2)
       const canvas = await html2canvas(contentElement, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
@@ -93,72 +92,44 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
         customCalc.style.display = originalDisplay || '';
       }
 
-      // Calculate PDF dimensions
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
+      const imgWidth = 210;
+      const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
 
-      // Create PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
       
-      // Add GBTAC header
       pdf.setFontSize(20);
-      pdf.setTextColor(218, 41, 28); // SAIT red
+      pdf.setTextColor(218, 41, 28);
       pdf.text('GBTAC - Carbon Footprint Report', 20, 20);
       
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       const now = new Date();
-      const currentDate = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
-      const currentTime = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
+      const currentDate = now.toLocaleDateString('en-CA');
+      const currentTime = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
       pdf.text(`Generated on: ${currentDate} ${currentTime}`, 20, 30);
       
-      // Add content image
-      const imgData = canvas.toDataURL('image/png');
-      let position = 40; // Start below header
+      // Use JPEG with compression for smaller file size (0.85 quality)
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
+      let position = 40;
       
-      // Add image to PDF (handle multiple pages if needed)
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth - 20, imgHeight);
+      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth - 20, imgHeight);
       heightLeft -= pageHeight;
       
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight + 40;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth - 20, imgHeight);
+        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth - 20, imgHeight);
         heightLeft -= pageHeight;
       }
 
-      // Generate filename with date and time
-      const timeForFilename = currentTime.replace(':', '-'); // Replace : with - for filename compatibility
+      const timeForFilename = currentTime.replace(':', '-');
       const filename = `Carbon_Footprint_Report_${currentDate}_${timeForFilename}.pdf`;
       
-      // Download PDF
+      // Download PDF to user's computer
       pdf.save(filename);
       
-      // Save report data to database if callback provided
-      console.log('Checking onReportSaved:', { 
-        hasCallback: !!onReportSaved, 
-        hasReportData: !!reportData 
-      });
-      
-      if (onReportSaved && reportData) {
-        console.log('Calling onReportSaved with reportData');
-        onReportSaved({
-          ...reportData,
-          metadata: {
-            ...reportData.metadata,
-            fileName: filename
-          }
-        });
-      } else {
-        console.warn('onReportSaved not called:', {
-          onReportSaved: !!onReportSaved,
-          reportData: !!reportData
-        });
-      }
-      
-      // Close dialog after successful download
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -220,6 +191,9 @@ const ExportReportDialog = ({ open, onClose, reportData, onReportSaved }) => {
               <Typography variant="body2">• Custom calculations (if any)</Typography>
               <Typography variant="body2">• SAIT branding and timestamp</Typography>
             </Box>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontStyle: 'italic' }}>
+              Note: The PDF will be downloaded directly to your computer.
+            </Typography>
           </Box>
         ) : (
           <Box>

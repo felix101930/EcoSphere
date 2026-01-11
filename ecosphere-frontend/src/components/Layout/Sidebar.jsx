@@ -19,54 +19,54 @@ const Sidebar = () => {
     {
       category: 'DASHBOARDS',
       items: [
-        { 
-          text: 'Overview', 
-          path: '/dashboard', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
-          permission: null 
+        {
+          text: 'Overview',
+          path: '/overview',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: null
         },
-        { 
-          text: 'Electricity', 
-          path: '/electricity', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
-          permission: 'electricity', 
-          comingSoon: true 
+        {
+          text: 'Electricity',
+          path: '/electricity',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: 'electricity',
+          comingSoon: true
         },
-        { 
-          text: 'Water', 
-          path: '/water', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
-          permission: 'water', 
-          comingSoon: true 
+        {
+          text: 'Water',
+          path: '/water',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: 'water',
+          comingSoon: true
         },
-        { 
-          text: 'Thermal', 
-          path: '/thermal', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
-          permission: 'thermal', 
-          comingSoon: true 
+        {
+          text: 'Thermal',
+          path: '/thermal',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: 'thermal',
+          comingSoon: true
         }
       ]
     },
     {
       category: 'ADVANCED',
       items: [
-        { 
-          text: '3D Model', 
-          path: '/3d-model', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
-          permission: '3d-model', 
-          comingSoon: true 
+        {
+          text: '3D Model',
+          path: '/3d-model',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: '3d-model',
+          comingSoon: true
         }
       ]
     },
     {
       category: 'CALCULATOR',
       items: [
-        { 
-          text: 'Carbon Footprint', 
-          path: '/carbon-footprint', 
-          roles: ['SuperAdmin', 'Admin', 'TeamMember'], 
+        {
+          text: 'Carbon Footprint',
+          path: '/carbon-footprint',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
           permission: 'carbon-footprint'
         }
       ]
@@ -74,25 +74,25 @@ const Sidebar = () => {
     {
       category: 'MANAGEMENT',
       items: [
-        { 
-          text: 'User Management', 
-          path: '/users', 
-          roles: ['SuperAdmin', 'Admin'], 
-          permission: null 
+        {
+          text: 'User Management',
+          path: '/users',
+          roles: ['SuperAdmin', 'Admin'],
+          permission: null
         },
-        { 
-          text: 'Dashboard Management', 
-          path: '/dashboard-management', 
-          roles: ['SuperAdmin', 'Admin'], 
-          permission: null, 
-          comingSoon: true 
+        {
+          text: 'Dashboard Management',
+          path: '/dashboard-management',
+          roles: ['SuperAdmin', 'Admin'],
+          permission: null,
+          comingSoon: true
         },
-        { 
-          text: 'Quiz Management', 
-          path: '/quiz-management', 
-          roles: ['SuperAdmin', 'Admin'], 
-          permission: null, 
-          comingSoon: true 
+        {
+          text: 'Quiz Management',
+          path: '/quiz-management',
+          roles: ['SuperAdmin', 'Admin'],
+          permission: null,
+          comingSoon: true
         }
       ]
     }
@@ -101,21 +101,21 @@ const Sidebar = () => {
   // Check if user can see a menu item
   const canSeeMenuItem = (item) => {
     if (!currentUser) return false;
-    
+
     // Check if user has the required role
     const hasRole = item.roles.includes(currentUser.role);
     if (!hasRole) return false;
-    
+
     // If no specific permission required, allow access
     if (!item.permission) {
       return true;
     }
-    
+
     // SuperAdmin and Admin have all permissions
     if (isSuperAdmin() || isAdmin()) {
       return true;
     }
-    
+
     // TeamMember needs specific permission
     return hasPermission(item.permission);
   };
@@ -150,8 +150,8 @@ const Sidebar = () => {
       {/* Logo and GBTAC */}
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
         <img src={logo} alt="SAIT Logo" style={{ width: 40, height: 'auto' }} />
-        <Typography 
-          sx={{ 
+        <Typography
+          sx={{
             fontSize: '18px',
             fontWeight: 700,
             color: '#324053',
@@ -207,7 +207,7 @@ const Sidebar = () => {
                       }
                     }}
                   >
-                    <ListItemText 
+                    <ListItemText
                       primary={item.text}
                       primaryTypographyProps={{
                         fontSize: '13px',
@@ -226,12 +226,12 @@ const Sidebar = () => {
       {/* User Info at Bottom */}
       <Box sx={{ borderTop: '1px solid #E0E0E0', p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-          <Avatar 
-            sx={{ 
-              width: 32, 
-              height: 32, 
-              bgcolor: currentUser?.role === 'SuperAdmin' ? '#6D2077' : 
-                       currentUser?.role === 'Admin' ? '#00A3E0' : '#666',
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: currentUser?.role === 'SuperAdmin' ? '#6D2077' :
+                currentUser?.role === 'Admin' ? '#00A3E0' : '#666',
               fontSize: '14px',
               fontWeight: 600
             }}
@@ -239,8 +239,8 @@ const Sidebar = () => {
             {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography 
-              sx={{ 
+            <Typography
+              sx={{
                 fontSize: '14px',
                 fontWeight: 600,
                 color: '#324053',
@@ -252,8 +252,8 @@ const Sidebar = () => {
             >
               {currentUser?.firstName} {currentUser?.lastName}
             </Typography>
-            <Typography 
-              sx={{ 
+            <Typography
+              sx={{
                 fontSize: '12px',
                 color: '#999',
                 fontFamily: 'DM Sans, sans-serif',
@@ -282,8 +282,8 @@ const Sidebar = () => {
             }
           }}
         >
-          <Typography 
-            sx={{ 
+          <Typography
+            sx={{
               fontSize: '14px',
               fontWeight: 600,
               fontFamily: 'Titillium Web, sans-serif'

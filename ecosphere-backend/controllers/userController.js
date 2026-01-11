@@ -2,19 +2,9 @@
 const UserService = require("../services/userService");
 const admin = require("../firebase/admin");
 
-// Admin creates user with Firebase
+// Admin creates user (simple version without Firebase)
 const adminCreateUser = async (req, res) => {
   try {
-    console.log("🔐 adminCreateUser - Checking user:", req.user);
-
-    // Verify admin OR superadmin role
-    if (req.user.role !== "Admin" && req.user.role !== "SuperAdmin") {
-      console.log("❌ User is not admin or superadmin:", req.user.role);
-      return res.status(403).json({ error: "Admin access required" });
-    }
-
-    console.log("✅ User has admin privileges:", req.user.role);
-
     const { firstName, lastName, email, password, role, permissions } =
       req.body;
 
@@ -23,22 +13,7 @@ const adminCreateUser = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if current user can create the specified role
-    if (req.user.role === "Admin") {
-      // Admin can only create TeamMembers
-      if (role === "SuperAdmin") {
-        return res
-          .status(403)
-          .json({ error: "Admin cannot create Super Admin" });
-      }
-      if (role === "Admin") {
-        return res
-          .status(403)
-          .json({ error: "Admin cannot create other Admins" });
-      }
-    }
-
-    const newUser = await UserService.addUserWithFirebase({
+    const newUser = await UserService.addUserSimple({
       firstName,
       lastName,
       email,
@@ -52,10 +27,6 @@ const adminCreateUser = async (req, res) => {
     console.error("Error in adminCreateUser:", error);
 
     if (error.message === "Email already exists") {
-      return res.status(400).json({ error: error.message });
-    }
-
-    if (error.message.includes("Firebase")) {
       return res.status(400).json({ error: error.message });
     }
 
@@ -177,6 +148,42 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Simple login function (no Firebase)
+const login = async (req, res) => {
+  try {
+    const { email, password, ipAddress } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Authenticate user
+    const user = await UserService.authenticateUser(email, password);
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Create login log
+    const LoginLogService = require("../services/loginLogService");
+    const loginLog = await LoginLogService.addLog({
+      email: user.email,
+      role: user.role,
+      status: "success",
+      ipAddress: ipAddress || "127.0.0.1",
+    });
+
+    // Add login log ID to user object
+    user.lastLoginId = loginLog.id;
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Error in login:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -184,4 +191,5 @@ module.exports = {
   adminCreateUser,
   updateUser,
   deleteUser,
+  login,
 };

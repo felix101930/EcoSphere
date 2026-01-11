@@ -1,14 +1,12 @@
 // PageHeader - Sticky header component for all pages
 import { Box, Typography, Button } from '@mui/material';
-import { FileDownload as FileDownloadIcon, History as HistoryIcon } from '@mui/icons-material';
+import { FileDownload as FileDownloadIcon } from '@mui/icons-material';
 
 const PageHeader = ({ 
   title, 
   subtitle, 
   showExportButton = false, 
   onExport,
-  showReportLogButton = false,
-  onReportLog,
   rightContent 
 }) => {
   return (
@@ -55,25 +53,6 @@ const PageHeader = ({
 
       {/* Right: Buttons or Custom Content */}
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-        {showReportLogButton && (
-          <Button
-            variant="outlined"
-            startIcon={<HistoryIcon />}
-            onClick={onReportLog}
-            sx={{
-              borderColor: '#DA291C',
-              color: '#DA291C',
-              '&:hover': { 
-                borderColor: '#A6192E',
-                bgcolor: 'rgba(218, 41, 28, 0.04)'
-              },
-              fontFamily: 'Titillium Web, sans-serif',
-              fontWeight: 600
-            }}
-          >
-            Report Log
-          </Button>
-        )}
         {showExportButton && (
           <Button
             variant="contained"

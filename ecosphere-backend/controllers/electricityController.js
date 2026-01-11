@@ -1,91 +1,215 @@
-// Electricity Controller - Handles electricity-related requests
-const electricityService = require('../services/electricityService');
+// Electricity Controller - Handle electricity data requests
+const ElectricityService = require('../services/electricityService');
+const { sendError, sendDataWithMetadata } = require('../utils/responseHelper');
+const { validateDateRange } = require('../utils/validationHelper');
+const { HTTP_STATUS, DATA_RANGES, DATA_SOURCES } = require('../utils/constants');
+const { asyncHandler, createDataFetcher, createBreakdownDataFetcher } = require('../utils/controllerHelper');
 
-class ElectricityController {
-  /**
-   * Get all electricity records
-   */
-  async getAllRecords(req, res) {
-    try {
-      const records = await electricityService.getAllRecords();
-      res.json(records);
-    } catch (error) {
-      console.error('Error in getAllRecords:', error);
-      res.status(500).json({ error: 'Failed to fetch electricity records' });
+/**
+ * Get available date range for electricity data
+ */
+const getAvailableDateRange = asyncHandler(async (req, res) => {
+  // Get date ranges for primary tables
+  const consumptionRange = await ElectricityService.getAvailableDateRange('30000_TL341');
+  const generationRange = await ElectricityService.getAvailableDateRange('30000_TL340');
+  const netEnergyRange = await ElectricityService.getAvailableDateRange('30000_TL339');
+
+  // Use custom response format to maintain backward compatibility
+  res.json({
+    success: true,
+    dateRanges: {
+      consumption: consumptionRange,
+      generation: generationRange,
+      netEnergy: netEnergyRange
     }
+  });
+});
+
+/**
+ * Get consumption data (overall)
+ */
+const getConsumptionData = createDataFetcher({
+  fetchDataFn: ElectricityService.getConsumptionData.bind(ElectricityService),
+  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
+  dataSource: DATA_SOURCES.CONSUMPTION
+});
+
+/**
+ * Get generation data (overall)
+ */
+const getGenerationData = createDataFetcher({
+  fetchDataFn: ElectricityService.getGenerationData.bind(ElectricityService),
+  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
+  dataSource: DATA_SOURCES.GENERATION
+});
+
+/**
+ * Get net energy data (overall) with self-sufficiency rate
+ * Note: Uses special metrics calculation that preserves sign
+ * Also calculates self-sufficiency rate for each time point
+ */
+const getNetEnergyData = asyncHandler(async (req, res) => {
+  const { dateFrom, dateTo } = req.params;
+
+  // Validate date range
+  const validation = validateDateRange(dateFrom, dateTo);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
   }
 
-  /**
-   * Get electricity records by date range
-   */
-  async getRecordsByDateRange(req, res) {
-    try {
-      const { startDate, endDate } = req.query;
-      
-      if (!startDate || !endDate) {
-        return res.status(400).json({ error: 'startDate and endDate are required' });
+  // Fetch net energy, consumption, and generation data in parallel
+  const [netEnergyData, consumptionData, generationData] = await Promise.all([
+    ElectricityService.getNetEnergyData(dateFrom, dateTo),
+    ElectricityService.getConsumptionData(dateFrom, dateTo),
+    ElectricityService.getGenerationData(dateFrom, dateTo)
+  ]);
+
+  // Calculate net energy metrics
+  const metrics = ElectricityService.calculateNetEnergyMetrics(netEnergyData);
+
+  // Calculate self-sufficiency rate for each time point
+  const selfSufficiencyRateData = [];
+  const minLength = Math.min(consumptionData.length, generationData.length);
+
+  for (let i = 0; i < minLength; i++) {
+    const consumption = Math.abs(consumptionData[i].value);
+    const generation = Math.abs(generationData[i].value);
+
+    // Calculate rate: (generation / consumption) * 100
+    // If consumption is 0, set rate to 0 to avoid division by zero
+    const rate = consumption > 0 ? (generation / consumption) * 100 : 0;
+
+    selfSufficiencyRateData.push({
+      ts: consumptionData[i].ts,
+      value: rate
+    });
+  }
+
+  // Calculate average self-sufficiency rate
+  const avgSelfSufficiencyRate = selfSufficiencyRateData.length > 0
+    ? selfSufficiencyRateData.reduce((sum, d) => sum + d.value, 0) / selfSufficiencyRateData.length
+    : 0;
+
+  const responseData = {
+    data: netEnergyData,
+    selfSufficiencyRate: selfSufficiencyRateData,
+    metrics: {
+      ...metrics,
+      avgSelfSufficiencyRate: avgSelfSufficiencyRate
+    },
+    count: netEnergyData.length,
+    dateFrom,
+    dateTo,
+    dataSource: DATA_SOURCES.NET_ENERGY
+  };
+
+  sendDataWithMetadata(res, responseData);
+});
+
+/**
+ * Get phase breakdown data
+ */
+const getPhaseBreakdownData = createBreakdownDataFetcher({
+  fetchDataFn: ElectricityService.getPhaseBreakdownData.bind(ElectricityService),
+  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
+  dataSources: DATA_SOURCES.PHASE,
+  dataKeys: ['total', 'phaseA', 'phaseB', 'phaseC'],
+  warning: DATA_RANGES.PHASE_BREAKDOWN.DESCRIPTION,
+  dateAvailability: {
+    from: DATA_RANGES.PHASE_BREAKDOWN.FROM,
+    to: DATA_RANGES.PHASE_BREAKDOWN.TO
+  }
+});
+
+/**
+ * Get equipment breakdown data
+ */
+const getEquipmentBreakdownData = createBreakdownDataFetcher({
+  fetchDataFn: ElectricityService.getEquipmentBreakdownData.bind(ElectricityService),
+  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
+  dataSources: DATA_SOURCES.EQUIPMENT,
+  dataKeys: ['panel2A1', 'ventilation', 'lighting', 'equipment', 'appliances'],
+  warning: DATA_RANGES.EQUIPMENT_BREAKDOWN.DESCRIPTION
+});
+
+/**
+ * Get solar source breakdown data
+ */
+const getSolarSourceBreakdownData = createBreakdownDataFetcher({
+  fetchDataFn: ElectricityService.getSolarSourceBreakdownData.bind(ElectricityService),
+  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
+  dataSources: DATA_SOURCES.SOLAR,
+  dataKeys: ['carport', 'rooftop'],
+  warning: DATA_RANGES.SOLAR_BREAKDOWN.DESCRIPTION,
+  dateAvailability: {
+    from: DATA_RANGES.SOLAR_BREAKDOWN.FROM,
+    to: DATA_RANGES.SOLAR_BREAKDOWN.TO
+  }
+});
+
+/**
+ * Get comprehensive electricity overview (consumption + generation + net energy)
+ */
+const getElectricityOverview = asyncHandler(async (req, res) => {
+  const { dateFrom, dateTo } = req.params;
+
+  // Validate date range
+  const validation = validateDateRange(dateFrom, dateTo);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
+  }
+
+  // Fetch all three datasets in parallel
+  const [consumptionData, generationData, netEnergyData] = await Promise.all([
+    ElectricityService.getConsumptionData(dateFrom, dateTo),
+    ElectricityService.getGenerationData(dateFrom, dateTo),
+    ElectricityService.getNetEnergyData(dateFrom, dateTo)
+  ]);
+
+  // Calculate metrics
+  const consumptionMetrics = ElectricityService.calculateMetrics(consumptionData);
+  const generationMetrics = ElectricityService.calculateMetrics(generationData);
+  const netEnergyMetrics = ElectricityService.calculateMetrics(netEnergyData);
+
+  // Calculate self-sufficiency
+  const selfSufficiency = ElectricityService.calculateSelfSufficiency(generationData, consumptionData);
+
+  sendDataWithMetadata(res, {
+    data: {
+      consumption: {
+        data: consumptionData,
+        metrics: consumptionMetrics,
+        dataSource: DATA_SOURCES.CONSUMPTION
+      },
+      generation: {
+        data: generationData,
+        metrics: generationMetrics,
+        dataSource: DATA_SOURCES.GENERATION
+      },
+      netEnergy: {
+        data: netEnergyData,
+        metrics: netEnergyMetrics,
+        dataSource: DATA_SOURCES.NET_ENERGY
+      },
+      selfSufficiency: {
+        percentage: selfSufficiency.toFixed(2),
+        description: 'Percentage of consumption met by generation'
       }
-      
-      const records = await electricityService.getRecordsByDateRange(startDate, endDate);
-      res.json(records);
-    } catch (error) {
-      console.error('Error in getRecordsByDateRange:', error);
-      res.status(500).json({ error: 'Failed to fetch electricity records' });
+    },
+    metadata: {
+      dateFrom,
+      dateTo
     }
-  }
+  });
+});
 
-  /**
-   * Get real-time data (today)
-   */
-  async getRealTimeData(req, res) {
-    try {
-      const records = await electricityService.getRealTimeData();
-      res.json(records);
-    } catch (error) {
-      console.error('Error in getRealTimeData:', error);
-      res.status(500).json({ error: 'Failed to fetch real-time data' });
-    }
-  }
-
-  /**
-   * Get daily data (last N days)
-   */
-  async getDailyData(req, res) {
-    try {
-      const days = parseInt(req.query.days) || 10;
-      const records = await electricityService.getDailyData(days);
-      res.json(records);
-    } catch (error) {
-      console.error('Error in getDailyData:', error);
-      res.status(500).json({ error: 'Failed to fetch daily data' });
-    }
-  }
-
-  /**
-   * Get long-term data (last 12 months)
-   */
-  async getLongTermData(req, res) {
-    try {
-      const records = await electricityService.getLongTermData();
-      res.json(records);
-    } catch (error) {
-      console.error('Error in getLongTermData:', error);
-      res.status(500).json({ error: 'Failed to fetch long-term data' });
-    }
-  }
-
-  /**
-   * Get metadata
-   */
-  async getMetadata(req, res) {
-    try {
-      const metadata = await electricityService.getMetadata();
-      res.json(metadata);
-    } catch (error) {
-      console.error('Error in getMetadata:', error);
-      res.status(500).json({ error: 'Failed to fetch metadata' });
-    }
-  }
-}
-
-module.exports = new ElectricityController();
+module.exports = {
+  getAvailableDateRange,
+  getConsumptionData,
+  getGenerationData,
+  getNetEnergyData,
+  getPhaseBreakdownData,
+  getEquipmentBreakdownData,
+  getSolarSourceBreakdownData,
+  getElectricityOverview
+};
