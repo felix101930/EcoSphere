@@ -8,9 +8,9 @@ import OverallTrendChart from './OverallTrendChart';
 import PhaseBreakdownChart from './PhaseBreakdownChart';
 import EquipmentBreakdownChart from './EquipmentBreakdownChart';
 
-const ConsumptionTab = ({ 
-  data, 
-  loading, 
+const ConsumptionTab = ({
+  data,
+  loading,
   dateFrom,
   dateTo,
   onLoadPhaseBreakdown,
@@ -59,6 +59,18 @@ const ConsumptionTab = ({
 
   return (
     <Box>
+      {/* Warning for aggregated data */}
+      {data.warning && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {data.warning}
+          {data.equipmentSources && (
+            <Box sx={{ mt: 1, fontSize: '0.875rem' }}>
+              Equipment sources used: {data.equipmentSources.join(', ')}
+            </Box>
+          )}
+        </Alert>
+      )}
+
       {/* Key Metrics */}
       <MetricsCards metrics={data.metrics} />
 
@@ -97,7 +109,7 @@ const ConsumptionTab = ({
 
       {/* Data Source Info */}
       <Alert severity="info" sx={{ mt: 2 }}>
-        Data Source: {data.dataSource} | Records: {data.count} | 
+        Data Source: {data.dataSource} | Records: {data.count} |
         Date Range: {data.dateFrom} to {data.dateTo}
       </Alert>
     </Box>

@@ -154,6 +154,7 @@ export const useElectricityData = () => {
       ]);
 
       if (consumptionResponse.success && generationResponse.success) {
+        // Extract data arrays from responses
         const consumptionData = consumptionResponse.data;
         const generationData = generationResponse.data;
 
