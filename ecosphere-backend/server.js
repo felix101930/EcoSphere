@@ -56,6 +56,7 @@ app.get("/", (req, res) => {
 const loginLogRoutes = require("./routes/loginLogRoutes");
 const databaseTestRoutes = require("./routes/databaseTestRoutes");
 const thermalRoutes = require("./routes/thermalRoutes");
+const aiRoutes = require('./routes/aiRoutes');
 const forecastRoutes = require("./routes/forecastRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
 const { forecastLimiter } = require("./middleware/rateLimiter");
@@ -69,6 +70,7 @@ app.use("/api/db", databaseTestRoutes);
 app.use("/api/thermal", thermalRoutes);
 app.use("/api/forecast", forecastLimiter.middleware(), forecastRoutes); // Rate limited
 app.use("/api/weather", weatherRoutes);
+app.use('/api/ai', aiRoutes); 
 
 // Health check
 app.get("/api/health", (req, res) => {
