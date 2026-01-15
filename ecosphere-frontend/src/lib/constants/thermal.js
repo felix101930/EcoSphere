@@ -56,6 +56,37 @@ export const SENSOR_POSITIONS = {
 };
 
 // ============================================================================
+// SENSOR LOCATION NAMES (Direction-based naming)
+// ============================================================================
+
+export const SENSOR_LOCATION_NAMES = {
+  // Basement sensors
+  '20004': 'East 1',
+  '20005': 'West 1',
+  '20006': 'South 1',
+
+  // Level 1 sensors
+  '20007': 'West 1',
+  '20008': 'West 2',
+  '20009': 'South 1',
+  '20010': 'East 1',
+  '20011': 'North 1',
+
+  // Level 2 sensors
+  '20012': 'West 1',
+  '20013': 'North 1',
+  '20014': 'East 1',
+  '20015': 'South 1',
+  '20016': 'West 2'
+};
+
+// Helper function to get sensor display name
+export const getSensorDisplayName = (sensorNumber) => {
+  const locationName = SENSOR_LOCATION_NAMES[sensorNumber];
+  return locationName ? `${locationName} (TL${sensorNumber})` : sensorNumber;
+};
+
+// ============================================================================
 // SENSOR COLORS (SAIT Official + Additional Colors)
 // ============================================================================
 
