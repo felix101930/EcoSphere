@@ -217,8 +217,7 @@ class OpenWeatherSolarForecaster:
             peak_kw = solar_hours['predicted_kw'].max()
             peak_hour = solar_hours.loc[solar_hours['predicted_kw'].idxmax(), 'timestamp'] if peak_kw > 0 else None
             
-            print(f"
-📊 SOLAR FORECAST SUMMARY:")
+            print(f"📊 SOLAR FORECAST SUMMARY:")
             print(f"   Total {hours}h generation: {total_kwh:.1f} kWh")
             print(f"   Peak generation: {peak_kw:.2f} kW")
             if peak_hour:
@@ -246,11 +245,9 @@ if __name__ == "__main__":
     forecast = forecaster.forecast_solar(CALGARY_LAT, CALGARY_LON, hours=48)
     
     if not forecast.empty:
-        print(f"
-📅 FIRST 12 HOURS OF FORECAST:")
+        print(f"📅 FIRST 12 HOURS OF FORECAST:")
         print(forecast.head(12).to_string())
         
         # Save to CSV
         forecast.to_csv('solar_forecast_48h.csv', index=False)
-        print(f"
-💾 Forecast saved to solar_forecast_48h.csv")
+        print(f"💾 Forecast saved to solar_forecast_48h.csv")
