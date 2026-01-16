@@ -86,13 +86,6 @@ const Sidebar = () => {
           roles: ['SuperAdmin', 'Admin'],
           permission: null,
           comingSoon: true
-        },
-        {
-          text: 'Quiz Management',
-          path: '/quiz-management',
-          roles: ['SuperAdmin', 'Admin'],
-          permission: null,
-          comingSoon: true
         }
       ]
     }

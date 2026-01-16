@@ -160,17 +160,6 @@ function App() {
               }
             />
 
-            <Route
-              path="/quiz-management"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <MainLayout showAIChatbot={false}>
-                    <ComingSoonPage featureName="Quiz Management" />
-                  </MainLayout>
-                </ProtectedRoute>
-              }
-            />
-
             {/* Default Route */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
