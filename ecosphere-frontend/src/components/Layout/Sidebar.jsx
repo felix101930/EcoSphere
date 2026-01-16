@@ -45,6 +45,12 @@ const Sidebar = () => {
           roles: ['SuperAdmin', 'Admin', 'TeamMember'],
           permission: 'thermal',
           comingSoon: true
+        },
+        {
+          text: 'Natural Gas',
+          path: '/natural-gas',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: 'natural-gas'
         }
       ]
     },

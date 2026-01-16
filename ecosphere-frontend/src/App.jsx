@@ -9,6 +9,7 @@ import CarbonFootprintPage from './pages/CarbonFootprintPage';
 import ThermalPage from './pages/ThermalPage';
 import ElectricityReportPage from './pages/ElectricityReportPage';
 import WaterReportPage from './pages/WaterReportPage';
+import NaturalGasPage from './pages/NaturalGasPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
@@ -108,6 +109,17 @@ function App() {
                 <ProtectedRoute>
                   <MainLayout showAIChatbot={true}>
                     <ThermalPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/natural-gas"
+              element={
+                <ProtectedRoute>
+                  <MainLayout showAIChatbot={true}>
+                    <NaturalGasPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
