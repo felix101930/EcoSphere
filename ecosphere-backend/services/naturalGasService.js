@@ -7,12 +7,13 @@ const cache = require('../utils/cache');
 class NaturalGasService {
     /**
      * Read and parse CSV file
-     * @returns {Promise<Array>} Parsed natural gas readings
+     * @returns {Promise<Array>} Complete month array from 2023-01 to 2025-12 with shifted usage
      */
     static async readCSVData() {
-        const cacheKey = 'naturalGas:csvData';
-        const cached = cache.get(cacheKey);
-        if (cached) return cached;
+        // Temporarily disable cache for testing
+        // const cacheKey = 'naturalGas:csvData:v3';
+        // const cached = cache.get(cacheKey);
+        // if (cached) return cached;
 
         try {
             const fileContent = await fs.readFile(NATURAL_GAS_CONFIG.CSV_FILE_PATH, 'utf-8');
@@ -24,52 +25,46 @@ class NaturalGasService {
                 trim: true
             });
 
-            // Skip header row and process data
-            const data = records.slice(1)
-                .filter(row => row[0] && row[1]) // Filter out rows with missing date or reading
-                .map(row => ({
-                    date: this.parseDate(row[0]),
-                    cumulativeReading: parseFloat(row[1]) || 0,
-                    usage: parseFloat(row[2]) || 0
-                }))
-                .filter(item => item.date); // Filter out invalid dates
+            // Extract usage values from CSV (column 3)
+            // Skip header row and filter out empty usage values
+            const usageValues = [];
+            for (let i = 1; i < records.length; i++) {
+                const row = records[i];
+                if (row[2] !== undefined && row[2] !== '') {
+                    const usage = parseFloat(row[2]) || 0;
+                    usageValues.push(usage);
+                }
+            }
 
-            // Cache the data
-            cache.set(cacheKey, data, NATURAL_GAS_CONFIG.CACHE_TTL);
+            // Generate complete month array from 2023-01 to 2025-12
+            const completeData = [];
+            for (let year = 2023; year <= 2025; year++) {
+                for (let month = 1; month <= 12; month++) {
+                    // Calculate index for usage value
+                    // usageValues[0] = 196 → Jan 2023, usageValues[1] = 194 → Feb 2023, etc.
+                    const monthIndex = (year - 2023) * 12 + (month - 1);
+                    const usage = monthIndex < usageValues.length ? usageValues[monthIndex] : 0;
 
-            return data;
+                    // Create date for this month
+                    const date = new Date(year, month - 1, 1);
+                    const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+
+                    completeData.push({
+                        year,
+                        month,
+                        monthLabel,
+                        usage
+                    });
+                }
+            }
+
+            // Temporarily disable cache for testing
+            // cache.set(cacheKey, completeData, NATURAL_GAS_CONFIG.CACHE_TTL);
+
+            return completeData;
         } catch (error) {
             console.error('Error reading CSV file:', error);
             throw new Error('Failed to read natural gas data');
-        }
-    }
-
-    /**
-     * Parse date string to ISO format
-     * @param {string} dateStr - Date string from CSV
-     * @returns {string|null} ISO date string (YYYY-MM-DD)
-     */
-    static parseDate(dateStr) {
-        try {
-            // Remove quotes if present
-            const cleanStr = dateStr.replace(/"/g, '').trim();
-
-            // Parse date (e.g., "Wednesday, January 4, 2023")
-            const date = new Date(cleanStr);
-
-            if (isNaN(date.getTime())) {
-                return null;
-            }
-
-            // Return ISO date string
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-
-            return `${year}-${month}-${day}`;
-        } catch (error) {
-            console.error('Error parsing date:', dateStr, error);
-            return null;
         }
     }
 
@@ -82,16 +77,20 @@ class NaturalGasService {
     static async getConsumptionData(dateFrom, dateTo) {
         const allData = await this.readCSVData();
 
-        // Filter data by date range (compare by month)
-        const filteredData = allData.filter(item => {
-            const itemDate = new Date(item.date);
-            const fromDate = new Date(dateFrom);
-            const toDate = new Date(dateTo);
+        // Parse date range
+        const fromDate = new Date(dateFrom);
+        const toDate = new Date(dateTo);
+        const fromYear = fromDate.getFullYear();
+        const fromMonth = fromDate.getMonth() + 1; // 1-12
+        const toYear = toDate.getFullYear();
+        const toMonth = toDate.getMonth() + 1; // 1-12
 
-            // Compare year and month only
-            const itemYearMonth = itemDate.getFullYear() * 12 + itemDate.getMonth();
-            const fromYearMonth = fromDate.getFullYear() * 12 + fromDate.getMonth();
-            const toYearMonth = toDate.getFullYear() * 12 + toDate.getMonth();
+        // Filter data by year and month
+        const filteredData = allData.filter(item => {
+            // Create comparable values: year * 12 + month
+            const itemYearMonth = item.year * 12 + item.month;
+            const fromYearMonth = fromYear * 12 + fromMonth;
+            const toYearMonth = toYear * 12 + toMonth;
 
             return itemYearMonth >= fromYearMonth && itemYearMonth <= toYearMonth;
         });
@@ -119,18 +118,12 @@ class NaturalGasService {
         const peak = usageValues.length > 0 ? Math.max(...usageValues) : 0;
         const min = usageValues.length > 0 ? Math.min(...usageValues) : 0;
 
-        // Format data for chart - group by month
+        // Format data for chart
         const monthlyData = filteredData.map(item => {
-            const date = new Date(item.date);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-
             return {
-                timestamp: item.date,
-                month: `${year}-${String(month).padStart(2, '0')}`,
-                monthLabel: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
-                value: item.usage,
-                cumulativeReading: item.cumulativeReading
+                month: `${item.year}-${String(item.month).padStart(2, '0')}`,
+                monthLabel: item.monthLabel,
+                value: item.usage
             };
         });
 
@@ -155,20 +148,10 @@ class NaturalGasService {
      * @returns {Promise<Object>} Min and max dates
      */
     static async getDateRange() {
-        const allData = await this.readCSVData();
-
-        if (allData.length === 0) {
-            return {
-                minDate: null,
-                maxDate: null
-            };
-        }
-
-        const dates = allData.map(item => item.date).sort();
-
+        // Fixed date range: 2023-01 to 2025-12
         return {
-            minDate: dates[0],
-            maxDate: dates[dates.length - 1]
+            minDate: '2023-01-01',
+            maxDate: '2025-12-31'
         };
     }
 
@@ -181,15 +164,10 @@ class NaturalGasService {
 
         // Format data for forecast service
         return allData.map(item => {
-            const date = new Date(item.date);
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-
             return {
-                month: `${year}-${String(month).padStart(2, '0')}`,
-                monthLabel: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
-                value: item.usage,
-                timestamp: item.date
+                month: `${item.year}-${String(item.month).padStart(2, '0')}`,
+                monthLabel: item.monthLabel,
+                value: item.usage
             };
         });
     }

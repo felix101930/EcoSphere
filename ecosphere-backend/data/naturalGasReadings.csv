@@ -1,5 +1,5 @@
-Natural Gas Meter Readings ,,GJ Usage (current minus previous reading)
-"Wednesday, January 4, 2023",5249,
+Date,Natural Gas Meter Readings ,GJ Usage (current minus previous reading)
+"Wednesday, January 4, 2023",5249,0
 "Monday, February 6, 2023",5445,196
 "Monday, March 6, 2023",5639,194
 "Thursday, April 27, 2023",5854,215
@@ -19,13 +19,13 @@ Natural Gas Meter Readings ,,GJ Usage (current minus previous reading)
 "Wednesday, June 5, 2024",8446,70
 "Monday, July 8, 2024",8461,15
 "Wednesday, August 7, 2024",8461,0
-"Sunday, September 1, 2024",,
-"Friday, October 4, 2024",8476,
+"Sunday, September 1, 2024",8476,15
+"Friday, October 4, 2024",8476,0
 "Tuesday, November 5, 2024",8781,305
 "Thursday, December 5, 2024",9622,841
 "Wednesday, January 8, 2025",10688,1066
-"Saturday, February 1, 2025",,
-"Thursday, March 6, 2025",12825,
+"Saturday, February 1, 2025",12825,2137
+"Thursday, March 6, 2025",12825,0
 "Friday, April 4, 2025",13469,644
 "Monday, May 5, 2025",13676,207
 "Thursday, June 5, 2025",13697,21
