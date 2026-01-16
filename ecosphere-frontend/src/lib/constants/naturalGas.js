@@ -15,14 +15,14 @@ export const CHART_COLORS = {
 export const TIME_PRESETS = {
     THIS_YEAR: 'this_year',
     LAST_YEAR: 'last_year',
-    ALL_DATA: 'all_data',
+    ALL_YEARS: 'all_years',
     CUSTOM: 'custom'
 };
 
 export const TIME_PRESET_LABELS = {
     [TIME_PRESETS.THIS_YEAR]: 'This Year',
     [TIME_PRESETS.LAST_YEAR]: 'Last Year',
-    [TIME_PRESETS.ALL_DATA]: 'All Data',
+    [TIME_PRESETS.ALL_YEARS]: 'All Years',
     [TIME_PRESETS.CUSTOM]: 'Custom Range'
 };
 
@@ -42,7 +42,7 @@ export const getPresetDateRange = (preset) => {
                 dateFrom: new Date(currentYear - 1, 0, 1),
                 dateTo: new Date(currentYear - 1, 11, 31)
             };
-        case TIME_PRESETS.ALL_DATA:
+        case TIME_PRESETS.ALL_YEARS:
             return {
                 dateFrom: new Date('2023-01-01'),
                 dateTo: new Date('2025-12-31')

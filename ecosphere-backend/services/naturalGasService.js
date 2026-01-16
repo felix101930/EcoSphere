@@ -36,26 +36,28 @@ class NaturalGasService {
                 }
             }
 
-            // Generate complete month array from 2023-01 to 2025-12
+            // Generate month array based on actual usage values available
+            // Each usage value represents one month, starting from 2023-01
             const completeData = [];
-            for (let year = 2023; year <= 2025; year++) {
-                for (let month = 1; month <= 12; month++) {
-                    // Calculate index for usage value
-                    // usageValues[0] = 196 → Jan 2023, usageValues[1] = 194 → Feb 2023, etc.
-                    const monthIndex = (year - 2023) * 12 + (month - 1);
-                    const usage = monthIndex < usageValues.length ? usageValues[monthIndex] : 0;
+            const startYear = 2023;
+            const startMonth = 1;
 
-                    // Create date for this month
-                    const date = new Date(year, month - 1, 1);
-                    const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+            for (let i = 0; i < usageValues.length; i++) {
+                // Calculate year and month for this index
+                const totalMonths = i;
+                const year = startYear + Math.floor(totalMonths / 12);
+                const month = (startMonth + (totalMonths % 12));
 
-                    completeData.push({
-                        year,
-                        month,
-                        monthLabel,
-                        usage
-                    });
-                }
+                // Create date for this month
+                const date = new Date(year, month - 1, 1);
+                const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+
+                completeData.push({
+                    year,
+                    month,
+                    monthLabel,
+                    usage: usageValues[i]
+                });
             }
 
             // Temporarily disable cache for testing

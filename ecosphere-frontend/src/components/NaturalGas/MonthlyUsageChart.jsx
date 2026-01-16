@@ -12,6 +12,7 @@ import {
     Legend
 } from 'chart.js';
 import { CHART_COLORS, DATA_CONFIG } from '../../lib/constants/naturalGas';
+import NoDataMessage from '../Common/NoDataMessage';
 
 // Register ChartJS components
 ChartJS.register(
@@ -23,27 +24,32 @@ ChartJS.register(
     Legend
 );
 
-function MonthlyUsageChart({ data, dataSource, count }) {
-    // Prepare chart data with additional filtering
-    const { chartData, actualCount } = useMemo(() => {
+function MonthlyUsageChart({ data, dataSource, dateFrom, dateTo }) {
+    // Prepare chart data with strict year filtering based on date range
+    const { chartData, actualCount, hasValidData } = useMemo(() => {
         if (!data || data.length === 0) {
-            return { chartData: null, actualCount: 0 };
+            return { chartData: null, actualCount: 0, hasValidData: false };
         }
 
-        // Additional filter: ensure all data belongs to the same year range
-        // If first item is from a different year than expected, filter it out
-        let filteredData = data;
+        // Get expected year range from dateFrom and dateTo
+        const fromDate = new Date(dateFrom);
+        const toDate = new Date(dateTo);
+        const expectedFromYear = fromDate.getFullYear();
+        const expectedToYear = toDate.getFullYear();
 
-        if (data.length > 12) {
-            // If we have more than 12 months, check if first item is from previous year
-            const firstYear = parseInt(data[0].month.split('-')[0]);
-            const secondYear = parseInt(data[1].month.split('-')[0]);
+        // Strict filter: only include data within the expected year range
+        const filteredData = data.filter(item => {
+            const year = parseInt(item.month.split('-')[0]);
+            return year >= expectedFromYear && year <= expectedToYear;
+        });
 
-            // If first item is from a different year, remove it
-            if (firstYear !== secondYear) {
-                filteredData = data.slice(1);
-            }
+        // If no data matches the expected year range, return no data
+        if (filteredData.length === 0) {
+            return { chartData: null, actualCount: 0, hasValidData: false };
         }
+
+        // Check if there's any valid data (non-zero values)
+        const hasValidData = filteredData.some(item => item.value > 0);
 
         return {
             chartData: {
@@ -58,9 +64,10 @@ function MonthlyUsageChart({ data, dataSource, count }) {
                     }
                 ]
             },
-            actualCount: filteredData.length
+            actualCount: filteredData.length,
+            hasValidData
         };
-    }, [data]);
+    }, [data, dateFrom, dateTo]);
 
     // Chart options
     const chartOptions = useMemo(() => ({
@@ -115,8 +122,15 @@ function MonthlyUsageChart({ data, dataSource, count }) {
         }
     }), []);
 
-    if (!chartData) {
-        return null;
+    if (!chartData || !hasValidData) {
+        return (
+            <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                    Monthly Natural Gas Usage
+                </Typography>
+                <NoDataMessage message="No natural gas usage data available for the selected time period. Data will be available after the next meter reading." />
+            </Paper>
+        );
     }
 
     return (

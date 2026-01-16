@@ -11,15 +11,15 @@ import { useNaturalGasData } from '../lib/hooks/useNaturalGasData';
 
 function NaturalGasPage() {
     const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);
-    const [selectedPreset, setSelectedPreset] = useState(TIME_PRESETS.ALL_DATA);
+    const [selectedPreset, setSelectedPreset] = useState(TIME_PRESETS.ALL_YEARS);
     const [customDateFrom, setCustomDateFrom] = useState(null);
     const [customDateTo, setCustomDateTo] = useState(null);
 
     // Export dialog state
     const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
-    // Get initial date range for all data
-    const initialRange = getPresetDateRange(TIME_PRESETS.ALL_DATA);
+    // Get initial date range for all years
+    const initialRange = getPresetDateRange(TIME_PRESETS.ALL_YEARS);
     const [dateFrom, setDateFrom] = useState(initialRange.dateFrom);
     const [dateTo, setDateTo] = useState(initialRange.dateTo);
 
