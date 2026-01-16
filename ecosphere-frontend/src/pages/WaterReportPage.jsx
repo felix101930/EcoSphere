@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import TimeFilter from '../components/Common/TimeFilter';
+import Disclaimer from '../components/Common/Disclaimer';
 import RainwaterTab from '../components/Water/RainwaterTab';
 import HotWaterTab from '../components/Water/HotWaterTab';
 import { TAB_TYPES } from '../lib/constants/water';
@@ -177,6 +178,9 @@ const WaterReportPage = () => {
             />
 
             <Box data-export-content sx={{ px: 4, py: 3 }}>
+                {/* Disclaimer */}
+                <Disclaimer />
+
                 {/* Time Filter */}
                 <TimeFilter
                     dateFrom={dateFrom}

@@ -3,6 +3,7 @@ import { KeyboardArrowUp, Bolt, Water, Thermostat } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/Common/PageHeader';
 import CollapsibleSection from '../components/Common/CollapsibleSection';
+import Disclaimer from '../components/Common/Disclaimer';
 import TimePresetSelector from '../components/Overview/TimePresetSelector';
 import ElectricityOverview from '../components/Overview/ElectricityOverview';
 import WaterOverview from '../components/Overview/WaterOverview';
@@ -61,6 +62,9 @@ export default function OverviewPage() {
             />
 
             <Container maxWidth="xl" sx={{ mt: 3 }}>
+                {/* Disclaimer */}
+                <Disclaimer />
+
                 {/* Time Preset Selector */}
                 <TimePresetSelector value={timePreset} onChange={setTimePreset} />
 

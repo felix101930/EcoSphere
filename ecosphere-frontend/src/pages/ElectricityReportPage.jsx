@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import TimeFilter from '../components/Common/TimeFilter';
+import Disclaimer from '../components/Common/Disclaimer';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
 import NetEnergyTab from '../components/Electricity/NetEnergyTab';
@@ -182,6 +183,9 @@ const ElectricityReportPage = () => {
       />
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
+        {/* Disclaimer */}
+        <Disclaimer />
+
         {/* Time Filter - Show for all tabs */}
         <TimeFilter
           dateFrom={dateFrom}

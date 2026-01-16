@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
+import Disclaimer from '../components/Common/Disclaimer';
 import ThermalControlPanel from '../components/Thermal/ThermalControlPanel';
 import ThermalChartSection from '../components/Thermal/ThermalChartSection';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
@@ -227,6 +228,9 @@ const ThermalPage = () => {
       />
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
+        {/* Disclaimer */}
+        <Disclaimer />
+
         {/* Control Panel */}
         <ThermalControlPanel
           selectedFloor={selectedFloor}

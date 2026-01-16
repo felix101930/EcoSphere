@@ -1,6 +1,7 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
 import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
+import Disclaimer from '../components/Common/Disclaimer';
 import TimePresetSelector from '../components/CarbonFootprint/TimePresetSelector';
 import AutomaticCalculationView from '../components/CarbonFootprint/AutomaticCalculationView';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
@@ -106,6 +107,9 @@ export default function CarbonFootprintPage() {
       />
 
       <Box sx={{ px: 4, py: 3 }}>
+        {/* Disclaimer */}
+        <Disclaimer />
+
         {/* Time Preset Selector */}
         <TimePresetSelector
           preset={timePreset}
