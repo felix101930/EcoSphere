@@ -186,20 +186,22 @@ const ElectricityReportPage = () => {
         {/* Disclaimer */}
         <Disclaimer />
 
-        {/* Time Filter - Show for all tabs */}
-        <TimeFilter
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          onDateFromChange={setDateFrom}
-          onDateToChange={setDateTo}
-          onApply={handleApplyFilter}
-          dateRange={dateRange?.consumption}
-          loading={loading}
-          showEquipmentInfo={true}
-        />
+        {/* Time Filter - Show for all tabs - Hide in export */}
+        <Box data-hide-in-export="true">
+          <TimeFilter
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+            onApply={handleApplyFilter}
+            dateRange={dateRange?.consumption}
+            loading={loading}
+            showEquipmentInfo={true}
+          />
+        </Box>
 
-        {/* Main Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        {/* Main Tabs - Hide in export */}
+        <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab
               label="Consumption"

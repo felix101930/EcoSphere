@@ -57,12 +57,14 @@ const GenerationTab = ({
       {/* Key Metrics */}
       <MetricsCards metrics={data.metrics} metricType="Generation" />
 
-      {/* Breakdown Selector */}
-      <BreakdownSelector
-        selectedBreakdown={selectedBreakdown}
-        onBreakdownChange={setSelectedBreakdown}
-        type="generation"
-      />
+      {/* Breakdown Selector - Hide in export */}
+      <Box data-hide-in-export="true">
+        <BreakdownSelector
+          selectedBreakdown={selectedBreakdown}
+          onBreakdownChange={setSelectedBreakdown}
+          type="generation"
+        />
+      </Box>
 
       {/* Overall Trend Chart */}
       {selectedBreakdown === GENERATION_BREAKDOWNS.OVERALL && (

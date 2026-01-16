@@ -74,12 +74,14 @@ const ConsumptionTab = ({
       {/* Key Metrics */}
       <MetricsCards metrics={data.metrics} metricType="Consumption" />
 
-      {/* Breakdown Selector */}
-      <BreakdownSelector
-        selectedBreakdown={selectedBreakdown}
-        onBreakdownChange={setSelectedBreakdown}
-        type="consumption"
-      />
+      {/* Breakdown Selector - Hide in export */}
+      <Box data-hide-in-export="true">
+        <BreakdownSelector
+          selectedBreakdown={selectedBreakdown}
+          onBreakdownChange={setSelectedBreakdown}
+          type="consumption"
+        />
+      </Box>
 
       {/* Overall Trend Chart */}
       {selectedBreakdown === CONSUMPTION_BREAKDOWNS.OVERALL && (
