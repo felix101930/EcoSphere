@@ -219,7 +219,7 @@ export const VIEW_MODES = {
 
 export const VIEW_MODE_LABELS = {
   [VIEW_MODES.SINGLE]: 'Single Day',
-  [VIEW_MODES.MULTIPLE]: 'Multiple Days',
+  [VIEW_MODES.MULTIPLE]: 'Multi Days',
   [VIEW_MODES.FORECAST]: 'Forecast'
 };
 
