@@ -51,8 +51,8 @@ const ThermalForecastView = ({
 
     return (
         <Box>
-            {/* Configuration Card */}
-            <Card sx={{ mb: 3 }}>
+            {/* Configuration Card - Hide in export */}
+            <Card data-hide-in-export="true" sx={{ mb: 3 }}>
                 <CardContent>
                     <Typography variant="h6" gutterBottom>
                         ⚙️ Forecast Configuration

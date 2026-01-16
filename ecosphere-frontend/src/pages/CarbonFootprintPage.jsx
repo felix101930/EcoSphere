@@ -1,7 +1,9 @@
 // Carbon Footprint Page - Main container for carbon footprint visualization
+import { useState } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import Disclaimer from '../components/Common/Disclaimer';
+import ExportReportDialog from '../components/CarbonFootprint/ExportReportDialog';
 import TimePresetSelector from '../components/CarbonFootprint/TimePresetSelector';
 import AutomaticCalculationView from '../components/CarbonFootprint/AutomaticCalculationView';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
@@ -30,6 +32,9 @@ ChartJS.register(
 );
 
 export default function CarbonFootprintPage() {
+  // Export dialog state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+
   // Use custom hook for data management
   const {
     timePreset,
@@ -104,9 +109,17 @@ export default function CarbonFootprintPage() {
       <PageHeader
         title="Carbon Footprint Calculator"
         subtitle="Monitor and analyze your carbon emissions based on electricity consumption"
+        showExportButton={true}
+        onExport={() => setExportDialogOpen(true)}
       />
 
-      <Box sx={{ px: 4, py: 3 }}>
+      {/* Export Report Dialog */}
+      <ExportReportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+      />
+
+      <Box data-export-content sx={{ px: 4, py: 3 }}>
         {/* Disclaimer */}
         <Disclaimer />
 
