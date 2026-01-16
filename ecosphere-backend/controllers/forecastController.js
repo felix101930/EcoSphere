@@ -36,10 +36,13 @@ const getElectricityForecast = async (req, res) => {
         const targetDateStr = targetDate;
 
         // Fetch historical consumption data
-        const historicalData = await ElectricityService.getConsumptionData(
+        const consumptionResponse = await ElectricityService.getConsumptionData(
             startDateStr,
             targetDateStr
         );
+
+        // Extract data array from response object
+        const historicalData = consumptionResponse.data || consumptionResponse;
 
         if (!historicalData || historicalData.length === 0) {
             return res.status(404).json({

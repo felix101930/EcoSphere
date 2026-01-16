@@ -17,7 +17,8 @@ const ForecastChart = ({
     generationLabel = 'Generation Forecast',
     outdoorTemperatureLabel = 'Outdoor Temperature',
     showTotal = true,
-    decimalPlaces = 0
+    decimalPlaces = 0,
+    title = '📈 Forecast Chart' // Add customizable title prop
 }) => {
     // Check if we have any data
     const hasConsumption = consumptionData && consumptionData.predictions && consumptionData.predictions.length > 0;
@@ -184,7 +185,7 @@ const ForecastChart = ({
         <Card>
             <CardContent>
                 <Typography variant="h6" gutterBottom>
-                    📈 Temperature Forecast
+                    {title}
                 </Typography>
 
                 <Box sx={{ height: CHART_HEIGHT, position: 'relative' }}>

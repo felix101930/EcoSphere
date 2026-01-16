@@ -130,6 +130,7 @@ const ThermalForecastView = ({
                         outdoorTemperatureLabel="Outdoor Temperature"
                         showTotal={false}
                         decimalPlaces={1}
+                        title="📈 Temperature Forecast"
                     />
                 </>
             )}
