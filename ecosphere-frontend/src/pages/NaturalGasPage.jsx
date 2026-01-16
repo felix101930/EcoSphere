@@ -5,6 +5,7 @@ import ExportReportDialog from '../components/Common/ExportReportDialog';
 import Disclaimer from '../components/Common/Disclaimer';
 import NaturalGasTimeFilter from '../components/NaturalGas/NaturalGasTimeFilter';
 import ConsumptionTab from '../components/NaturalGas/ConsumptionTab';
+import ForecastTab from '../components/NaturalGas/ForecastTab';
 import { TAB_TYPES, TIME_PRESETS, TIME_PRESET_LABELS, getPresetDateRange, DATA_CONFIG } from '../lib/constants/naturalGas';
 import { useNaturalGasData } from '../lib/hooks/useNaturalGasData';
 
@@ -112,7 +113,7 @@ function NaturalGasPage() {
                 <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <Tabs value={activeTab} onChange={handleTabChange}>
                         <Tab label="Consumption" value={TAB_TYPES.CONSUMPTION} />
-                        <Tab label="Forecast" value={TAB_TYPES.FORECAST} disabled />
+                        <Tab label="Forecast" value={TAB_TYPES.FORECAST} />
                     </Tabs>
                 </Box>
 
@@ -127,9 +128,7 @@ function NaturalGasPage() {
                 )}
 
                 {activeTab === TAB_TYPES.FORECAST && (
-                    <Alert severity="info" sx={{ minHeight: '200px', display: 'flex', alignItems: 'center' }}>
-                        Forecast functionality coming soon
-                    </Alert>
+                    <ForecastTab />
                 )}
             </Box>
         </>

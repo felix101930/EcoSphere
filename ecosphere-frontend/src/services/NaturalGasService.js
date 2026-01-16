@@ -64,6 +64,32 @@ class NaturalGasService {
 
         return `${year}-${month}-${day}`;
     }
+
+    /**
+     * Get forecast
+     * @param {Date} targetDate - Target date for forecast
+     * @param {number} forecastMonths - Number of months to forecast
+     * @returns {Promise<Object>} Forecast data
+     */
+    static async getForecast(targetDate, forecastMonths = 6) {
+        try {
+            const targetStr = this.formatDate(targetDate);
+
+            const response = await fetch(
+                `${API_BASE_URL}/natural-gas/forecast?targetDate=${targetStr}&forecastMonths=${forecastMonths}`
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch forecast');
+            }
+
+            const result = await response.json();
+            return result.data;
+        } catch (error) {
+            console.error('Error fetching forecast:', error);
+            throw error;
+        }
+    }
 }
 
 export default NaturalGasService;

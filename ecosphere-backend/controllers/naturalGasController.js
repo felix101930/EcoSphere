@@ -1,5 +1,6 @@
 // Natural Gas Controller - Handle natural gas API requests
 const NaturalGasService = require('../services/naturalGasService');
+const NaturalGasForecastService = require('../services/naturalGasForecastService');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { asyncHandler } = require('../utils/controllerHelper');
 const { validateDateRange } = require('../utils/validationHelper');
@@ -32,7 +33,39 @@ const getDateRange = asyncHandler(async (req, res) => {
     sendSuccess(res, dateRange);
 });
 
+/**
+ * Get forecast
+ * GET /api/natural-gas/forecast?targetDate=YYYY-MM-DD&forecastMonths=6
+ */
+const getForecast = asyncHandler(async (req, res) => {
+    const { targetDate, forecastMonths = 6 } = req.query;
+
+    // Validate target date
+    if (!targetDate) {
+        return sendError(res, 400, 'Target date is required');
+    }
+
+    // Validate forecast months
+    const months = parseInt(forecastMonths);
+    if (isNaN(months) || months < 1 || months > 12) {
+        return sendError(res, 400, 'Forecast months must be between 1 and 12');
+    }
+
+    // Get historical data (all available data for training)
+    const allData = await NaturalGasService.getAllData();
+
+    // Generate forecast
+    const forecast = await NaturalGasForecastService.generateForecast(
+        targetDate,
+        months,
+        allData
+    );
+
+    sendSuccess(res, forecast);
+});
+
 module.exports = {
     getConsumption,
-    getDateRange
+    getDateRange,
+    getForecast
 };

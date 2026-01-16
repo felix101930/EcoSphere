@@ -162,6 +162,28 @@ class NaturalGasService {
             maxDate: dates[dates.length - 1]
         };
     }
+
+    /**
+     * Get all data for forecast training
+     * @returns {Promise<Array>} All monthly data
+     */
+    static async getAllData() {
+        const allData = await this.readCSVData();
+
+        // Format data for forecast service
+        return allData.map(item => {
+            const date = new Date(item.date);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+
+            return {
+                month: `${year}-${String(month).padStart(2, '0')}`,
+                monthLabel: date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
+                value: item.usage,
+                timestamp: item.date
+            };
+        });
+    }
 }
 
 module.exports = NaturalGasService;
