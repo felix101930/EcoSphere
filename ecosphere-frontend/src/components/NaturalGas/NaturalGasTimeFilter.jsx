@@ -29,7 +29,7 @@ function NaturalGasTimeFilter({
             </Typography>
 
             {/* Preset Buttons */}
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 2 }}>
                 <ToggleButtonGroup
                     value={selectedPreset}
                     exclusive
@@ -95,7 +95,6 @@ function NaturalGasTimeFilter({
                 <Button
                     variant="contained"
                     onClick={onApply}
-                    sx={{ mt: 2 }}
                 >
                     Apply
                 </Button>

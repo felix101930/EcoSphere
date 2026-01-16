@@ -1,7 +1,7 @@
 // Natural Gas Consumption Tab - Display monthly usage data
-import { Box } from '@mui/material';
+import { Box, Alert } from '@mui/material';
+import { Info } from '@mui/icons-material';
 import LoadingSpinner from '../Common/LoadingSpinner';
-import NoDataMessage from '../Common/NoDataMessage';
 import MetricsCards from '../Electricity/MetricsCards';
 import MonthlyUsageChart from './MonthlyUsageChart';
 import DataSummary from './DataSummary';
@@ -13,7 +13,21 @@ function ConsumptionTab({ data, isLoading, dateFrom, dateTo }) {
     }
 
     if (!data || !data.data || data.data.length === 0) {
-        return <NoDataMessage message="No natural gas data available for the selected period" />;
+        return (
+            <Alert
+                severity="info"
+                icon={<Info />}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    minHeight: '200px'
+                }}
+            >
+                <Box>
+                    No natural gas data available for the selected period
+                </Box>
+            </Alert>
+        );
     }
 
     return (

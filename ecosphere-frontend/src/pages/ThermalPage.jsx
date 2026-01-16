@@ -181,7 +181,7 @@ const ThermalPage = () => {
     return (
       <>
         <PageHeader
-          title="Thermal Dashboard"
+          title="Thermal Report"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -198,7 +198,7 @@ const ThermalPage = () => {
     return (
       <>
         <PageHeader
-          title="Thermal Dashboard"
+          title="Thermal Report"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -221,7 +221,7 @@ const ThermalPage = () => {
       />
 
       <PageHeader
-        title="Thermal Dashboard"
+        title="Thermal Report"
         subtitle="Monitor and analyze building temperature"
         showExportButton={true}
         onExport={() => setExportDialogOpen(true)}
