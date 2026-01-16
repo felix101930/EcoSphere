@@ -22,8 +22,8 @@ const HotWaterTab = ({ data, loading, dateTo, forecast, forecastLoading, forecas
 
     return (
         <Box>
-            {/* Sub-tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            {/* Sub-tabs - Hide in export */}
+            <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={activeSubTab} onChange={handleSubTabChange}>
                     <Tab label="Overview" value={SUB_TABS.OVERVIEW} />
                     <Tab label="Forecast" value={SUB_TABS.FORECAST} />

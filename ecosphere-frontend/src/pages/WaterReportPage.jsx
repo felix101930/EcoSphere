@@ -181,19 +181,21 @@ const WaterReportPage = () => {
                 {/* Disclaimer */}
                 <Disclaimer />
 
-                {/* Time Filter */}
-                <TimeFilter
-                    dateFrom={dateFrom}
-                    dateTo={dateTo}
-                    onDateFromChange={setDateFrom}
-                    onDateToChange={setDateTo}
-                    onApply={handleApplyFilter}
-                    dateRange={getCurrentDateRange()}
-                    loading={loading}
-                />
+                {/* Time Filter - Hide in export */}
+                <Box data-hide-in-export="true">
+                    <TimeFilter
+                        dateFrom={dateFrom}
+                        dateTo={dateTo}
+                        onDateFromChange={setDateFrom}
+                        onDateToChange={setDateTo}
+                        onApply={handleApplyFilter}
+                        dateRange={getCurrentDateRange()}
+                        loading={loading}
+                    />
+                </Box>
 
-                {/* Main Tabs */}
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                {/* Main Tabs - Hide in export */}
+                <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <Tabs value={activeTab} onChange={handleTabChange}>
                         <Tab
                             label="Rainwater Harvesting"
