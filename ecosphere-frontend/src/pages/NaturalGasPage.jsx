@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Tabs, Tab, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
+import ExportReportDialog from '../components/Common/ExportReportDialog';
 import Disclaimer from '../components/Common/Disclaimer';
 import NaturalGasTimeFilter from '../components/NaturalGas/NaturalGasTimeFilter';
 import ConsumptionTab from '../components/NaturalGas/ConsumptionTab';
@@ -12,6 +13,9 @@ function NaturalGasPage() {
     const [selectedPreset, setSelectedPreset] = useState(TIME_PRESETS.ALL_DATA);
     const [customDateFrom, setCustomDateFrom] = useState(null);
     const [customDateTo, setCustomDateTo] = useState(null);
+
+    // Export dialog state
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
     // Get initial date range for all data
     const initialRange = getPresetDateRange(TIME_PRESETS.ALL_DATA);
@@ -64,6 +68,16 @@ function NaturalGasPage() {
             <PageHeader
                 title="Natural Gas Report"
                 subtitle={`Monthly natural gas consumption data`}
+                showExportButton={true}
+                onExport={() => setExportDialogOpen(true)}
+            />
+
+            {/* Export Report Dialog */}
+            <ExportReportDialog
+                open={exportDialogOpen}
+                onClose={() => setExportDialogOpen(false)}
+                reportType="NaturalGas"
+                reportTitle="Natural Gas Report"
             />
 
             <Box data-export-content sx={{ px: 4, py: 3 }}>
