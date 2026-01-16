@@ -1,71 +1,33 @@
 // Natural Gas Service - Business logic for natural gas data
 const fs = require('fs').promises;
-const { parse } = require('csv-parse/sync');
 const { NATURAL_GAS_CONFIG } = require('../utils/naturalGasConstants');
 const cache = require('../utils/cache');
 
 class NaturalGasService {
     /**
-     * Read and parse CSV file
-     * @returns {Promise<Array>} Complete month array from 2023-01 to 2025-12 with shifted usage
+     * Read and parse JSON file with monthly usage data
+     * @returns {Promise<Array>} Monthly usage data
      */
-    static async readCSVData() {
+    static async readMonthlyUsageData() {
         // Temporarily disable cache for testing
-        // const cacheKey = 'naturalGas:csvData:v3';
+        // const cacheKey = 'naturalGas:monthlyUsage:v1';
         // const cached = cache.get(cacheKey);
         // if (cached) return cached;
 
         try {
-            const fileContent = await fs.readFile(NATURAL_GAS_CONFIG.CSV_FILE_PATH, 'utf-8');
+            const jsonPath = NATURAL_GAS_CONFIG.CSV_FILE_PATH.replace('naturalGasReadings.csv', 'naturalGasMonthlyUsage.json');
+            const fileContent = await fs.readFile(jsonPath, 'utf-8');
+            const data = JSON.parse(fileContent);
 
-            // Parse CSV
-            const records = parse(fileContent, {
-                columns: false,
-                skip_empty_lines: true,
-                trim: true
-            });
-
-            // Extract usage values from CSV (column 3)
-            // Skip header row and filter out empty usage values
-            const usageValues = [];
-            for (let i = 1; i < records.length; i++) {
-                const row = records[i];
-                if (row[2] !== undefined && row[2] !== '') {
-                    const usage = parseFloat(row[2]) || 0;
-                    usageValues.push(usage);
-                }
-            }
-
-            // Generate month array based on actual usage values available
-            // Each usage value represents one month, starting from 2023-01
-            const completeData = [];
-            const startYear = 2023;
-            const startMonth = 1;
-
-            for (let i = 0; i < usageValues.length; i++) {
-                // Calculate year and month for this index
-                const totalMonths = i;
-                const year = startYear + Math.floor(totalMonths / 12);
-                const month = (startMonth + (totalMonths % 12));
-
-                // Create date for this month
-                const date = new Date(year, month - 1, 1);
-                const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-
-                completeData.push({
-                    year,
-                    month,
-                    monthLabel,
-                    usage: usageValues[i]
-                });
-            }
+            // Filter out 2022 data (we only want 2023 onwards)
+            const filteredData = data.filter(item => item.year >= 2023);
 
             // Temporarily disable cache for testing
-            // cache.set(cacheKey, completeData, NATURAL_GAS_CONFIG.CACHE_TTL);
+            // cache.set(cacheKey, filteredData, NATURAL_GAS_CONFIG.CACHE_TTL);
 
-            return completeData;
+            return filteredData;
         } catch (error) {
-            console.error('Error reading CSV file:', error);
+            console.error('Error reading JSON file:', error);
             throw new Error('Failed to read natural gas data');
         }
     }
@@ -77,7 +39,7 @@ class NaturalGasService {
      * @returns {Promise<Object>} Consumption data with metrics
      */
     static async getConsumptionData(dateFrom, dateTo) {
-        const allData = await this.readCSVData();
+        const allData = await this.readMonthlyUsageData();
 
         // Parse date range
         const fromDate = new Date(dateFrom);
@@ -123,7 +85,7 @@ class NaturalGasService {
         // Format data for chart
         const monthlyData = filteredData.map(item => {
             return {
-                month: `${item.year}-${String(item.month).padStart(2, '0')}`,
+                month: item.monthKey,
                 monthLabel: item.monthLabel,
                 value: item.usage
             };
@@ -162,12 +124,12 @@ class NaturalGasService {
      * @returns {Promise<Array>} All monthly data
      */
     static async getAllData() {
-        const allData = await this.readCSVData();
+        const allData = await this.readMonthlyUsageData();
 
         // Format data for forecast service
         return allData.map(item => {
             return {
-                month: `${item.year}-${String(item.month).padStart(2, '0')}`,
+                month: item.monthKey,
                 monthLabel: item.monthLabel,
                 value: item.usage
             };
