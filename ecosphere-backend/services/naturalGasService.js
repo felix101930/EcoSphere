@@ -82,9 +82,18 @@ class NaturalGasService {
     static async getConsumptionData(dateFrom, dateTo) {
         const allData = await this.readCSVData();
 
-        // Filter data by date range
+        // Filter data by date range (compare by month)
         const filteredData = allData.filter(item => {
-            return item.date >= dateFrom && item.date <= dateTo;
+            const itemDate = new Date(item.date);
+            const fromDate = new Date(dateFrom);
+            const toDate = new Date(dateTo);
+
+            // Compare year and month only
+            const itemYearMonth = itemDate.getFullYear() * 12 + itemDate.getMonth();
+            const fromYearMonth = fromDate.getFullYear() * 12 + fromDate.getMonth();
+            const toYearMonth = toDate.getFullYear() * 12 + toDate.getMonth();
+
+            return itemYearMonth >= fromYearMonth && itemYearMonth <= toYearMonth;
         });
 
         if (filteredData.length === 0) {
