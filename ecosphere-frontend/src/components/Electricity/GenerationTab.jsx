@@ -7,9 +7,9 @@ import BreakdownSelector from './BreakdownSelector';
 import OverallTrendChart from './OverallTrendChart';
 import SolarSourceBreakdownChart from './SolarSourceBreakdownChart';
 
-const GenerationTab = ({ 
-  data, 
-  loading, 
+const GenerationTab = ({
+  data,
+  loading,
   dateFrom,
   dateTo,
   onLoadSolarSourceBreakdown,
@@ -55,7 +55,7 @@ const GenerationTab = ({
   return (
     <Box>
       {/* Key Metrics */}
-      <MetricsCards metrics={data.metrics} />
+      <MetricsCards metrics={data.metrics} metricType="Generation" />
 
       {/* Breakdown Selector */}
       <BreakdownSelector
@@ -68,7 +68,7 @@ const GenerationTab = ({
       {selectedBreakdown === GENERATION_BREAKDOWNS.OVERALL && (
         <OverallTrendChart
           data={data.data}
-          title="Generation Trend"
+          title="Electricity Generation Trend Overall (Daily)"
           dataLabel="Generation (Wh)"
           color="#4CAF50"
         />
@@ -84,7 +84,7 @@ const GenerationTab = ({
 
       {/* Data Source Info */}
       <Alert severity="info" sx={{ mt: 2 }}>
-        Data Source: {data.dataSource} | Records: {data.count} | 
+        Data Source: {data.dataSource} | Records: {data.count} |
         Date Range: {data.dateFrom} to {data.dateTo}
       </Alert>
     </Box>

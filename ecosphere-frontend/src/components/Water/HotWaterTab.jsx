@@ -51,7 +51,7 @@ const HotWaterTab = ({ data, loading, dateTo, forecast, forecastLoading, forecas
                     {!loading && data && data.data && data.data.length > 0 && (
                         <>
                             {/* Metrics Cards */}
-                            <MetricsCards metrics={data.metrics} unit="L/h" />
+                            <MetricsCards metrics={data.metrics} unit="L/h" metricType="Hot Water" />
 
                             {/* Overall Trend Chart */}
                             <OverallTrendChart

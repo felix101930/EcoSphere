@@ -350,7 +350,7 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        Temperature Range Chart
+        Daily Temperature Trend
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Days: {dates.length} | Shaded area = High-Low range | Line = Average temperature | Hover to see the details

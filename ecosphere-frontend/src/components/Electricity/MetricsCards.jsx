@@ -28,10 +28,18 @@ const MetricCard = ({ title, value, unit, icon: IconComponent, color = 'primary'
   );
 };
 
-const MetricsCards = ({ metrics, unit = 'Wh' }) => {
+const MetricsCards = ({ metrics, unit = 'Wh', metricType = '' }) => {
   if (!metrics) {
     return null;
   }
+
+  // Add metric type prefix if provided
+  const getTitle = (baseTitle) => {
+    if (metricType) {
+      return `${baseTitle} ${metricType}`;
+    }
+    return baseTitle;
+  };
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -41,7 +49,7 @@ const MetricsCards = ({ metrics, unit = 'Wh' }) => {
       <Grid container spacing={2}>
         <Grid xs={12} sm={6} md={3}>
           <MetricCard
-            title="Total"
+            title={getTitle('Total')}
             value={Math.abs(metrics.total).toFixed(2)}
             unit={unit}
             icon={ShowChart}
@@ -50,7 +58,7 @@ const MetricsCards = ({ metrics, unit = 'Wh' }) => {
         </Grid>
         <Grid xs={12} sm={6} md={3}>
           <MetricCard
-            title="Average"
+            title={getTitle('Average')}
             value={Math.abs(metrics.average).toFixed(2)}
             unit={unit}
             icon={Speed}
@@ -59,7 +67,7 @@ const MetricsCards = ({ metrics, unit = 'Wh' }) => {
         </Grid>
         <Grid xs={12} sm={6} md={3}>
           <MetricCard
-            title="Peak"
+            title={getTitle('Peak')}
             value={Math.abs(metrics.peak).toFixed(2)}
             unit={unit}
             icon={TrendingUp}
@@ -68,7 +76,7 @@ const MetricsCards = ({ metrics, unit = 'Wh' }) => {
         </Grid>
         <Grid xs={12} sm={6} md={3}>
           <MetricCard
-            title="Minimum"
+            title={getTitle('Minimum')}
             value={Math.abs(metrics.min).toFixed(2)}
             unit={unit}
             icon={TrendingDown}

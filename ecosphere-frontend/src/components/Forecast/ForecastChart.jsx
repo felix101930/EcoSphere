@@ -184,7 +184,7 @@ const ForecastChart = ({
         <Card>
             <CardContent>
                 <Typography variant="h6" gutterBottom>
-                    📈 Forecast Results
+                    📈 Temperature Forecast
                 </Typography>
 
                 <Box sx={{ height: CHART_HEIGHT, position: 'relative' }}>

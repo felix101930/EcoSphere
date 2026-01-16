@@ -25,7 +25,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
     }
 
     const { metrics } = data;
-    
+
     // Calculate totals for each equipment
     const equipmentData = [
       { label: EQUIPMENT_LABELS.panel2A1, value: Math.abs(metrics.panel2A1?.total || 0) },
@@ -69,7 +69,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             const label = context.label || '';
             const value = context.parsed || 0;
             const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -85,7 +85,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
     return (
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Equipment Breakdown
+          Electricity Consumption Trend by Equipment
         </Typography>
         <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography color="text.secondary">
@@ -100,7 +100,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
     return (
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Equipment Breakdown
+          Electricity Consumption Trend by Equipment
         </Typography>
         <Alert severity="warning" sx={{ mb: 2 }}>
           Equipment data has different time ranges for different categories
@@ -117,7 +117,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Equipment Breakdown
+        Electricity Consumption Trend by Equipment
       </Typography>
       {data.warning && (
         <Alert severity="info" sx={{ mb: 2 }}>

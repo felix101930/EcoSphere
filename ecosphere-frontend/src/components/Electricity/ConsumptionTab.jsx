@@ -72,7 +72,7 @@ const ConsumptionTab = ({
       )}
 
       {/* Key Metrics */}
-      <MetricsCards metrics={data.metrics} />
+      <MetricsCards metrics={data.metrics} metricType="Consumption" />
 
       {/* Breakdown Selector */}
       <BreakdownSelector
@@ -85,7 +85,7 @@ const ConsumptionTab = ({
       {selectedBreakdown === CONSUMPTION_BREAKDOWNS.OVERALL && (
         <OverallTrendChart
           data={data.data}
-          title="Consumption Trend"
+          title="Electricity Consumption Trend Overall (Daily)"
           dataLabel="Consumption (Wh)"
           color="#DA291C"
         />

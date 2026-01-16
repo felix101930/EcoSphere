@@ -51,7 +51,7 @@ const RainwaterTab = ({ data, loading, dateTo, forecast, forecastLoading, foreca
                     {!loading && data && data.data && data.data.length > 0 && (
                         <>
                             {/* Metrics Cards */}
-                            <MetricsCards metrics={data.metrics} unit="%" />
+                            <MetricsCards metrics={data.metrics} unit="%" metricType="Water Level" />
 
                             {/* Overall Trend Chart */}
                             <OverallTrendChart

@@ -191,6 +191,7 @@ const ElectricityReportPage = () => {
           onApply={handleApplyFilter}
           dateRange={dateRange?.consumption}
           loading={loading}
+          showEquipmentInfo={true}
         />
 
         {/* Main Tabs */}

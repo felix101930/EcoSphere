@@ -27,7 +27,8 @@ const TimeFilter = ({
     onDateToChange,
     onApply,
     dateRange,
-    loading
+    loading,
+    showEquipmentInfo = false // New prop to control equipment info display
 }) => {
     const [preset, setPreset] = useState(TIME_PRESETS.LAST_7_DAYS);
 
@@ -164,18 +165,22 @@ const TimeFilter = ({
             {dateRange && (
                 <Alert severity="info" sx={{ mt: 2 }}>
                     Available Range: {dateRange.minDate} to {dateRange.maxDate}
-                    <br /><br />
-                    <strong>Equipment Breakdown Data Ranges:</strong>
-                    <br />
-                    • Panel2A-1: 2020-02-15 to 2020-11-08
-                    <br />
-                    • Ventilation: 2020-11-01 to 2020-11-08
-                    <br />
-                    • Lighting: 2019-11-07 to 2019-11-14
-                    <br />
-                    • Equipment/R&D: 2019-11-07 to 2019-11-14
-                    <br />
-                    • Appliances: 2019-11-07 to 2019-11-14
+                    {showEquipmentInfo && (
+                        <>
+                            <br /><br />
+                            <strong>Equipment Breakdown Data Ranges:</strong>
+                            <br />
+                            • Panel2A-1: 2020-02-15 to 2020-11-08
+                            <br />
+                            • Ventilation: 2020-11-01 to 2020-11-08
+                            <br />
+                            • Lighting: 2019-11-07 to 2019-11-14
+                            <br />
+                            • Equipment/R&D: 2019-11-07 to 2019-11-14
+                            <br />
+                            • Appliances: 2019-11-07 to 2019-11-14
+                        </>
+                    )}
                 </Alert>
             )}
         </Paper>
