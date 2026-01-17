@@ -230,25 +230,33 @@ class NaturalGasForecastService {
 
     /**
      * Tier 1: Seasonal Weighted Forecast
+     * Uses historical seasonal patterns to predict future consumption
      * Formula: 0.4 × LastYear + 0.4 × TwoYearsAgo + 0.2 × Recent3MonthAvg
+     * 
+     * @param {Array} data - Historical monthly data
+     * @param {number} forecastMonths - Number of months to forecast
+     * @param {Date} targetDate - Base date for forecast calculation
+     * @returns {Array} Array of prediction objects with month, label, value, and components
      */
     static seasonalWeightedForecast(data, forecastMonths, targetDate) {
         const predictions = [];
         const target = new Date(targetDate);
 
-        // Get target year and month (1-12)
+        // Extract year and month from target date
+        // Month is converted to 1-12 range (JavaScript uses 0-11)
         const targetYear = target.getFullYear();
-        const targetMonth = target.getMonth() + 1; // Convert to 1-12
+        const targetMonth = target.getMonth() + 1;
 
         console.log(`Target: ${targetYear}-${targetMonth}`);
 
-        // Start from i=1 to forecast the NEXT month after target
+        // Loop through each month we need to forecast
+        // Start from i=1 because we forecast the NEXT month after target
         for (let i = 1; i <= forecastMonths; i++) {
-            // Calculate forecast month directly using math
+            // Calculate forecast month using pure math (avoids Date object timezone issues)
             let forecastMonth = targetMonth + i;
             let forecastYear = targetYear;
 
-            // Handle year overflow
+            // Handle year boundary crossing (e.g., Dec + 1 = Jan of next year)
             while (forecastMonth > 12) {
                 forecastMonth -= 12;
                 forecastYear += 1;
@@ -256,28 +264,27 @@ class NaturalGasForecastService {
 
             console.log(`Iteration ${i}: Forecast ${forecastYear}-${forecastMonth}`);
 
-            // Get last year same month
+            // Get historical data for the same month in previous years
             const lastYearValue = this.getMonthValue(data, forecastMonth, forecastYear - 1);
-
-            // Get two years ago same month
             const twoYearsAgoValue = this.getMonthValue(data, forecastMonth, forecastYear - 2);
 
-            // Get recent 3-month average
+            // Get recent trend by averaging last 3 months
             const recentAvg = this.getRecentAverage(data, 3);
 
-            // Weighted prediction
+            // Apply weighted formula: 40% last year + 40% two years ago + 20% recent trend
             const prediction =
                 SEASONAL_WEIGHTS.LAST_YEAR * lastYearValue +
                 SEASONAL_WEIGHTS.TWO_YEARS_AGO * twoYearsAgoValue +
                 SEASONAL_WEIGHTS.RECENT_AVERAGE * recentAvg;
 
-            // Create date for label
+            // Create Date object for month label formatting
             const forecastDate = new Date(forecastYear, forecastMonth - 1, 1);
 
+            // Build prediction object with all components for transparency
             predictions.push({
                 month: `${forecastYear}-${String(forecastMonth).padStart(2, '0')}`,
                 monthLabel: this.getMonthLabel(forecastDate),
-                value: Math.max(0, prediction),
+                value: Math.max(0, prediction), // Ensure non-negative
                 components: {
                     lastYear: lastYearValue,
                     twoYearsAgo: twoYearsAgoValue,
