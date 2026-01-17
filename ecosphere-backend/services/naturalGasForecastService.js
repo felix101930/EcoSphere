@@ -57,12 +57,12 @@ class NaturalGasForecastService {
      * Main forecast function - intelligently selects best algorithm
      */
     static async generateForecast(targetDate, forecastMonths, historicalData) {
-        // Temporarily disable cache for debugging
-        // const cacheKey = cache.constructor.generateKey('ng-forecast', targetDate, forecastMonths, historicalData.length);
-        // const cached = cache.get(cacheKey);
-        // if (cached) {
-        //     return cached;
-        // }
+        // Check cache first
+        const cacheKey = cache.constructor.generateKey('ng-forecast', targetDate, forecastMonths, historicalData.length);
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            return cached;
+        }
 
         try {
             // 1. Assess data availability
@@ -104,8 +104,8 @@ class NaturalGasForecastService {
                 }
             };
 
-            // Cache the result
-            // cache.set(cacheKey, result, FORECAST_CACHE_TTL);
+            // Cache the result (1 hour TTL for forecasts)
+            cache.set(cacheKey, result, FORECAST_CACHE_TTL);
 
             return result;
         } catch (error) {

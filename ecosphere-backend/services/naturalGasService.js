@@ -9,10 +9,10 @@ class NaturalGasService {
      * @returns {Promise<Array>} Monthly usage data
      */
     static async readMonthlyUsageData() {
-        // Temporarily disable cache for testing
-        // const cacheKey = 'naturalGas:monthlyUsage:v1';
-        // const cached = cache.get(cacheKey);
-        // if (cached) return cached;
+        // Check cache first
+        const cacheKey = 'naturalGas:monthlyUsage:v1';
+        const cached = cache.get(cacheKey);
+        if (cached) return cached;
 
         try {
             const jsonPath = NATURAL_GAS_CONFIG.CSV_FILE_PATH.replace('naturalGasReadings.csv', 'naturalGasMonthlyUsage.json');
@@ -22,8 +22,8 @@ class NaturalGasService {
             // Filter out 2022 data (we only want 2023 onwards)
             const filteredData = data.filter(item => item.year >= 2023);
 
-            // Temporarily disable cache for testing
-            // cache.set(cacheKey, filteredData, NATURAL_GAS_CONFIG.CACHE_TTL);
+            // Cache the data (static data, long TTL)
+            cache.set(cacheKey, filteredData, NATURAL_GAS_CONFIG.CACHE_TTL);
 
             return filteredData;
         } catch (error) {
