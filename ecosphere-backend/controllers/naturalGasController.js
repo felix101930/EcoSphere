@@ -34,6 +34,15 @@ const getDateRange = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get all historical data
+ * GET /api/natural-gas/all-data
+ */
+const getAllData = asyncHandler(async (req, res) => {
+    const allData = await NaturalGasService.getAllData();
+    sendSuccess(res, allData);
+});
+
+/**
  * Get forecast
  * GET /api/natural-gas/forecast?targetDate=YYYY-MM-DD&forecastMonths=6
  */
@@ -67,5 +76,6 @@ const getForecast = asyncHandler(async (req, res) => {
 module.exports = {
     getConsumption,
     getDateRange,
+    getAllData,
     getForecast
 };

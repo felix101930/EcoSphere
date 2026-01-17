@@ -57,12 +57,12 @@ class NaturalGasForecastService {
      * Main forecast function - intelligently selects best algorithm
      */
     static async generateForecast(targetDate, forecastMonths, historicalData) {
-        // Check cache first
-        const cacheKey = cache.constructor.generateKey('ng-forecast', targetDate, forecastMonths, historicalData.length);
-        const cached = cache.get(cacheKey);
-        if (cached) {
-            return cached;
-        }
+        // Temporarily disable cache for debugging
+        // const cacheKey = cache.constructor.generateKey('ng-forecast', targetDate, forecastMonths, historicalData.length);
+        // const cached = cache.get(cacheKey);
+        // if (cached) {
+        //     return cached;
+        // }
 
         try {
             // 1. Assess data availability
@@ -105,7 +105,7 @@ class NaturalGasForecastService {
             };
 
             // Cache the result
-            cache.set(cacheKey, result, FORECAST_CACHE_TTL);
+            // cache.set(cacheKey, result, FORECAST_CACHE_TTL);
 
             return result;
         } catch (error) {
@@ -236,10 +236,25 @@ class NaturalGasForecastService {
         const predictions = [];
         const target = new Date(targetDate);
 
+        // Get target year and month (1-12)
+        const targetYear = target.getFullYear();
+        const targetMonth = target.getMonth() + 1; // Convert to 1-12
+
+        console.log(`Target: ${targetYear}-${targetMonth}`);
+
+        // Start from i=1 to forecast the NEXT month after target
         for (let i = 1; i <= forecastMonths; i++) {
-            const forecastDate = new Date(target.getFullYear(), target.getMonth() + i, 1);
-            const forecastMonth = forecastDate.getMonth() + 1;
-            const forecastYear = forecastDate.getFullYear();
+            // Calculate forecast month directly using math
+            let forecastMonth = targetMonth + i;
+            let forecastYear = targetYear;
+
+            // Handle year overflow
+            while (forecastMonth > 12) {
+                forecastMonth -= 12;
+                forecastYear += 1;
+            }
+
+            console.log(`Iteration ${i}: Forecast ${forecastYear}-${forecastMonth}`);
 
             // Get last year same month
             const lastYearValue = this.getMonthValue(data, forecastMonth, forecastYear - 1);
@@ -255,6 +270,9 @@ class NaturalGasForecastService {
                 SEASONAL_WEIGHTS.LAST_YEAR * lastYearValue +
                 SEASONAL_WEIGHTS.TWO_YEARS_AGO * twoYearsAgoValue +
                 SEASONAL_WEIGHTS.RECENT_AVERAGE * recentAvg;
+
+            // Create date for label
+            const forecastDate = new Date(forecastYear, forecastMonth - 1, 1);
 
             predictions.push({
                 month: `${forecastYear}-${String(forecastMonth).padStart(2, '0')}`,
@@ -294,13 +312,26 @@ class NaturalGasForecastService {
         const predictions = [];
         const target = new Date(targetDate);
 
+        // Get target year and month (1-12)
+        const targetYear = target.getFullYear();
+        const targetMonth = target.getMonth() + 1;
+
         for (let i = 1; i <= forecastMonths; i++) {
-            const forecastDate = new Date(target.getFullYear(), target.getMonth() + i, 1);
-            const forecastMonth = forecastDate.getMonth() + 1;
-            const forecastYear = forecastDate.getFullYear();
+            // Calculate forecast month directly using math
+            let forecastMonth = targetMonth + i;
+            let forecastYear = targetYear;
+
+            // Handle year overflow
+            while (forecastMonth > 12) {
+                forecastMonth -= 12;
+                forecastYear += 1;
+            }
 
             // Predict using trend
             const prediction = intercept + slope * (n + i - 1);
+
+            // Create date for label
+            const forecastDate = new Date(forecastYear, forecastMonth - 1, 1);
 
             predictions.push({
                 month: `${forecastYear}-${String(forecastMonth).padStart(2, '0')}`,
@@ -383,10 +414,23 @@ class NaturalGasForecastService {
         const predictions = [];
         const target = new Date(targetDate);
 
+        // Get target year and month (1-12)
+        const targetYear = target.getFullYear();
+        const targetMonth = target.getMonth() + 1;
+
         for (let i = 1; i <= forecastMonths; i++) {
-            const forecastDate = new Date(target.getFullYear(), target.getMonth() + i, 1);
-            const forecastMonth = forecastDate.getMonth() + 1;
-            const forecastYear = forecastDate.getFullYear();
+            // Calculate forecast month directly using math
+            let forecastMonth = targetMonth + i;
+            let forecastYear = targetYear;
+
+            // Handle year overflow
+            while (forecastMonth > 12) {
+                forecastMonth -= 12;
+                forecastYear += 1;
+            }
+
+            // Create date for label
+            const forecastDate = new Date(forecastYear, forecastMonth - 1, 1);
 
             predictions.push({
                 month: `${forecastYear}-${String(forecastMonth).padStart(2, '0')}`,

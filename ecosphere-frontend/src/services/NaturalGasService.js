@@ -66,6 +66,26 @@ class NaturalGasService {
     }
 
     /**
+     * Get all historical data
+     * @returns {Promise<Array>} All monthly data
+     */
+    static async getAllData() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/natural-gas/all-data`);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch all data');
+            }
+
+            const result = await response.json();
+            return result.data;
+        } catch (error) {
+            console.error('Error fetching all data:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get forecast
      * @param {Date} targetDate - Target date for forecast
      * @param {number} forecastMonths - Number of months to forecast

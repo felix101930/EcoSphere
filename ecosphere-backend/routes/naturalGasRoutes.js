@@ -9,6 +9,9 @@ router.get('/consumption', naturalGasController.getConsumption);
 // Date range endpoint
 router.get('/date-range', naturalGasController.getDateRange);
 
+// All data endpoint
+router.get('/all-data', naturalGasController.getAllData);
+
 // Forecast endpoint
 router.get('/forecast', naturalGasController.getForecast);
 

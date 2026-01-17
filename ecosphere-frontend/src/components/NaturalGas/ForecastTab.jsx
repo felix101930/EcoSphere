@@ -18,9 +18,45 @@ function ForecastTab() {
         setError(null);
 
         try {
-            // Use current date as target
-            const targetDate = new Date();
+            // Get the last available data point to determine forecast start date
+            // Forecast should start from the month after the last available data
+            const allData = await NaturalGasService.getAllData();
+
+            console.log('=== Natural Gas Forecast Debug ===');
+            console.log('All data length:', allData?.length);
+
+            if (!allData || allData.length === 0) {
+                throw new Error('No historical data available for forecast');
+            }
+
+            // Get the last data point
+            const lastDataPoint = allData[allData.length - 1];
+            console.log('Last data point:', lastDataPoint);
+
+            // Parse the last month (format: "YYYY-MM")
+            const [lastYear, lastMonth] = lastDataPoint.month.split('-').map(Number);
+            console.log('Last data year:', lastYear, 'month:', lastMonth);
+
+            // Calculate the NEXT month after the last data point
+            // This is where the forecast should start
+            let nextMonth = lastMonth + 1;
+            let nextYear = lastYear;
+            if (nextMonth > 12) {
+                nextMonth = 1;
+                nextYear += 1;
+            }
+            console.log('Next month (forecast start):', nextYear, '-', nextMonth);
+
+            // Create target date for the NEXT month (forecast start)
+            // Use month-1 because JavaScript Date uses 0-based months
+            const targetDate = new Date(nextYear, nextMonth - 1, 1);
+            console.log('Target date:', targetDate.toISOString());
+            console.log('Forecast months:', forecastMonths);
+
             const result = await NaturalGasService.getForecast(targetDate, forecastMonths);
+            console.log('Forecast result:', result);
+            console.log('First prediction:', result?.predictions?.[0]);
+
             setForecast(result);
         } catch (err) {
             console.error('Error generating forecast:', err);
