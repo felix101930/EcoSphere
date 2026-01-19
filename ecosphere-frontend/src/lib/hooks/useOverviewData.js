@@ -3,6 +3,7 @@ import { TIME_PRESETS, DATA_RANGES, DEMO_DATE_RANGE } from '../constants/overvie
 import ElectricityReportService from '../../services/ElectricityReportService';
 import WaterReportService from '../../services/WaterReportService';
 import ThermalService from '../../services/ThermalService';
+import NaturalGasService from '../../services/NaturalGasService';
 import { aggregateToDaily, calculateDailyMetrics } from '../utils/dataAggregation';
 
 export default function useOverviewData() {
@@ -26,6 +27,7 @@ export default function useOverviewData() {
         first: null,
         second: null
     });
+    const [naturalGasData, setNaturalGasData] = useState(null);
 
     // Calculate date range based on preset
     const calculateDateRange = useCallback((preset) => {
@@ -264,6 +266,40 @@ export default function useOverviewData() {
         }
     }, [isDateInRange]);
 
+    // Load natural gas data
+    const loadNaturalGasData = useCallback(async (fromStr, toStr) => {
+        try {
+            // Fetch all natural gas data (monthly data from 2023-01 to 2025-11)
+            // Always show all available data because natural gas is monthly data
+            // and the date ranges from other modules (daily data) don't align well
+            const allData = await NaturalGasService.getAllData();
+
+            if (!allData || allData.length === 0) {
+                return null;
+            }
+
+            // Calculate metrics - note: data uses 'value' field, not 'usage'
+            const total = allData.reduce((sum, item) => sum + (item.value || 0), 0);
+            const average = total / allData.length;
+            const values = allData.map(item => item.value || 0);
+            const peak = Math.max(...values);
+            const min = Math.min(...values);
+
+            return {
+                data: allData,
+                metrics: {
+                    total,
+                    average,
+                    peak,
+                    min
+                }
+            };
+        } catch (err) {
+            console.error('Error loading natural gas data:', err);
+            return null;
+        }
+    }, []);
+
     // Load all data
     const loadAllData = useCallback(async () => {
         if (!dateRange.from || !dateRange.to) return;
@@ -275,22 +311,24 @@ export default function useOverviewData() {
             const fromStr = formatDate(dateRange.from);
             const toStr = formatDate(dateRange.to);
 
-            const [electricity, water, thermal] = await Promise.all([
+            const [electricity, water, thermal, naturalGas] = await Promise.all([
                 loadElectricityData(fromStr, toStr),
                 loadWaterData(fromStr, toStr),
-                loadThermalData(fromStr, toStr)
+                loadThermalData(fromStr, toStr),
+                loadNaturalGasData(fromStr, toStr)
             ]);
 
             setElectricityData(electricity);
             setWaterData(water);
             setThermalData(thermal);
+            setNaturalGasData(naturalGas);
         } catch (err) {
             console.error('Error loading overview data:', err);
             setError('Failed to load data. Please try again.');
         } finally {
             setLoading(false);
         }
-    }, [dateRange, loadElectricityData, loadWaterData, loadThermalData]);
+    }, [dateRange, loadElectricityData, loadWaterData, loadThermalData, loadNaturalGasData]);
 
     // Update date range when preset changes
     useEffect(() => {
@@ -312,6 +350,7 @@ export default function useOverviewData() {
         electricityData,
         waterData,
         thermalData,
+        naturalGasData,
         reload: loadAllData
     };
 }

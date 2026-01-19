@@ -24,7 +24,8 @@ export const DATA_RANGES = {
     electricity: { start: '2019-02-13', end: '2020-11-08' },
     thermal: { start: '2019-01-01', end: '2020-11-08' },
     rainwater: { start: '2018-10-13', end: '2020-11-08' },
-    hotWater: { start: '2018-09-11', end: '2019-11-14' }
+    hotWater: { start: '2018-09-11', end: '2019-11-14' },
+    naturalGas: { start: '2023-01', end: '2025-11' }
 };
 
 export const SECTION_COLORS = {
@@ -41,7 +42,8 @@ export const SECTION_COLORS = {
         basement: '#2196F3',
         first: '#4CAF50',
         second: '#FF9800'
-    }
+    },
+    naturalGas: '#FF6B35' // Orange for natural gas/fire
 };
 
 export const FLOOR_LABELS = {
