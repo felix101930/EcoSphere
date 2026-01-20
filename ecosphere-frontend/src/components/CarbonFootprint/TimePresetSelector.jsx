@@ -22,7 +22,7 @@ export default function TimePresetSelector({
     };
 
     return (
-        <Paper sx={{ p: 3, mb: 3 }}>
+        <Paper data-hide-in-export="true" sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
                 Time Range (Last Available Date and Time for Demo)
             </Typography>

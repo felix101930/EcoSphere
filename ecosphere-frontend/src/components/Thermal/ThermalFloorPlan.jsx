@@ -4,7 +4,7 @@ import basementPlan from '../../assets/floorplan/basement.png';
 import level1Plan from '../../assets/floorplan/level1.png';
 import level2Plan from '../../assets/floorplan/level2.png';
 import ThermalService from '../../services/ThermalService';
-import { FLOOR_CONFIGS, SENSOR_POSITIONS, TEMPERATURE_CONFIG } from '../../lib/constants/thermal';
+import { FLOOR_CONFIGS, SENSOR_POSITIONS, TEMPERATURE_CONFIG, getSensorDisplayName } from '../../lib/constants/thermal';
 
 const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureHourly = [], currentTimeIndex = 0 }) => {
   // Floor image mapping
@@ -28,6 +28,7 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureH
   const renderSensorBox = (sensorId, temp, position) => {
     const color = ThermalService.getColorByTemp(temp);
     const displayTemp = ThermalService.formatTemperature(temp);
+    const displayName = getSensorDisplayName(sensorId);
 
     return (
       <Box
@@ -59,7 +60,7 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureH
             textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
           }}
         >
-          {sensorId}
+          {displayName}
         </Typography>
         <Typography
           variant="h4"

@@ -199,7 +199,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, selfSufficiencyData 
         return (
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                    Net Energy & Self-Sufficiency Rate Trend
+                    Net Energy & Electricity Self-Supply Rate Trend (Daily)
                 </Typography>
                 <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography color="text.secondary">
@@ -213,7 +213,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, selfSufficiencyData 
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-                Net Energy & Self-Sufficiency Rate Trend
+                Net Energy & Electricity Self-Supply Rate Trend (Daily)
             </Typography>
             <Box sx={{ height: 400 }}>
                 <Line data={chartData} options={options} plugins={plugins} />

@@ -52,7 +52,7 @@ export default function WaterOverview({ data }) {
                             '& .MuiPaper-root': { mb: 0 },
                             '& .MuiBox-root:has(canvas)': { height: '180px !important' }
                         }}>
-                            <MetricsCards metrics={data.rainwater.metrics} unit="%" />
+                            <MetricsCards metrics={data.rainwater.metrics} unit="%" metricType="Water Level" />
                             <OverallTrendChart
                                 data={data.rainwater.data}
                                 title="Rainwater Level Trend"
@@ -85,7 +85,7 @@ export default function WaterOverview({ data }) {
                             '& .MuiPaper-root': { mb: 0 },
                             '& .MuiBox-root:has(canvas)': { height: '180px !important' }
                         }}>
-                            <MetricsCards metrics={data.hotWater.metrics} unit="L/h" />
+                            <MetricsCards metrics={data.hotWater.metrics} unit="L/h" metricType="Hot Water" />
                             <OverallTrendChart
                                 data={data.hotWater.data}
                                 title="Hot Water Consumption Trend"

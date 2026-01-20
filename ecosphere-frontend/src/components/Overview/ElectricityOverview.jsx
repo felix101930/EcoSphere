@@ -7,7 +7,8 @@ import NetEnergyWithSelfSufficiencyChart from '../Electricity/NetEnergyWithSelfS
 import NoDataMessage from '../Common/NoDataMessage';
 import { DATA_RANGES, SECTION_COLORS } from '../../lib/constants/overview';
 
-function SectionCard({ title, icon: IconComponent, color, children }) {
+function SectionCard({ title, icon, color, children }) {
+    const IconComponent = icon;
     return (
         <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: 2 }}>
@@ -53,7 +54,7 @@ export default function ElectricityOverview({ data }) {
                             '& .MuiPaper-root': { mb: 0 },
                             '& .MuiBox-root:has(canvas)': { height: '180px !important' }
                         }}>
-                            <MetricsCards metrics={data.consumption.metrics} unit="Wh" />
+                            <MetricsCards metrics={data.consumption.metrics} unit="Wh" metricType="Consumption" />
                             <OverallTrendChart
                                 data={data.consumption.data}
                                 title="Consumption Trend"
@@ -86,7 +87,7 @@ export default function ElectricityOverview({ data }) {
                             '& .MuiPaper-root': { mb: 0 },
                             '& .MuiBox-root:has(canvas)': { height: '180px !important' }
                         }}>
-                            <MetricsCards metrics={data.generation.metrics} unit="Wh" />
+                            <MetricsCards metrics={data.generation.metrics} unit="Wh" metricType="Generation" />
                             <OverallTrendChart
                                 data={data.generation.data}
                                 title="Generation Trend"

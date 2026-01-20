@@ -53,6 +53,12 @@ const Sidebar = () => {
           roles: ['SuperAdmin', 'Admin', 'TeamMember'],
           permission: 'thermal',
           comingSoon: true
+        },
+        {
+          text: 'Natural Gas',
+          path: '/natural-gas',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: 'natural-gas'
         }
       ]
     },
@@ -91,13 +97,6 @@ const Sidebar = () => {
         {
           text: 'Dashboard Management',
           path: '/dashboard-management',
-          roles: ['SuperAdmin', 'Admin'],
-          permission: null,
-          comingSoon: true
-        },
-        {
-          text: 'Quiz Management',
-          path: '/quiz-management',
           roles: ['SuperAdmin', 'Admin'],
           permission: null,
           comingSoon: true

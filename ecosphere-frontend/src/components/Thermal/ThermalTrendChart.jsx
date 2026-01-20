@@ -2,7 +2,7 @@
 import { Box, Typography } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import ThermalService from '../../services/ThermalService';
-import { SENSOR_COLORS, getSensorColor, getSensorName } from '../../lib/constants/thermal';
+import { getSensorColor, getSensorDisplayName } from '../../lib/constants/thermal';
 
 const ThermalTrendChart = ({ data, outdoorTemperature, onTimeClick }) => {
   // Get available sensor IDs from data
@@ -25,9 +25,10 @@ const ThermalTrendChart = ({ data, outdoorTemperature, onTimeClick }) => {
   const datasets = availableSensorIds.map(sensorId => {
     const sensorNumber = sensorId.replace('_TL2', '');
     const rgb = getSensorColor(sensorId, 'rgb');
+    const displayName = getSensorDisplayName(sensorNumber);
 
     return {
-      label: `${sensorNumber} Temperature`,
+      label: `${displayName} Temperature`,
       data: data[sensorId].map(record => record.value),
       borderColor: `rgb(${rgb})`,
       backgroundColor: `rgba(${rgb}, 0.1)`,
@@ -139,7 +140,7 @@ const ThermalTrendChart = ({ data, outdoorTemperature, onTimeClick }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        📈 Temperature Trend (15-Min Overview)
+        📈 Temperature Trend (15-Min Interval)
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Records: {recordCount} | Click on the chart to jump to that time

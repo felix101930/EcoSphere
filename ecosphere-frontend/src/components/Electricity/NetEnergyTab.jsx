@@ -30,13 +30,13 @@ const NetEnergyTab = ({ data, loading }) => {
       {/* Info Card */}
       <Paper sx={{ p: 2, mb: 3, bgcolor: 'info.50', borderLeft: 4, borderColor: 'info.main' }}>
         <Typography variant="body2" color="text.secondary">
-          <strong>Net Energy</strong> = Generation - Consumption
+          • <strong>Net Energy</strong> = Generation - Consumption
           <br />
           • <strong>Negative values</strong> (red): Building consumes more than it generates → Grid dependency
           <br />
           • <strong>Positive values</strong> (green): Building generates more than it consumes → Grid export
           <br />
-          • <strong>Self-Sufficiency Rate</strong> = (Generation / Consumption) × 100%
+          • <strong>Self-Supply Rate</strong> = (Generation / Consumption) × 100%
           <br />
           • <strong>100%</strong>: Self-sufficient | <strong>&gt;100%</strong>: Surplus | <strong>&lt;100%</strong>: Grid dependent
         </Typography>

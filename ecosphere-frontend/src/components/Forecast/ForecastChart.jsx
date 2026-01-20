@@ -19,6 +19,10 @@ const ForecastChart = ({
     consumptionLabel = 'Consumption Forecast',
     generationLabel = 'Generation Forecast',
     mlForecastLabel = 'AI Solar Forecast',
+    outdoorTemperatureLabel = 'Outdoor Temperature',
+    showTotal = true,
+    decimalPlaces = 0,
+    title = '📈 Forecast Chart' // Add customizable title prop
 }) => {
     const [chartView, setChartView] = useState('solar'); // 'solar' or 'weather'
 
@@ -99,7 +103,7 @@ const ForecastChart = ({
         <Card>
             <CardContent>
                 <Typography variant="h6" gutterBottom>
-                    📈 Historical Forecast Results
+                    {title}
                 </Typography>
 
                 <Box sx={{ height: CHART_HEIGHT, position: 'relative' }}>

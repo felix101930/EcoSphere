@@ -505,7 +505,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                     {forecastType === FORECAST_UI_TYPES.HISTORICAL && consumptionForecast && (
                         <DataAvailabilityCard
                             metadata={consumptionForecast.metadata}
-                            title="Consumption Forecast"
+                            title="Electricity Consumption Forecast"
                         />
                     )}
                     
@@ -516,13 +516,18 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                     )}
                     
                     {/* Forecast Chart */}
-                    <ForecastChart
+                   <ForecastChart
                         consumptionData={forecastType === FORECAST_UI_TYPES.HISTORICAL ? consumptionForecast : null}
                         generationData={forecastType === FORECAST_UI_TYPES.HISTORICAL ? generationForecast : null}
-                        mlForecastData={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? displayForecast : null}
+                        mlForecastData={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? displayForecastData : null}
                         forecastType={forecastType}
                         yAxisLabel={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 'Power Output (kW)' : 'Daily Energy (Wh/day)'}
                         unit={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 'kW' : 'Wh'}
+                        
+                        // These are the lines you added from main:
+                        title="📈 Electricity Forecast"
+                        consumptionLabel="Electricity Consumption Forecast"
+                        generationLabel="Electricity Generation Forecast"
                     />
                 </>
             )}

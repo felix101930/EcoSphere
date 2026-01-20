@@ -1,0 +1,290 @@
+[
+  {
+    "year": 2022,
+    "month": 12,
+    "monthKey": "2022-12",
+    "monthLabel": "Dec 2022",
+    "usage": 0,
+    "readingDate": "2023-01-04"
+  },
+  {
+    "year": 2023,
+    "month": 1,
+    "monthKey": "2023-01",
+    "monthLabel": "Jan 2023",
+    "usage": 196,
+    "readingDate": "2023-02-06"
+  },
+  {
+    "year": 2023,
+    "month": 2,
+    "monthKey": "2023-02",
+    "monthLabel": "Feb 2023",
+    "usage": 194,
+    "readingDate": "2023-03-06"
+  },
+  {
+    "year": 2023,
+    "month": 3,
+    "monthKey": "2023-03",
+    "monthLabel": "Mar 2023",
+    "usage": 215,
+    "readingDate": "2023-04-27"
+  },
+  {
+    "year": 2023,
+    "month": 4,
+    "monthKey": "2023-04",
+    "monthLabel": "Apr 2023",
+    "usage": 0,
+    "readingDate": "2023-05-05"
+  },
+  {
+    "year": 2023,
+    "month": 5,
+    "monthKey": "2023-05",
+    "monthLabel": "May 2023",
+    "usage": 0,
+    "readingDate": "2023-06-06"
+  },
+  {
+    "year": 2023,
+    "month": 6,
+    "monthKey": "2023-06",
+    "monthLabel": "Jun 2023",
+    "usage": 5,
+    "readingDate": "2023-07-05"
+  },
+  {
+    "year": 2023,
+    "month": 7,
+    "monthKey": "2023-07",
+    "monthLabel": "Jul 2023",
+    "usage": 0,
+    "readingDate": "2023-08-08"
+  },
+  {
+    "year": 2023,
+    "month": 8,
+    "monthKey": "2023-08",
+    "monthLabel": "Aug 2023",
+    "usage": 1,
+    "readingDate": "2023-09-07"
+  },
+  {
+    "year": 2023,
+    "month": 9,
+    "monthKey": "2023-09",
+    "monthLabel": "Sep 2023",
+    "usage": 0,
+    "readingDate": "2023-10-05"
+  },
+  {
+    "year": 2023,
+    "month": 10,
+    "monthKey": "2023-10",
+    "monthLabel": "Oct 2023",
+    "usage": 82,
+    "readingDate": "2023-11-06"
+  },
+  {
+    "year": 2023,
+    "month": 11,
+    "monthKey": "2023-11",
+    "monthLabel": "Nov 2023",
+    "usage": 99,
+    "readingDate": "2023-12-06"
+  },
+  {
+    "year": 2023,
+    "month": 12,
+    "monthKey": "2023-12",
+    "monthLabel": "Dec 2023",
+    "usage": 135,
+    "readingDate": "2024-01-08"
+  },
+  {
+    "year": 2024,
+    "month": 1,
+    "monthKey": "2024-01",
+    "monthLabel": "Jan 2024",
+    "usage": 166,
+    "readingDate": "2024-02-05"
+  },
+  {
+    "year": 2024,
+    "month": 2,
+    "monthKey": "2024-02",
+    "monthLabel": "Feb 2024",
+    "usage": 861,
+    "readingDate": "2024-03-05"
+  },
+  {
+    "year": 2024,
+    "month": 3,
+    "monthKey": "2024-03",
+    "monthLabel": "Mar 2024",
+    "usage": 725,
+    "readingDate": "2024-04-05"
+  },
+  {
+    "year": 2024,
+    "month": 4,
+    "monthKey": "2024-04",
+    "monthLabel": "Apr 2024",
+    "usage": 448,
+    "readingDate": "2024-05-07"
+  },
+  {
+    "year": 2024,
+    "month": 5,
+    "monthKey": "2024-05",
+    "monthLabel": "May 2024",
+    "usage": 70,
+    "readingDate": "2024-06-05"
+  },
+  {
+    "year": 2024,
+    "month": 6,
+    "monthKey": "2024-06",
+    "monthLabel": "Jun 2024",
+    "usage": 15,
+    "readingDate": "2024-07-08"
+  },
+  {
+    "year": 2024,
+    "month": 7,
+    "monthKey": "2024-07",
+    "monthLabel": "Jul 2024",
+    "usage": 0,
+    "readingDate": "2024-08-07"
+  },
+  {
+    "year": 2024,
+    "month": 8,
+    "monthKey": "2024-08",
+    "monthLabel": "Aug 2024",
+    "usage": 15,
+    "readingDate": "2024-09-01"
+  },
+  {
+    "year": 2024,
+    "month": 9,
+    "monthKey": "2024-09",
+    "monthLabel": "Sep 2024",
+    "usage": 0,
+    "readingDate": "2024-10-04"
+  },
+  {
+    "year": 2024,
+    "month": 10,
+    "monthKey": "2024-10",
+    "monthLabel": "Oct 2024",
+    "usage": 305,
+    "readingDate": "2024-11-05"
+  },
+  {
+    "year": 2024,
+    "month": 11,
+    "monthKey": "2024-11",
+    "monthLabel": "Nov 2024",
+    "usage": 841,
+    "readingDate": "2024-12-05"
+  },
+  {
+    "year": 2024,
+    "month": 12,
+    "monthKey": "2024-12",
+    "monthLabel": "Dec 2024",
+    "usage": 1066,
+    "readingDate": "2025-01-08"
+  },
+  {
+    "year": 2025,
+    "month": 1,
+    "monthKey": "2025-01",
+    "monthLabel": "Jan 2025",
+    "usage": 2137,
+    "readingDate": "2025-02-01"
+  },
+  {
+    "year": 2025,
+    "month": 2,
+    "monthKey": "2025-02",
+    "monthLabel": "Feb 2025",
+    "usage": 0,
+    "readingDate": "2025-03-06"
+  },
+  {
+    "year": 2025,
+    "month": 3,
+    "monthKey": "2025-03",
+    "monthLabel": "Mar 2025",
+    "usage": 644,
+    "readingDate": "2025-04-04"
+  },
+  {
+    "year": 2025,
+    "month": 4,
+    "monthKey": "2025-04",
+    "monthLabel": "Apr 2025",
+    "usage": 207,
+    "readingDate": "2025-05-05"
+  },
+  {
+    "year": 2025,
+    "month": 5,
+    "monthKey": "2025-05",
+    "monthLabel": "May 2025",
+    "usage": 21,
+    "readingDate": "2025-06-05"
+  },
+  {
+    "year": 2025,
+    "month": 6,
+    "monthKey": "2025-06",
+    "monthLabel": "Jun 2025",
+    "usage": 1,
+    "readingDate": "2025-07-07"
+  },
+  {
+    "year": 2025,
+    "month": 7,
+    "monthKey": "2025-07",
+    "monthLabel": "Jul 2025",
+    "usage": 0,
+    "readingDate": "2025-08-05"
+  },
+  {
+    "year": 2025,
+    "month": 8,
+    "monthKey": "2025-08",
+    "monthLabel": "Aug 2025",
+    "usage": 0,
+    "readingDate": "2025-09-05"
+  },
+  {
+    "year": 2025,
+    "month": 9,
+    "monthKey": "2025-09",
+    "monthLabel": "Sep 2025",
+    "usage": 31,
+    "readingDate": "2025-10-09"
+  },
+  {
+    "year": 2025,
+    "month": 10,
+    "monthKey": "2025-10",
+    "monthLabel": "Oct 2025",
+    "usage": 330,
+    "readingDate": "2025-11-06"
+  },
+  {
+    "year": 2025,
+    "month": 11,
+    "monthKey": "2025-11",
+    "monthLabel": "Nov 2025",
+    "usage": 720,
+    "readingDate": "2025-12-06"
+  }
+]

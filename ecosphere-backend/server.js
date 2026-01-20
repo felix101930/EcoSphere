@@ -12,6 +12,7 @@ const connectionManager = require("./db/connectionManager");
 const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
 const waterRoutes = require("./routes/waterRoutes");
+const naturalGasRoutes = require("./routes/naturalGasRoutes");
 
 const app = express();
 
@@ -74,6 +75,7 @@ const mlRoutes = require("./routes/mlRoutes");
 app.use("/api", userRoutes); // This includes /api/auth/login
 app.use("/api/electricity", electricityRoutes);
 app.use("/api/water", waterRoutes);
+app.use("/api/natural-gas", naturalGasRoutes);
 app.use("/api/login-logs", loginLogRoutes);
 app.use("/api/db", databaseTestRoutes);
 app.use("/api/thermal", thermalRoutes);

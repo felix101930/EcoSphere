@@ -58,6 +58,9 @@ class ElectricityService {
   /**
    * Get consumption data (TL341 - Hourly Increment)
    * Primary data source: 634 days (2019-02-13 to 2020-11-08)
+   * 
+   * Tier 1: Use TL341 (Overall consumption data)
+   * Tier 2: If TL341 has no data, aggregate equipment data
    */
   static async getConsumptionData(dateFrom, dateTo) {
     const cacheKey = cache.constructor.generateKey('consumption', dateFrom, dateTo);
@@ -66,6 +69,7 @@ class ElectricityService {
 
     const tableName = TABLE_NAMES.CONSUMPTION;
 
+    // Tier 1: Try to get Overall data (TL341)
     const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE CONVERT(varchar, ts, 23) >= '${dateFrom}' AND CONVERT(varchar, ts, 23) <= '${dateTo}' ORDER BY ts`;
     const command = buildSqlcmdCommand(query);
 
@@ -84,15 +88,77 @@ class ElectricityService {
         return null;
       }).filter(item => item !== null);
 
-      // Determine cache TTL based on date
-      const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
-      cache.set(cacheKey, results, ttl);
+      // If we have Overall data, return it
+      if (results.length > 0) {
+        const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+        const response = {
+          data: results,
+          source: 'overall',
+          dataSource: 'TL341 (Primary Consumption Data)'
+        };
+        cache.set(cacheKey, response, ttl);
+        return response;
+      }
 
-      return results;
+      // Tier 2: If no Overall data, try to aggregate equipment data
+      console.log(`No Overall data for ${dateFrom} to ${dateTo}, trying equipment aggregation...`);
+      const equipmentData = await this.getEquipmentBreakdownData(dateFrom, dateTo);
+      const aggregatedData = this.aggregateEquipmentData(equipmentData);
+
+      if (aggregatedData.length > 0) {
+        const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
+        const response = {
+          data: aggregatedData,
+          source: 'equipment_aggregated',
+          dataSource: 'Aggregated from Equipment Tables',
+          warning: 'Using aggregated equipment data (Overall consumption data not available for this period)',
+          equipmentSources: Object.keys(equipmentData).filter(key => equipmentData[key].length > 0)
+        };
+        cache.set(cacheKey, response, ttl);
+        return response;
+      }
+
+      // No data available at all
+      const emptyResponse = {
+        data: [],
+        source: 'none',
+        dataSource: 'No data available'
+      };
+      return emptyResponse;
+
     } catch (error) {
       console.error('Error getting consumption data:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Aggregate equipment data by timestamp
+   * Sums all equipment values for each timestamp
+   */
+  static aggregateEquipmentData(equipmentData) {
+    const timestampMap = new Map();
+
+    // Iterate through all equipment types
+    for (const [equipmentType, dataArray] of Object.entries(equipmentData)) {
+      if (!dataArray || dataArray.length === 0) continue;
+
+      // Add each data point to the timestamp map
+      dataArray.forEach(item => {
+        const existing = timestampMap.get(item.ts) || 0;
+        timestampMap.set(item.ts, existing + Math.abs(item.value)); // Use absolute value
+      });
+    }
+
+    // Convert map to array and sort by timestamp
+    const aggregated = Array.from(timestampMap.entries())
+      .map(([ts, value]) => ({
+        ts,
+        value: -Math.abs(value) // Make negative (consumption convention)
+      }))
+      .sort((a, b) => a.ts.localeCompare(b.ts));
+
+    return aggregated;
   }
 
   /**

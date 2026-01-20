@@ -150,46 +150,48 @@ const CustomCalculator = ({ emissionFactor }) => {
         Custom Calculation (based on monthly electricity bills)
       </Typography>
 
-      {/* Input Section */}
-      <CustomEntryForm
-        customEntries={customEntries}
-        onUpdateEntry={handleUpdateEntry}
-        onAddEntry={handleAddCustomEntry}
-        availableYears={availableYears}
-        getAvailableMonths={getAvailableMonths}
-      />
+      {/* Input Section - Hide in export */}
+      <Box data-hide-in-export="true">
+        <CustomEntryForm
+          customEntries={customEntries}
+          onUpdateEntry={handleUpdateEntry}
+          onAddEntry={handleAddCustomEntry}
+          availableYears={availableYears}
+          getAvailableMonths={getAvailableMonths}
+        />
 
-      {/* Generate and Clear Buttons */}
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center' }}>
-        <Button
-          variant="contained"
-          onClick={handleGenerateCustomReport}
-          sx={{
-            bgcolor: '#DA291C',
-            color: 'white',
-            px: 8,
-            py: 1.5,
-            fontSize: '16px',
-            fontFamily: 'Titillium Web, sans-serif',
-            fontWeight: 600,
-            textTransform: 'none',
-            borderRadius: '25px',
-            '&:hover': { bgcolor: '#A6192E' }
-          }}
-        >
-          Generate
-        </Button>
-        <Button
-          onClick={handleClearCustomData}
-          sx={{
-            color: '#666',
-            textTransform: 'none',
-            textDecoration: 'underline',
-            '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
-          }}
-        >
-          Clear
-        </Button>
+        {/* Generate and Clear Buttons */}
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center' }}>
+          <Button
+            variant="contained"
+            onClick={handleGenerateCustomReport}
+            sx={{
+              bgcolor: '#DA291C',
+              color: 'white',
+              px: 8,
+              py: 1.5,
+              fontSize: '16px',
+              fontFamily: 'Titillium Web, sans-serif',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: '25px',
+              '&:hover': { bgcolor: '#A6192E' }
+            }}
+          >
+            Generate
+          </Button>
+          <Button
+            onClick={handleClearCustomData}
+            sx={{
+              color: '#666',
+              textTransform: 'none',
+              textDecoration: 'underline',
+              '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
+            }}
+          >
+            Clear
+          </Button>
+        </Box>
       </Box>
 
       {/* Custom Chart */}

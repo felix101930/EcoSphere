@@ -27,11 +27,37 @@ const getAvailableDateRange = asyncHandler(async (req, res) => {
 
 /**
  * Get consumption data (overall)
+ * Now supports Tier 2 fallback (equipment aggregation)
  */
-const getConsumptionData = createDataFetcher({
-  fetchDataFn: ElectricityService.getConsumptionData.bind(ElectricityService),
-  calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
-  dataSource: DATA_SOURCES.CONSUMPTION
+const getConsumptionData = asyncHandler(async (req, res) => {
+  const { dateFrom, dateTo } = req.params;
+
+  // Validate date range
+  const validation = validateDateRange(dateFrom, dateTo);
+  if (!validation.isValid) {
+    return sendError(res, HTTP_STATUS.BAD_REQUEST, validation.error);
+  }
+
+  // Fetch data (returns object with data, source, dataSource, warning?, equipmentSources?)
+  const response = await ElectricityService.getConsumptionData(dateFrom, dateTo);
+
+  // Calculate metrics
+  const metrics = ElectricityService.calculateMetrics(response.data);
+
+  // Send response with all metadata
+  sendDataWithMetadata(res, {
+    data: response.data,
+    metadata: {
+      dateFrom,
+      dateTo,
+      dataSource: response.dataSource,
+      count: response.data.length,
+      metrics,
+      source: response.source,
+      ...(response.warning && { warning: response.warning }),
+      ...(response.equipmentSources && { equipmentSources: response.equipmentSources })
+    }
+  });
 });
 
 /**
@@ -58,11 +84,14 @@ const getNetEnergyData = asyncHandler(async (req, res) => {
   }
 
   // Fetch net energy, consumption, and generation data in parallel
-  const [netEnergyData, consumptionData, generationData] = await Promise.all([
+  const [netEnergyData, consumptionResponse, generationData] = await Promise.all([
     ElectricityService.getNetEnergyData(dateFrom, dateTo),
     ElectricityService.getConsumptionData(dateFrom, dateTo),
     ElectricityService.getGenerationData(dateFrom, dateTo)
   ]);
+
+  // Extract consumption data from response object
+  const consumptionData = consumptionResponse.data;
 
   // Calculate net energy metrics
   const metrics = ElectricityService.calculateNetEnergyMetrics(netEnergyData);
@@ -160,11 +189,14 @@ const getElectricityOverview = asyncHandler(async (req, res) => {
   }
 
   // Fetch all three datasets in parallel
-  const [consumptionData, generationData, netEnergyData] = await Promise.all([
+  const [consumptionResponse, generationData, netEnergyData] = await Promise.all([
     ElectricityService.getConsumptionData(dateFrom, dateTo),
     ElectricityService.getGenerationData(dateFrom, dateTo),
     ElectricityService.getNetEnergyData(dateFrom, dateTo)
   ]);
+
+  // Extract consumption data from response object
+  const consumptionData = consumptionResponse.data;
 
   // Calculate metrics
   const consumptionMetrics = ElectricityService.calculateMetrics(consumptionData);
@@ -179,7 +211,10 @@ const getElectricityOverview = asyncHandler(async (req, res) => {
       consumption: {
         data: consumptionData,
         metrics: consumptionMetrics,
-        dataSource: DATA_SOURCES.CONSUMPTION
+        dataSource: consumptionResponse.dataSource,
+        source: consumptionResponse.source,
+        ...(consumptionResponse.warning && { warning: consumptionResponse.warning }),
+        ...(consumptionResponse.equipmentSources && { equipmentSources: consumptionResponse.equipmentSources })
       },
       generation: {
         data: generationData,

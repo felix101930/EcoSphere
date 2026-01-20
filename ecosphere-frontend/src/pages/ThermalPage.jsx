@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
+import Disclaimer from '../components/Common/Disclaimer';
 import ThermalControlPanel from '../components/Thermal/ThermalControlPanel';
 import ThermalChartSection from '../components/Thermal/ThermalChartSection';
 import ThermalFloorPlan from '../components/Thermal/ThermalFloorPlan';
@@ -180,7 +181,7 @@ const ThermalPage = () => {
     return (
       <>
         <PageHeader
-          title="Thermal Dashboard"
+          title="Thermal Report"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -197,7 +198,7 @@ const ThermalPage = () => {
     return (
       <>
         <PageHeader
-          title="Thermal Dashboard"
+          title="Thermal Report"
           subtitle="Monitor and analyze building temperature"
           showExportButton={true}
           onExport={() => setExportDialogOpen(true)}
@@ -220,30 +221,35 @@ const ThermalPage = () => {
       />
 
       <PageHeader
-        title="Thermal Dashboard"
+        title="Thermal Report"
         subtitle="Monitor and analyze building temperature"
         showExportButton={true}
         onExport={() => setExportDialogOpen(true)}
       />
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
-        {/* Control Panel */}
-        <ThermalControlPanel
-          selectedFloor={selectedFloor}
-          onFloorChange={handleFloorChange}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          selectedDate={viewMode === VIEW_MODES.SINGLE || viewMode === VIEW_MODES.FORECAST ? selectedDate : null}
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          onDateChange={handleDateChange}
-          onDateFromChange={setDateFrom}
-          onDateToChange={setDateTo}
-          shouldDisableDate={shouldDisableDate}
-          onGenerateChart={handleGenerateChart}
-          dateRangeError={dateRangeError}
-          loading={loading}
-        />
+        {/* Disclaimer */}
+        <Disclaimer />
+
+        {/* Control Panel - Hide in export */}
+        <Box data-hide-in-export="true">
+          <ThermalControlPanel
+            selectedFloor={selectedFloor}
+            onFloorChange={handleFloorChange}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            selectedDate={viewMode === VIEW_MODES.SINGLE || viewMode === VIEW_MODES.FORECAST ? selectedDate : null}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateChange={handleDateChange}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+            shouldDisableDate={shouldDisableDate}
+            onGenerateChart={handleGenerateChart}
+            dateRangeError={dateRangeError}
+            loading={loading}
+          />
+        </Box>
 
         {/* Conditional Rendering based on View Mode */}
         {viewMode === VIEW_MODES.FORECAST ? (
@@ -276,18 +282,20 @@ const ThermalPage = () => {
               currentTimeIndex={currentTimeIndex}
             />
 
-            {/* Time/Date Slider */}
-            <ThermalTimeSlider
-              currentIndex={currentTimeIndex}
-              maxIndex={viewMode === VIEW_MODES.SINGLE ? maxTimeIndex : maxMultipleDaysTimeIndex}
-              onIndexChange={setCurrentTimeIndex}
-              currentTime={currentTime}
-              mode={viewMode}
-              dateList={viewMode === VIEW_MODES.MULTIPLE ? Object.keys(aggregatedData).sort() : []}
-              detailData={viewMode === VIEW_MODES.MULTIPLE ? multipleDaysDetailData : {}}
-              sensorIds={sensorIds}
-              loading={loading}
-            />
+            {/* Time/Date Slider - Hide in export */}
+            <Box data-hide-in-export="true">
+              <ThermalTimeSlider
+                currentIndex={currentTimeIndex}
+                maxIndex={viewMode === VIEW_MODES.SINGLE ? maxTimeIndex : maxMultipleDaysTimeIndex}
+                onIndexChange={setCurrentTimeIndex}
+                currentTime={currentTime}
+                mode={viewMode}
+                dateList={viewMode === VIEW_MODES.MULTIPLE ? Object.keys(aggregatedData).sort() : []}
+                detailData={viewMode === VIEW_MODES.MULTIPLE ? multipleDaysDetailData : {}}
+                sensorIds={sensorIds}
+                loading={loading}
+              />
+            </Box>
           </>
         )}
       </Box>
