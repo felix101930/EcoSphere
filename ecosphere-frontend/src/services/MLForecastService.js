@@ -138,6 +138,12 @@ class MLForecastService {
     // Get current time
     const now = new Date();
     const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    console.log(
+      `🔍 Filtering ${forecast.data.length} data points for ${hours} hours`,
+    );
+    console.log(`⏰ Current time: ${now.toLocaleTimeString()}`);
 
     // Filter: only future predictions starting from next hour
     const filteredData = forecast.data
@@ -145,16 +151,44 @@ class MLForecastService {
         const itemTime = new Date(item.timestamp);
 
         // Skip if in the past
-        if (itemTime < now) return false;
-
-        // Skip current hour if less than 30 minutes left
-        if (itemTime.getHours() === currentHour && now.getMinutes() > 30) {
+        if (itemTime < now) {
+          console.log(`⏪ Skipping past hour: ${itemTime.toLocaleString()}`);
           return false;
         }
 
-        return true; // Include ALL hours (day and night)
+        // Skip current hour if more than 30 minutes have passed
+        const isCurrentHour = itemTime.getHours() === currentHour;
+        if (isCurrentHour && currentMinute > 30) {
+          console.log(
+            `⏳ Skipping current hour (over 30 min passed): ${itemTime.toLocaleTimeString()}`,
+          );
+          return false;
+        }
+
+        return true;
       })
       .slice(0, hours); // Take only requested hours
+
+    console.log(`✅ Filtered to ${filteredData.length} hours`);
+
+    // Debug: Check if we have empty data in the filtered result
+    if (filteredData.length > 0) {
+      console.log(
+        `📊 First hour: ${new Date(filteredData[0].timestamp).toLocaleString()} - ${filteredData[0].predicted_kw}kW`,
+      );
+      console.log(
+        `📊 Last hour: ${new Date(filteredData[filteredData.length - 1].timestamp).toLocaleString()} - ${filteredData[filteredData.length - 1].predicted_kw}kW`,
+      );
+
+      // Check for empty hours in the middle
+      filteredData.forEach((item, index) => {
+        if (!item.weather || Object.keys(item.weather).length === 0) {
+          console.log(
+            `⚠️ Empty weather at index ${index}: ${new Date(item.timestamp).toLocaleTimeString()}`,
+          );
+        }
+      });
+    }
 
     // Calculate summary for filtered data
     const total_kwh = filteredData.reduce(
@@ -174,18 +208,51 @@ class MLForecastService {
     // Get weather stats from filtered data
     const weatherData = filteredData.filter((item) => item.weather);
     const hasWeatherData = weatherData.length > 0;
+
+    // Calculate averages only for items that have weather data
     const avgUV = hasWeatherData
       ? weatherData.reduce(
           (sum, item) => sum + (item.weather?.uv_index || 0),
           0,
         ) / weatherData.length
       : 0;
+
     const avgClouds = hasWeatherData
       ? weatherData.reduce(
           (sum, item) => sum + (item.weather?.clouds_pct || 0),
           0,
         ) / weatherData.length
       : 0;
+
+    // Ensure the last item has proper data
+    if (filteredData.length > 0) {
+      const lastItem = filteredData[filteredData.length - 1];
+      if (!lastItem.weather || Object.keys(lastItem.weather).length === 0) {
+        console.log(
+          `🔧 Fixing empty weather for last hour: ${new Date(lastItem.timestamp).toLocaleString()}`,
+        );
+
+        // Try to find weather data from previous hours
+        const previousItemWithWeather = filteredData
+          .slice(0, -1)
+          .reverse()
+          .find((item) => item.weather && Object.keys(item.weather).length > 0);
+
+        if (previousItemWithWeather) {
+          lastItem.weather = { ...previousItemWithWeather.weather };
+          console.log(`✅ Fixed last hour weather using previous data`);
+        } else {
+          // Use default weather values
+          lastItem.weather = {
+            uv_index: 0,
+            clouds_pct: 50,
+            temperature_c: 20,
+            weather_main: "Unknown",
+            weather_description: "No weather data available",
+          };
+        }
+      }
+    }
 
     return {
       success: true,
@@ -200,6 +267,7 @@ class MLForecastService {
         actual_hours_shown: filteredData.length,
         weather_quality: {
           weather_data_available: hasWeatherData,
+          weather_data_points: weatherData.length,
           avg_uv_index: parseFloat(avgUV.toFixed(2)),
           avg_cloud_cover: parseFloat(avgClouds.toFixed(1)),
         },

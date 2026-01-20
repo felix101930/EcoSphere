@@ -20,13 +20,6 @@ import {
     Chip,
     Stack
 } from '@mui/material';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -65,7 +58,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
   { value: 12, label: "Next 12 Hours", hours: 12 },
   { value: 24, label: "Next 24 Hours", hours: 24 },
   { value: 48, label: "Next 48 Hours", hours: 48 },
-  { value: "custom", label: "Custom Hours" },
+  { value: "custom", label: "Custom Hours (1-30)" },
 ];
 
     // Custom hook for historical forecasts
@@ -93,19 +86,20 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
 
     // Handle custom hours change
     const handleCustomHoursInput = (e) => {
-  const value = e.target.value;
-  setCustomHoursInput(value);
-  
-  if (value && !isNaN(value) && value > 0) {
-    const hours = Math.min(parseInt(value), 48);
-    setForecastHours(hours);
-    // Apply filter if data exists
-    if (mlForecast) {
-      const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
-      setFilteredForecast(filtered);
+    const value = e.target.value;
+    setCustomHoursInput(value);
+    
+    if (value && !isNaN(value) && value > 0) {
+        // Limit to 30 hours maximum
+        const hours = Math.min(Math.max(1, parseInt(value)), 30);
+        setForecastHours(hours);
+        // Apply filter if data exists
+        if (mlForecast) {
+        const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
+        setFilteredForecast(filtered);
+        }
     }
-  }
-};
+    };
 
     // Handle hours change (filtering)
     const handleHoursChange = (hours) => {
@@ -208,22 +202,23 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
 
     // Handle forecast hours dropdown change
     const handleForecastHoursChange = (e) => {
-  const value = e.target.value;
-  
-  if (value === "custom") {
-    setShowCustomInput(true);
-    setForecastHours(24); // Keep default value for now
-  } else {
-    setShowCustomInput(false);
-    const hours = parseInt(value);
-    setForecastHours(hours);
-    // Apply filter if data exists
-    if (mlForecast) {
-      const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
-      setFilteredForecast(filtered);
+    const value = e.target.value;
+    
+    if (value === "custom") {
+        setShowCustomInput(true);
+        setCustomHoursInput("");
+        setForecastHours(12); // Set a reasonable default
+    } else {
+        setShowCustomInput(false);
+        const hours = parseInt(value);
+        setForecastHours(hours);
+        // Apply filter if data exists
+        if (mlForecast) {
+        const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
+        setFilteredForecast(filtered);
+        }
     }
-  }
-};
+    };
 
     // Parse date safely (if needed)
     const parseDateSafely = (dateInput) => {
@@ -302,64 +297,85 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
 
                     {/* ML Forecast Configuration */}
                     {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
-                        <Grid container spacing={2} sx={{ mb: 3 }}>
-                            <Grid item xs={12} sm={showCustomInput ? 6 : 8} md={showCustomInput ? 4 : 4}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Forecast Duration</InputLabel>
-                                    <Select
-                                        value={showCustomInput ? "custom" : forecastHours}
-                                        label="Forecast Duration"
-                                        onChange={handleForecastHoursChange}
-                                        startAdornment={<AccessTimeIcon sx={{ mr: 1, color: 'action.active' }} />}
-                                    >
-                                        {quickForecastOptions.map((option) => (
-                                            <MenuItem key={option.value} value={option.value}>
-                                                {option.label} {option.value !== "custom" && `(${option.hours}h)`}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
+                        <>
+                            {/* Daylight Hours Notice */}
+                            <Alert severity="info" sx={{ mb: 2 }}>
+                                <Typography variant="body2" gutterBottom>
+                                    <strong>Daylight Hours Only:</strong> Forecast covers only daylight hours <strong>(6 AM to 9 PM)</strong>.
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Hours from 9 PM to 6 AM are excluded as solar generation is minimal during nighttime.
+                                </Typography>
+                            </Alert>
 
-                            {showCustomInput && (
+                            <Grid container spacing={2} sx={{ mb: 3 }}>
+                                <Grid item xs={12} sm={showCustomInput ? 6 : 6} md={showCustomInput ? 4 : 4}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>Forecast Duration</InputLabel>
+                                        <Select
+                                            value={showCustomInput ? "custom" : forecastHours}
+                                            label="Forecast Duration"
+                                            onChange={handleForecastHoursChange}
+                                            startAdornment={<AccessTimeIcon sx={{ mr: 1, color: 'action.active' }} />}
+                                        >
+                                            {quickForecastOptions.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label} {option.value !== "custom" && `(${option.hours}h)`}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                {showCustomInput && (
                                 <Grid item xs={12} sm={6} md={4}>
                                     <TextField
-                                        label="Custom Hours (1-48)"
-                                        type="number"
-                                        value={customHoursInput}
-                                        onChange={handleCustomHoursInput}
-                                        fullWidth
-                                        inputProps={{ min: 1, max: 48 }}
-                                        helperText={`Showing: ${forecastHours} hours`}
-                                        autoFocus
+                                    label="Custom Hours (1-30)"
+                                    type="number"
+                                    value={customHoursInput}
+                                    onChange={handleCustomHoursInput}
+                                    fullWidth
+                                    inputProps={{ 
+                                        min: 1, 
+                                        max: 30,
+                                        step: 1 
+                                    }}
+                                    helperText={`Max 30 hours for meaningful results`}
+                                    autoFocus
+                                    error={customHoursInput && (parseInt(customHoursInput) < 1 || parseInt(customHoursInput) > 30)}
                                     />
                                 </Grid>
-                            )}
+                                )}
 
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Stack direction="row" spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={6} md={4}>
                                     <Button
                                         variant="contained"
                                         onClick={handleGenerateForecast}
                                         disabled={mlLoading}
-                                        sx={{ flex: 1 }}
+                                        fullWidth
+                                        sx={{ height: '56px' }}
                                         startIcon={mlLoading ? <CircularProgress size={20} /> : <PsychologyIcon />}
                                     >
                                         {mlLoading ? 'Generating...' : 'Generate Forecast'}
                                     </Button>
-                                    
-                                    <Tooltip title="Force refresh (ignore cache)">
+                                </Grid>
+
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <Tooltip title="Force refresh forecast and bypass cache">
                                         <Button
                                             variant="outlined"
                                             onClick={handleForceRefresh}
                                             disabled={mlLoading}
+                                            fullWidth
+                                            sx={{ height: '56px' }}
+                                            startIcon={<RefreshIcon />}
                                         >
-                                            <RefreshIcon />
+                                            Force Refresh
                                         </Button>
                                     </Tooltip>
-                                </Stack>
+                                </Grid>
                             </Grid>
-                        </Grid>
+                        </>
                     )}
 
                     {/* Historical Forecast Configuration */}
@@ -416,10 +432,10 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                     {forecastType === FORECAST_UI_TYPES.ML_SOLAR && displayForecast && (
                         <Alert severity="info" sx={{ mt: 2 }}>
                             <Typography variant="body2">
-                                ⚡ <strong>Smart Caching:</strong> Showing {displayForecast.summary?.actual_hours_shown || 0} of 
+                                <strong>Smart Caching:</strong> Showing {displayForecast.summary?.actual_hours_shown || 0} of 
                                 requested {displayForecast.summary?.requested_hours || 0} hours. 
                                 {displayForecast.summary?.actual_hours_shown < displayForecast.summary?.requested_hours && 
-                                    " Night-time hours (6PM-6AM) excluded."}
+                                    " Night-time hours (9 PM - 6 AM) excluded."}
                                 <br/>
                                 <strong>48-hour dataset cached for 10 minutes.</strong>
                             </Typography>
@@ -540,7 +556,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                             {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
                                 <Alert severity="info" sx={{ mt: 2, maxWidth: 600, mx: 'auto' }}>
                                     <Typography variant="body2">
-                                        <strong>🤖 AI Solar Forecast Features:</strong>
+                                        <strong>AI Solar Forecast Features:</strong>
                                         <br/>• 48-hour dataset with smart caching
                                         <br/>• Real-time weather integration
                                         <br/>• Fast filtering without API calls

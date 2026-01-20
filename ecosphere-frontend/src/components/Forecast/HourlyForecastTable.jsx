@@ -223,7 +223,7 @@ const HourlyForecastTable = ({ forecastData, title = "Hourly Forecast Details" }
     <Box sx={{ mt: 3 }}>
       <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <AccessTimeIcon />
-        {title} ({forecastData.data.length} hours)
+        {title}
       </Typography>
       
       {/* Warning if some hours lack weather data */}

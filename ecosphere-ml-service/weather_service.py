@@ -13,7 +13,7 @@ class WeatherService:
         self.api_key = api_key or os.environ.get('OPENWEATHER_API_KEY', '')
         if not self.api_key:
             # Fallback to a test key if none provided
-            self.api_key = 'test_api_key'
+            self.api_key = ''
             
         self.base_url = "https://api.openweathermap.org/data/3.0/onecall"
         self.cache_dir = Path(__file__).parent / 'weather_cache'
@@ -187,47 +187,54 @@ class WeatherService:
             # Log successful API call
             self._log_api_call('onecall', success=True)
             
-            # Process hourly forecasts
+            # Process ALL 48 hours of forecasts
             forecasts = {}
-            current_date = current_time.date()
+            total_hours_collected = 0
             
-            # Get data for today and tomorrow
-            for day_offset in range(2):  # Today and tomorrow
-                date = current_date + timedelta(days=day_offset)
-                date_str = date.strftime("%Y-%m-%d")
-                forecasts[date_str] = []
+            # We need to collect up to 48 hours
+            hour_offset = 0
+            while total_hours_collected < 48 and hour_offset < 48:
+                target_time = current_time + timedelta(hours=hour_offset)
+                date_str = target_time.strftime("%Y-%m-%d")
+                hour = target_time.hour
                 
-                for hour in range(0, 24):
-                    target_time = datetime.combine(date, datetime.min.time()).replace(hour=hour)
-                    
-                    # Skip if more than 48 hours in future
-                    if (target_time - current_time).total_seconds() > 48 * 3600:
-                        continue
-                    
-                    closest_forecast = self._find_closest_hourly(weather_data['hourly'], target_time)
-                    if closest_forecast:
-                        forecasts[date_str].append({
-                            'hour': hour,
-                            'timestamp': target_time.isoformat(),
-                            'uv_index': closest_forecast.get('uvi', 0),
-                            'temperature_c': closest_forecast.get('temp', 15),
-                            'humidity_pct': closest_forecast.get('humidity', 50),
-                            'pressure_kpa': closest_forecast.get('pressure', 1013) / 10.0,
-                            'dew_point_c': closest_forecast.get('dew_point', 10),
-                            'wind_speed_ms': closest_forecast.get('wind_speed', 3),
-                            'wind_direction_deg': closest_forecast.get('wind_deg', 0),
-                            'clouds_pct': closest_forecast.get('clouds', 50),
-                            'visibility_m': closest_forecast.get('visibility', 10000),
-                            'precipitation_mmh': self._get_precipitation(closest_forecast),
-                            'weather_main': closest_forecast.get('weather', [{}])[0].get('main', 'Clear'),
-                            'weather_description': closest_forecast.get('weather', [{}])[0].get('description', 'clear sky')
-                        })
+                # Initialize date if not exists
+                if date_str not in forecasts:
+                    forecasts[date_str] = []
+                
+                # Find closest hourly forecast
+                closest_forecast = self._find_closest_hourly(weather_data['hourly'], target_time)
+                if closest_forecast:
+                    forecasts[date_str].append({
+                        'hour': hour,
+                        'timestamp': target_time.isoformat(),
+                        'uv_index': closest_forecast.get('uvi', 0),
+                        'temperature_c': closest_forecast.get('temp', 15),
+                        'humidity_pct': closest_forecast.get('humidity', 50),
+                        'pressure_kpa': closest_forecast.get('pressure', 1013) / 10.0,
+                        'dew_point_c': closest_forecast.get('dew_point', 10),
+                        'wind_speed_ms': closest_forecast.get('wind_speed', 3),
+                        'wind_direction_deg': closest_forecast.get('wind_deg', 0),
+                        'clouds_pct': closest_forecast.get('clouds', 50),
+                        'visibility_m': closest_forecast.get('visibility', 10000),
+                        'precipitation_mmh': self._get_precipitation(closest_forecast),
+                        'weather_main': closest_forecast.get('weather', [{}])[0].get('main', 'Clear'),
+                        'weather_description': closest_forecast.get('weather', [{}])[0].get('description', 'clear sky'),
+                        'is_daylight': 1 if 6 <= hour <= 21 else 0  # Add daylight flag
+                    })
+                    total_hours_collected += 1
+                
+                hour_offset += 1
             
             # Debug: show what we got
             print(f"Received weather data for:", file=sys.stderr)
             for date_str, hours in forecasts.items():
                 if hours:
-                    print(f"   {date_str}: {len(hours)} hours (hours: {[h['hour'] for h in hours[:5]]}...)", file=sys.stderr)
+                    daylight_hours = [h for h in hours if h['is_daylight'] == 1]
+                    nighttime_hours = [h for h in hours if h['is_daylight'] == 0]
+                    print(f"   {date_str}: {len(hours)} total hours ({len(daylight_hours)} daylight, {len(nighttime_hours)} nighttime)", file=sys.stderr)
+            
+            print(f"   Total: {total_hours_collected} hours collected for 48-hour window", file=sys.stderr)
             
             # Cache the results
             self._save_to_cache(lat, lon, start_date, end_date, forecasts)

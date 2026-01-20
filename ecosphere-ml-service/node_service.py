@@ -218,12 +218,12 @@ class SolarForecastService:
         return max(0, float(prediction_kw)), missing_features
     
     def predict_range(self, start_date_str, end_date_str, lat=None, lon=None, use_weather=True, force_fresh=False):
-        """
-        Predict for a date range with constraints:
-        - Maximum 48 hours from current time
-        - Uses caching for 10 minutes
-        - Respects API rate limits
-        """
+    # """
+    # Predict for a date range with constraints:
+    # - Gets ALL 48 hours of weather data (for caching)
+    # - Predicts only for daylight hours (6 AM to 9 PM)
+    # - Returns complete metadata for frontend display
+    # """
         try:
             # Set coordinates
             current_lat = lat or self.lat
@@ -255,10 +255,18 @@ class SolarForecastService:
                 )
                 
                 if weather_forecast:
-                    print(f"Weather data received", file=sys.stderr)
+                    # Log what we received
+                    total_hours = sum(len(hours) for hours in weather_forecast.values())
+                    daylight_hours = sum(
+                        1 for hours in weather_forecast.values() 
+                        for h in hours if h.get('is_daylight') == 1
+                    )
+                    print(f"Weather data received: {total_hours} total hours ({daylight_hours} daylight)", file=sys.stderr)
                     for date_key, hours in weather_forecast.items():
                         if hours:
-                            print(f"   {date_key}: {len(hours)} hours available", file=sys.stderr)
+                            daylight = [h for h in hours if h.get('is_daylight') == 1]
+                            nighttime = [h for h in hours if h.get('is_daylight') == 0]
+                            print(f"   {date_key}: {len(hours)} hours ({len(daylight)} daylight, {len(nighttime)} nighttime)", file=sys.stderr)
                 else:
                     print(f"Could not fetch weather data, using default values", file=sys.stderr)
             
@@ -272,6 +280,7 @@ class SolarForecastService:
             
             predictions = []
             missing_features_total = []
+            skipped_night_hours = []
             
             print(f"Starting predictions from {next_hour.strftime('%H:%M')}...", file=sys.stderr)
             
@@ -284,69 +293,74 @@ class SolarForecastService:
                     break
                 
                 hour = prediction_time.hour
+                date_str = prediction_time.strftime("%Y-%m-%d")
                 
-                # Only predict for daylight hours (6 AM to 9 PM)
-                if 6 <= hour <= 21:
-                    try:
-                        date_str = prediction_time.strftime("%Y-%m-%d")
-                        
-                        # Get weather data for this exact hour
-                        hour_weather = None
-                        if weather_forecast and date_str in weather_forecast:
-                            # Find exact hour match
-                            for weather_hour in weather_forecast[date_str]:
-                                if weather_hour['hour'] == hour:
-                                    hour_weather = weather_hour
-                                    break
-                        
-                        # Make prediction
-                        predicted_kw, missing = self.predict_for_datetime(prediction_time, hour_weather)
-                        missing_features_total.extend(missing)
-                        
-                        # Prepare prediction data
-                        prediction_data = {
-                            'timestamp': prediction_time.replace(minute=0, second=0, microsecond=0).isoformat(),
-                            'predicted_kw': round(predicted_kw, 2),
-                            'hour': hour,
-                            'date': date_str,
-                            'is_daylight': 1,
-                            'is_forecast': 1 if prediction_time > current_time else 0
+                # Skip nighttime hours (only predict 6 AM to 9 PM)
+                if not (6 <= hour <= 21):
+                    # Track skipped hours for metadata
+                    skipped_night_hours.append({
+                        'timestamp': prediction_time.isoformat(),
+                        'hour': hour,
+                        'date': date_str,
+                        'reason': 'nighttime'
+                    })
+                    continue
+                
+                try:
+                    # Get weather data for this exact hour
+                    hour_weather = None
+                    if weather_forecast and date_str in weather_forecast:
+                        # Find exact hour match
+                        for weather_hour in weather_forecast[date_str]:
+                            if weather_hour['hour'] == hour:
+                                hour_weather = weather_hour
+                                break
+                    
+                    # Make prediction
+                    predicted_kw, missing = self.predict_for_datetime(prediction_time, hour_weather)
+                    missing_features_total.extend(missing)
+                    
+                    # Prepare prediction data
+                    prediction_data = {
+                        'timestamp': prediction_time.replace(minute=0, second=0, microsecond=0).isoformat(),
+                        'predicted_kw': round(predicted_kw, 2),
+                        'hour': hour,
+                        'date': date_str,
+                        'is_daylight': 1,
+                        'is_forecast': 1 if prediction_time > current_time else 0
+                    }
+                    
+                    # Add weather info if available
+                    if hour_weather:
+                        prediction_data['weather'] = {
+                            'uv_index': hour_weather.get('uv_index', 0),
+                            'temperature_c': hour_weather.get('temperature_c', 0),
+                            'clouds_pct': hour_weather.get('clouds_pct', 0),
+                            'precipitation_mmh': hour_weather.get('precipitation_mmh', 0),
+                            'weather_main': hour_weather.get('weather_main', 'Clear'),
+                            'weather_description': hour_weather.get('weather_description', 'clear sky')
                         }
-                        
-                        # Add weather info if available
-                        if hour_weather:
-                            prediction_data['weather'] = {
-                                'uv_index': hour_weather.get('uv_index', 0),
-                                'temperature_c': hour_weather.get('temperature_c', 0),
-                                'clouds_pct': hour_weather.get('clouds_pct', 0),
-                                'precipitation_mmh': hour_weather.get('precipitation_mmh', 0),
-                                'weather_main': hour_weather.get('weather_main', 'Clear'),
-                                'weather_description': hour_weather.get('weather_description', 'clear sky')
-                            }
-                            print(f"   {prediction_time.strftime('%H:%M')}: {predicted_kw:.2f} kW | "
-                                  f"UV: {hour_weather.get('uv_index', 0):.1f} | "
-                                  f"Clouds: {hour_weather.get('clouds_pct', 0)}%", file=sys.stderr)
-                        else:
-                            print(f"   {prediction_time.strftime('%H:%M')}: {predicted_kw:.2f} kW (no weather)", file=sys.stderr)
-                        
-                        predictions.append(prediction_data)
-                        
-                    except Exception as e:
-                        print(f"Prediction failed for {prediction_time}: {e}", file=sys.stderr)
-                        predictions.append({
-                            'timestamp': prediction_time.isoformat(),
-                            'predicted_kw': 0,
-                            'hour': hour,
-                            'date': prediction_time.strftime("%Y-%m-%d"),
-                            'is_daylight': 1,
-                            'error': str(e)
-                        })
-                else:
-                    # Skip nighttime hours
-                    if hour_offset == 0:  # Only print once
-                        print(f"   Skipping nighttime hours (only 6 AM to 9 PM)", file=sys.stderr)
+                        print(f"   {prediction_time.strftime('%H:%M')}: {predicted_kw:.2f} kW | "
+                            f"UV: {hour_weather.get('uv_index', 0):.1f} | "
+                            f"Clouds: {hour_weather.get('clouds_pct', 0)}%", file=sys.stderr)
+                    else:
+                        print(f"   {prediction_time.strftime('%H:%M')}: {predicted_kw:.2f} kW (no weather)", file=sys.stderr)
+                    
+                    predictions.append(prediction_data)
+                    
+                except Exception as e:
+                    print(f"Prediction failed for {prediction_time}: {e}", file=sys.stderr)
+                    predictions.append({
+                        'timestamp': prediction_time.isoformat(),
+                        'predicted_kw': 0,
+                        'hour': hour,
+                        'date': date_str,
+                        'is_daylight': 1,
+                        'error': str(e)
+                    })
             
-            print(f"Generated {len(predictions)} predictions", file=sys.stderr)
+            print(f"Generated {len(predictions)} daylight predictions", file=sys.stderr)
+            print(f"Skipped {len(skipped_night_hours)} nighttime hours", file=sys.stderr)
             
             # If no predictions, create at least one
             if len(predictions) == 0:
@@ -378,7 +392,8 @@ class SolarForecastService:
                     'total_kwh': round(total_kwh, 2),
                     'peak_kw': round(peak_kw, 2),
                     'prediction_count': len(predictions),
-                    'valid_predictions': len(valid_predictions),
+                    'daylight_hours': len(predictions),
+                    'nighttime_hours_skipped': len(skipped_night_hours),
                     'date_range': {
                         'start': predictions[0]['date'] if predictions else start_date_str,
                         'end': predictions[-1]['date'] if predictions else end_date_str,
@@ -386,9 +401,10 @@ class SolarForecastService:
                         'actual_end': predictions[-1]['timestamp'] if predictions else end_date_str,
                         'hours_predicted': len(predictions)
                     },
-                    'avg_kw_per_day': round(total_kwh / max(1, len(set(p['date'] for p in predictions))), 2),
+                    'avg_kw_per_hour': round(total_kwh / max(1, len(predictions)), 2),
                     'weather_quality': {
                         'weather_data_available': weather_data_available,
+                        'hours_with_weather': sum(1 for p in predictions if 'weather' in p),
                         'api_calls_remaining': api_stats['remaining_calls']
                     }
                 },
@@ -397,7 +413,9 @@ class SolarForecastService:
                     'r2_score': self.metrics.get('r2', 0),
                     'features_used': len(self.feature_names),
                     'missing_features': len(set(missing_features_total)),
-                    'weather_integrated': use_weather
+                    'weather_integrated': use_weather,
+                    'daylight_only': True,  # Important: model only predicts for daylight
+                    'prediction_window': '6 AM to 9 PM'
                 },
                 'api_stats': api_stats,
                 'metadata': {
@@ -409,13 +427,17 @@ class SolarForecastService:
                     'time_constraints': {
                         'max_hours_ahead': 48,
                         'current_time': current_time.isoformat(),
-                        'hours_predicted': len(predictions)
+                        'prediction_window': '6:00-21:00 (daylight only)',
+                        'total_hours_considered': 48,
+                        'daylight_hours_predicted': len(predictions),
+                        'nighttime_hours_excluded': len(skipped_night_hours)
                     },
                     'cache_info': {
                         'weather_cache_minutes': 10,
                         'result_cache_minutes': 10,
-                        'used_cached_data': False  # This is fresh
-                    }
+                        'used_cached_data': False
+                    },
+                    'note': f"Model predicts only for daylight hours (6 AM - 9 PM). {len(skipped_night_hours)} nighttime hours excluded."
                 }
             }
             
