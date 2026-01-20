@@ -13,7 +13,7 @@ import { useElectricityData } from '../lib/hooks/useElectricityData';
 
 const ElectricityReportPage = () => {
   // Tab state
-  const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);
+  const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);  
 
   // Date filter state
   const [dateFrom, setDateFrom] = useState(null);

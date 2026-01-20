@@ -47,7 +47,14 @@ app.get("/", (req, res) => {
       auth: "/api/auth/login",
       electricity: "/api/electricity/*",
       water: "/api/water/*",
-      ml: "/api/ml/*",
+      ml: {
+        forecast: "/api/ml/solar-forecast",
+        legacy: "/api/ml/legacy-forecast",
+        model: "/api/ml/model-info",
+        stats: "/api/ml/api-stats",
+        test: "/api/ml/test",
+        health: "/api/ml/health",
+      },
     },
     documentation: "Visit /api/health for system status",
   });

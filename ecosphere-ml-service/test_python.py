@@ -1,64 +1,54 @@
-"""
-Test the Python service directly
-"""
 import sys
 import os
-
-# Add parent directory to path
 sys.path.append(os.path.dirname(__file__))
 
 from node_service import SolarForecastService
-from datetime import datetime
+from datetime import datetime, timedelta
 
-def test_service():
-    print("🧪 Testing Solar Forecast Service")
+def quick_test():
+    print("🧪 Quick Test of Solar Forecast Service")
     print("=" * 60)
     
     try:
         # Initialize service
         service = SolarForecastService('solar_forecast_openweather.pkl')
         
-        # Test single prediction
-        test_time = datetime(2024, 6, 15, 12, 0, 0)  # June 15, noon
-        prediction = service.predict_for_datetime(test_time)
+        # Get today and tomorrow
+        current_time = datetime.now()
+        today = current_time.strftime('%Y-%m-%d')
+        tomorrow = (current_time + timedelta(days=1)).strftime('%Y-%m-%d')
         
-        print(f"✅ Model loaded: {type(service.model).__name__}")
-        print(f"📊 R² score: {service.metrics.get('r2', 0):.3f}")
-        print(f"🔧 Features: {len(service.feature_names)}")
-        print(f"\n🔮 Test prediction for {test_time}:")
-        print(f"   Predicted: {prediction:.2f} kW")
+        print(f"📅 Testing: {today} to {tomorrow}")
+        print(f"🕐 Current time: {current_time}")
         
-        # Test date range
-        print(f"\n📅 Testing date range...")
-        predictions = service.predict_range('2024-06-01', '2024-06-03')
+        # Test with weather
+        print(f"\n🌤️ Testing WITH weather data...")
+        result = service.predict_range(today, tomorrow, use_weather=True, force_fresh=True)
         
-        print(f"✅ Generated {len(predictions)} predictions")
+        if result['success']:
+            print(f"✅ Success! Generated {len(result['data'])} predictions")
+            print(f"📊 Total kWh: {result['summary']['total_kwh']}")
+            print(f"🏔️ Peak kW: {result['summary']['peak_kw']}")
+            print(f"🤖 Model: {result['model_info']['name']}")
+            print(f"📡 Weather integrated: {result['model_info']['weather_integrated']}")
+            print(f"📊 API calls remaining: {result['api_stats']['remaining_calls']}")
+            
+            # Show sample predictions
+            if result['data']:
+                print(f"\n📋 Sample predictions:")
+                for i, pred in enumerate(result['data'][:3]):
+                    weather_info = ""
+                    if 'weather' in pred:
+                        weather_info = f" | UV: {pred['weather']['uv_index']:.1f} | Clouds: {pred['weather']['clouds_pct']}%"
+                    print(f"   {pred['timestamp'][11:16]}: {pred['predicted_kw']:.2f} kW{weather_info}")
         
-        # Show first 5 predictions
-        print(f"\n📋 First 5 predictions:")
-        for i, pred in enumerate(predictions[:5]):
-            print(f"   {i+1}. {pred['timestamp']}: {pred['predicted_kw']:.2f} kW")
-        
-        # Calculate summary
-        total_kwh = sum(p['predicted_kw'] for p in predictions)
-        peak_kw = max(p['predicted_kw'] for p in predictions)
-        
-        print(f"\n📈 Summary for Jun 1-3, 2024:")
-        print(f"   Total generation: {total_kwh:.1f} kWh")
-        print(f"   Peak output: {peak_kw:.2f} kW")
-        print(f"   Average per daylight hour: {total_kwh/len(predictions):.2f} kW")
-        
-        print(f"\n" + "=" * 60)
-        print("🎉 All tests passed!")
+        return result
         
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
         traceback.print_exc()
-        return False
-    
-    return True
+        return None
 
 if __name__ == "__main__":
-    success = test_service()
-    sys.exit(0 if success else 1)
+    quick_test()

@@ -4,13 +4,17 @@ const mlController = require("../controllers/MLController");
 
 /**
  * @route   GET /api/ml/solar-forecast
- * @desc    Get solar generation forecast from ML model
+ * @desc    Get enhanced solar generation forecast with weather data
  * @access  Public
- * @query   dateFrom - Start date (YYYY-MM-DD)
- * @query   dateTo - End date (YYYY-MM-DD)
- * @query   useCache - Whether to use cache (default: true)
  */
 router.get("/solar-forecast", mlController.getSolarForecast);
+
+/**
+ * @route   GET /api/ml/legacy-forecast
+ * @desc    Get legacy solar forecast (backward compatibility)
+ * @access  Public
+ */
+router.get("/legacy-forecast", mlController.getLegacySolarForecast);
 
 /**
  * @route   GET /api/ml/model-info
@@ -18,6 +22,13 @@ router.get("/solar-forecast", mlController.getSolarForecast);
  * @access  Public
  */
 router.get("/model-info", mlController.getModelInfo);
+
+/**
+ * @route   GET /api/ml/api-stats
+ * @desc    Get API usage statistics
+ * @access  Public
+ */
+router.get("/api-stats", mlController.getApiStats);
 
 /**
  * @route   GET /api/ml/test

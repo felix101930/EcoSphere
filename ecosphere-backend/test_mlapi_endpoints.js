@@ -7,7 +7,7 @@ const BASE_URL = "http://localhost:3001/api";
 
 async function testEndpoint(endpoint, name) {
   return new Promise((resolve) => {
-    console.log(`\n🔍 Testing ${name}: ${endpoint}`);
+    console.log(`\nTesting ${name}: ${endpoint}`);
 
     http
       .get(`${BASE_URL}${endpoint}`, (res) => {
@@ -20,30 +20,30 @@ async function testEndpoint(endpoint, name) {
         res.on("end", () => {
           try {
             const json = JSON.parse(data);
-            console.log(`   ✅ Status: ${res.statusCode}`);
-            console.log(`   📊 Success: ${json.success || "N/A"}`);
+            console.log(`Status: ${res.statusCode}`);
+            console.log(`Success: ${json.success || "N/A"}`);
 
             if (json.error) {
-              console.log(`   ❌ Error: ${json.error}`);
+              console.log(`Error: ${json.error}`);
             }
 
             resolve({ success: true, data: json });
           } catch (e) {
-            console.log(`   ❌ Failed to parse JSON: ${e.message}`);
-            console.log(`   📄 Raw response: ${data.substring(0, 200)}...`);
+            console.log(`Failed to parse JSON: ${e.message}`);
+            console.log(`Raw response: ${data.substring(0, 200)}...`);
             resolve({ success: false, error: e.message });
           }
         });
       })
       .on("error", (err) => {
-        console.log(`   ❌ Request failed: ${err.message}`);
+        console.log(`Request failed: ${err.message}`);
         resolve({ success: false, error: err.message });
       });
   });
 }
 
 async function runAPITests() {
-  console.log("🌐 Testing ML API Endpoints");
+  console.log("Testing ML API Endpoints");
   console.log("=".repeat(60));
 
   const tests = [
@@ -70,10 +70,10 @@ async function runAPITests() {
 
   console.log("\n" + "=".repeat(60));
   if (allPassed) {
-    console.log("✅ All API endpoints working!");
-    console.log("\n🚀 ML Service is fully integrated!");
+    console.log("All API endpoints working!");
+    console.log("\nML Service is fully integrated!");
   } else {
-    console.log("⚠️  Some tests failed");
+    console.log("Some tests failed");
   }
 }
 

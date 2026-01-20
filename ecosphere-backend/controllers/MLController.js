@@ -8,6 +8,137 @@ const { HTTP_STATUS } = require("../utils/constants");
  * Get solar generation forecast from ML model
  */
 const getSolarForecast = asyncHandler(async (req, res) => {
+  const {
+    dateFrom,
+    dateTo,
+    useCache = "true",
+    useWeather = "true",
+    forceFresh = "false",
+    lat,
+    lon,
+  } = req.query;
+
+  // Validate required parameters
+  if (!dateFrom || !dateTo) {
+    return sendError(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      "Missing required parameters: dateFrom and dateTo",
+    );
+  }
+
+  // Validate date format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateFrom) || !dateRegex.test(dateTo)) {
+    return sendError(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      "Invalid date format. Use YYYY-MM-DD",
+    );
+  }
+
+  // Validate and limit to 48 hours max
+  const startDate = new Date(dateFrom);
+  const endDate = new Date(dateTo);
+  const now = new Date();
+
+  const hoursDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60));
+
+  if (hoursDiff > 48) {
+    return sendError(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      "Forecast limited to maximum 48 hours",
+      { max_hours: 48, requested_hours: hoursDiff },
+    );
+  }
+
+  // Don't allow forecasting too far into the future
+  const maxEndDate = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+  if (endDate > maxEndDate) {
+    return sendError(
+      res,
+      HTTP_STATUS.BAD_REQUEST,
+      "Cannot forecast more than 48 hours into the future",
+    );
+  }
+
+  try {
+    // Get forecast from enhanced service
+    const forecast = await MLForecastService.getSolarForecast(
+      dateFrom,
+      dateTo,
+      {
+        useCache: useCache !== "false",
+        useWeather: useWeather !== "false",
+        forceFresh: forceFresh === "true",
+        coordinates:
+          lat && lon ? { lat: parseFloat(lat), lon: parseFloat(lon) } : null,
+      },
+    );
+
+    // Add API stats
+    const apiStats = await MLForecastService.getApiStats();
+
+    const response = {
+      ...forecast,
+      api_stats: apiStats.success
+        ? apiStats
+        : {
+            calls_today: 0,
+            max_calls_per_day: 950,
+            remaining_calls: 950,
+            last_reset: new Date().toISOString(),
+            today: new Date().toISOString().split("T")[0],
+          },
+    };
+
+    sendDataWithMetadata(res, response);
+  } catch (error) {
+    console.error("Enhanced forecast controller error:", error);
+
+    // Try to return fallback data
+    try {
+      const fallback = MLForecastService.getFallbackForecast(dateFrom, dateTo);
+      fallback.metadata = {
+        ...fallback.metadata,
+        error: error.message,
+        dateFrom,
+        dateTo,
+        is_fallback: true,
+      };
+
+      // Add API stats even for fallback
+      try {
+        const apiStats = await MLForecastService.getApiStats();
+        fallback.api_stats = apiStats.success
+          ? apiStats
+          : {
+              calls_today: 0,
+              max_calls_per_day: 950,
+              remaining_calls: 950,
+            };
+      } catch (statsError) {
+        fallback.api_stats = {
+          calls_today: 0,
+          max_calls_per_day: 950,
+          remaining_calls: 950,
+        };
+      }
+
+      sendDataWithMetadata(res, fallback);
+    } catch (fallbackError) {
+      sendError(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        `Failed to generate forecast: ${error.message}`,
+      );
+    }
+  }
+});
+
+// For backward compatibility - legacy endpoint
+const getLegacySolarForecast = asyncHandler(async (req, res) => {
   const { dateFrom, dateTo, useCache = "true" } = req.query;
 
   // Validate required parameters
@@ -63,7 +194,11 @@ const getSolarForecast = asyncHandler(async (req, res) => {
     const forecast = await MLForecastService.getSolarForecast(
       dateFrom,
       dateTo,
-      useCacheBool,
+      {
+        useCache: useCacheBool,
+        useWeather: false, // Legacy doesn't use weather
+        forceFresh: false,
+      },
     );
 
     // Prepare response
@@ -90,7 +225,7 @@ const getSolarForecast = asyncHandler(async (req, res) => {
 
     sendDataWithMetadata(res, response);
   } catch (error) {
-    console.error("Forecast controller error:", error);
+    console.error("Legacy forecast controller error:", error);
 
     // Try to return fallback data
     try {
@@ -110,6 +245,26 @@ const getSolarForecast = asyncHandler(async (req, res) => {
         `Failed to generate forecast: ${error.message}`,
       );
     }
+  }
+});
+
+/**
+ * Get API usage statistics
+ */
+const getApiStats = asyncHandler(async (req, res) => {
+  try {
+    const stats = await MLForecastService.getApiStats();
+    res.json(stats);
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      calls_today: 0,
+      max_calls_per_day: 950,
+      remaining_calls: 950,
+      last_reset: new Date().toISOString(),
+      today: new Date().toISOString().split("T")[0],
+    });
   }
 });
 
@@ -153,7 +308,10 @@ const testMLService = asyncHandler(async (req, res) => {
       endpoints: {
         forecast:
           "/api/ml/solar-forecast?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD",
+        enhancedForecast:
+          "/api/ml/enhanced-forecast?dateFrom=YYYY-MM-DD&dateTo=YYYY-MM-DD&useWeather=true",
         modelInfo: "/api/ml/model-info",
+        apiStats: "/api/ml/api-stats",
         health: "/api/ml/health",
       },
     });
@@ -204,19 +362,43 @@ const getHealth = asyncHandler(async (req, res) => {
     const forecast = await MLForecastService.getSolarForecast(
       testDate,
       tomorrowStr,
-      false,
+      {
+        useCache: false,
+        useWeather: true,
+        forceFresh: false,
+      },
     );
     health.checks.prediction = {
       status: forecast.success ? "healthy" : "unhealthy",
       predictions: forecast.summary.prediction_count,
       isFallback: forecast.model_info.is_fallback || false,
+      weatherIntegrated: forecast.model_info.weather_integrated || false,
+    };
+
+    // Test API stats
+    const apiStats = await MLForecastService.getApiStats();
+    health.checks.api = {
+      status: apiStats.success ? "healthy" : "degraded",
+      calls_today: apiStats.calls_today || 0,
+      max_calls_per_day: apiStats.max_calls_per_day || 950,
+      remaining_calls: apiStats.remaining_calls || 950,
     };
 
     // Determine overall status
     const allHealthy = Object.values(health.checks).every(
       (c) => c.status === "healthy",
     );
-    health.status = allHealthy ? "healthy" : "degraded";
+    const anyUnhealthy = Object.values(health.checks).some(
+      (c) => c.status === "unhealthy",
+    );
+
+    if (anyUnhealthy) {
+      health.status = "unhealthy";
+    } else if (!allHealthy) {
+      health.status = "degraded";
+    } else {
+      health.status = "healthy";
+    }
 
     if (health.checks.prediction.isFallback) {
       health.status = "degraded";
@@ -232,7 +414,9 @@ const getHealth = asyncHandler(async (req, res) => {
 
 module.exports = {
   getSolarForecast,
+  getLegacySolarForecast,
   getModelInfo,
   testMLService,
   getHealth,
+  getApiStats,
 };

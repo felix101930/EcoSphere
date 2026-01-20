@@ -1,0 +1,514 @@
+{
+  "success": true,
+  "data": [
+    {
+      "timestamp": "2026-01-20T13:00:00",
+      "predicted_kw": 3.58,
+      "hour": 13,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.65,
+        "temperature_c": 0.64,
+        "clouds_pct": 20,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T14:00:00",
+      "predicted_kw": 3.26,
+      "hour": 14,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.52,
+        "temperature_c": 0.82,
+        "clouds_pct": 21,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T15:00:00",
+      "predicted_kw": 3.38,
+      "hour": 15,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.31,
+        "temperature_c": 1.46,
+        "clouds_pct": 20,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T16:00:00",
+      "predicted_kw": 2.93,
+      "hour": 16,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.11,
+        "temperature_c": 1.59,
+        "clouds_pct": 18,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T17:00:00",
+      "predicted_kw": 1.91,
+      "hour": 17,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": 0.44,
+        "clouds_pct": 15,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T18:00:00",
+      "predicted_kw": 1.71,
+      "hour": 18,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -0.42,
+        "clouds_pct": 7,
+        "precipitation_mmh": 0,
+        "weather_main": "Clear",
+        "weather_description": "clear sky"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T19:00:00",
+      "predicted_kw": 1.36,
+      "hour": 19,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -0.29,
+        "clouds_pct": 11,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T20:00:00",
+      "predicted_kw": 1.21,
+      "hour": 20,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -0.13,
+        "clouds_pct": 12,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-20T21:00:00",
+      "predicted_kw": 1.83,
+      "hour": 21,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": 0.36,
+        "clouds_pct": 11,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T06:00:00",
+      "predicted_kw": 0.82,
+      "hour": 6,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -6.19,
+        "clouds_pct": 21,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T07:00:00",
+      "predicted_kw": 0.91,
+      "hour": 7,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -7,
+        "clouds_pct": 19,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T08:00:00",
+      "predicted_kw": 1.01,
+      "hour": 8,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -7.5,
+        "clouds_pct": 35,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "scattered clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T09:00:00",
+      "predicted_kw": 1.66,
+      "hour": 9,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -7.52,
+        "clouds_pct": 41,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "scattered clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T10:00:00",
+      "predicted_kw": 2.85,
+      "hour": 10,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.24,
+        "temperature_c": -6.77,
+        "clouds_pct": 44,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "scattered clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T11:00:00",
+      "predicted_kw": 3.25,
+      "hour": 11,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.41,
+        "temperature_c": -6.03,
+        "clouds_pct": 42,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "scattered clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T12:00:00",
+      "predicted_kw": 3.63,
+      "hour": 12,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.53,
+        "temperature_c": -5.33,
+        "clouds_pct": 14,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T13:00:00",
+      "predicted_kw": 4.19,
+      "hour": 13,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.54,
+        "temperature_c": -4.69,
+        "clouds_pct": 17,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T14:00:00",
+      "predicted_kw": 4.43,
+      "hour": 14,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.43,
+        "temperature_c": -4.2,
+        "clouds_pct": 20,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T15:00:00",
+      "predicted_kw": 4.05,
+      "hour": 15,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.27,
+        "temperature_c": -3.95,
+        "clouds_pct": 20,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T16:00:00",
+      "predicted_kw": 3.33,
+      "hour": 16,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0.11,
+        "temperature_c": -4.03,
+        "clouds_pct": 23,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T17:00:00",
+      "predicted_kw": 1.89,
+      "hour": 17,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -4.85,
+        "clouds_pct": 23,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "few clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T18:00:00",
+      "predicted_kw": 1.5,
+      "hour": 18,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -5.53,
+        "clouds_pct": 91,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "overcast clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T19:00:00",
+      "predicted_kw": 1.42,
+      "hour": 19,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -6.07,
+        "clouds_pct": 93,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "overcast clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T20:00:00",
+      "predicted_kw": 1.23,
+      "hour": 20,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -6.56,
+        "clouds_pct": 93,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "overcast clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-21T21:00:00",
+      "predicted_kw": 1.0,
+      "hour": 21,
+      "date": "2026-01-21",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -6.93,
+        "clouds_pct": 94,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "overcast clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-22T06:00:00",
+      "predicted_kw": 1.53,
+      "hour": 6,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T07:00:00",
+      "predicted_kw": 1.72,
+      "hour": 7,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T08:00:00",
+      "predicted_kw": 2.74,
+      "hour": 8,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T09:00:00",
+      "predicted_kw": 4.86,
+      "hour": 9,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T10:00:00",
+      "predicted_kw": 6.38,
+      "hour": 10,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T11:00:00",
+      "predicted_kw": 6.97,
+      "hour": 11,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-22T12:00:00",
+      "predicted_kw": 7.28,
+      "hour": 12,
+      "date": "2026-01-22",
+      "is_daylight": 1,
+      "is_forecast": 1
+    }
+  ],
+  "summary": {
+    "total_kwh": 89.82,
+    "peak_kw": 7.28,
+    "prediction_count": 32,
+    "valid_predictions": 32,
+    "date_range": {
+      "start": "2026-01-20",
+      "end": "2026-01-22",
+      "actual_start": "2026-01-20T13:00:00",
+      "actual_end": "2026-01-22T12:00:00",
+      "hours_predicted": 32
+    },
+    "avg_kw_per_day": 29.94,
+    "weather_quality": {
+      "weather_data_available": true,
+      "api_calls_remaining": 948
+    }
+  },
+  "model_info": {
+    "name": "RandomForestRegressor",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17,
+    "missing_features": 0,
+    "weather_integrated": true
+  },
+  "api_stats": {
+    "calls_today": 2,
+    "max_calls_per_day": 950,
+    "remaining_calls": 948,
+    "last_reset": "2026-01-20T12:22:01.853447",
+    "today": "2026-01-20"
+  },
+  "metadata": {
+    "generated_at": "2026-01-20T12:41:00.427803",
+    "coordinates": {
+      "lat": 51.0447,
+      "lon": -114.0719
+    },
+    "time_constraints": {
+      "max_hours_ahead": 48,
+      "current_time": "2026-01-20T12:40:57.972623",
+      "hours_predicted": 32
+    },
+    "cache_info": {
+      "weather_cache_minutes": 10,
+      "result_cache_minutes": 10,
+      "used_cached_data": false
+    }
+  },
+  "_cached": {
+    "cached_at": "2026-01-20T12:41:00.427825",
+    "cache_key": "1cfeb18b6164f118b8bad55c2584eac2"
+  }
+}

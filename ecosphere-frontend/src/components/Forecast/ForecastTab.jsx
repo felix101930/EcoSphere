@@ -1,4 +1,4 @@
-// Forecast Tab - Main forecast interface
+// ForecastTab.jsx - Updated with complete logic
 import { useState, useEffect } from 'react';
 import {
     Box,
@@ -14,31 +14,59 @@ import {
     Alert,
     ToggleButtonGroup,
     ToggleButton,
-    Tooltip
+    Tooltip,
+    TextField,
+    Grid,
+    Chip,
+    Stack
 } from '@mui/material';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DataAvailabilityCard from './DataAvailabilityCard';
 import GenerationForecastInfo from './GenerationForecastInfo';
 import MLForecastCard from './MLForecastCard';
+import HourlyForecastTable from './HourlyForecastTable';
 import ForecastChart from './ForecastChart';
 import { useForecastData } from '../../lib/hooks/useForecastData';
 import MLForecastService from '../../services/MLForecastService';
 import {
-    FORECAST_PERIODS,
-    FORECAST_PERIOD_LABELS,
     FORECAST_UI_TYPES,
     FORECAST_UI_TYPE_LABELS,
-    ML_FORECAST
 } from '../../lib/constants/forecast';
 
 const ForecastTab = ({ dateTo }) => {
-    // State
-    const [forecastDays, setForecastDays] = useState(FORECAST_PERIODS.SEVEN_DAYS);
-    const [forecastType, setForecastType] = useState(FORECAST_UI_TYPES.HISTORICAL);
-    const [mlForecast, setMlForecast] = useState(null);
-    const [mlLoading, setMlLoading] = useState(false);
-    const [mlError, setMlError] = useState(null);
+const [forecastType, setForecastType] = useState(FORECAST_UI_TYPES.ML_SOLAR);
+const [mlForecast, setMlForecast] = useState(null);
+const [filteredForecast, setFilteredForecast] = useState(null);
+const [mlLoading, setMlLoading] = useState(false);
+const [mlError, setMlError] = useState(null);
+const [forecastHours, setForecastHours] = useState(24);
+const [customHoursInput, setCustomHoursInput] = useState('');
+const [showCustomInput, setShowCustomInput] = useState(false);
+const [forceRefresh, setForceRefresh] = useState(false);
+const [apiStats, setApiStats] = useState(null);
+const [showHourlyTable, setShowHourlyTable] = useState(false);
+
+    // Quick forecast options
+    const quickForecastOptions = [
+  { value: 1, label: "Next Hour", hours: 1 },
+  { value: 5, label: "Next 5 Hours", hours: 5 },
+  { value: 12, label: "Next 12 Hours", hours: 12 },
+  { value: 24, label: "Next 24 Hours", hours: 24 },
+  { value: 48, label: "Next 48 Hours", hours: 48 },
+  { value: "custom", label: "Custom Hours" },
+];
 
     // Custom hook for historical forecasts
     const {
@@ -49,97 +77,175 @@ const ForecastTab = ({ dateTo }) => {
         loadBothForecasts
     } = useForecastData();
 
-    // Handle generate forecast based on type
-    const handleGenerateForecast = async () => {
-        if (!dateTo) return;
+    // Load API stats
+    useEffect(() => {
+        loadApiStats();
+    }, []);
 
+    const loadApiStats = async () => {
         try {
-            if (forecastType === FORECAST_UI_TYPES.HISTORICAL) {
-                // Existing historical forecast
-                await loadBothForecasts(dateTo, forecastDays);
-                // Clear ML forecast when switching to historical
-                setMlForecast(null);
-            } else if (forecastType === FORECAST_UI_TYPES.ML_SOLAR) {
-                await loadMLForecast();
-            }
-        } catch (err) {
-            console.error('Failed to generate forecast:', err);
+            const stats = await MLForecastService.getApiStats();
+            setApiStats(stats);
+        } catch (error) {
+            console.error('Failed to load API stats:', error);
         }
     };
 
-    // Helper function to safely parse date
-const parseDateSafely = (dateInput) => {
-    if (!dateInput) return null;
-    
-    if (typeof dateInput === 'string') {
-        // Try parsing as ISO string first
-        let date = new Date(dateInput);
-        if (isNaN(date.getTime())) {
-            // Try parsing as YYYY-MM-DD
-            date = new Date(dateInput + 'T12:00:00');
-        }
-        return isNaN(date.getTime()) ? null : date;
+    // Handle custom hours change
+    const handleCustomHoursInput = (e) => {
+  const value = e.target.value;
+  setCustomHoursInput(value);
+  
+  if (value && !isNaN(value) && value > 0) {
+    const hours = Math.min(parseInt(value), 48);
+    setForecastHours(hours);
+    // Apply filter if data exists
+    if (mlForecast) {
+      const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
+      setFilteredForecast(filtered);
     }
-    
-    if (dateInput instanceof Date) {
-        return isNaN(dateInput.getTime()) ? null : dateInput;
-    }
-    
-    return null;
+  }
 };
 
-    // Load ML forecast
-    const loadMLForecast = async () => {
-    const targetDate = parseDateSafely(dateTo);
-    
-    if (!targetDate) {
-        setMlError('Invalid or missing date for forecast');
-        return;
-    }
-    
-    setMlLoading(true);
-    setMlError(null);
-    
-    try {
-        // Calculate date range (24 hours max from dateTo)
-        const endDate = new Date(targetDate);
-        endDate.setHours(12, 0, 0, 0); // Set to noon
+    // Handle hours change (filtering)
+    const handleHoursChange = (hours) => {
+        setForecastHours(hours);
         
-        const startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - 1); 
-        
-        // Format dates as YYYY-MM-DD
-        const startDateStr = startDate.toISOString().split('T')[0];
-        const endDateStr = endDate.toISOString().split('T')[0];
-        
-        console.log(`Loading ML forecast from ${startDateStr} to ${endDateStr}`);
-        
-        const forecast = await MLForecastService.getSolarForecast(
-            startDateStr,
-            endDateStr,
-            false
-        );
-        
-        if (forecast.success || forecast.data) {
-            setMlForecast(forecast);
-        } else {
-            setMlError('ML forecast service returned no data');
+        // Apply filter to existing dataset if available
+        if (mlForecast && mlForecast.data) {
+            console.log(`🔄 Filtering to ${hours} hours`);
+            const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
+            setFilteredForecast(filtered);
         }
-    } catch (error) {
-        console.error('Failed to load ML forecast:', error);
-        setMlError(`ML forecast error: ${error.message}`);
-    } finally {
-        setMlLoading(false);
+    };
+
+    // Handle forecast type change
+    const handleForecastTypeChange = (e, newType) => {
+        if (newType) {
+            setForecastType(newType);
+            if (newType === FORECAST_UI_TYPES.ML_SOLAR) {
+                // Reset ML state when switching to ML
+                setMlForecast(null);
+                setFilteredForecast(null);
+            }
+        }
+    };
+
+    // Handle generate forecast
+    const handleGenerateForecast = async () => {
+        if (forecastType === FORECAST_UI_TYPES.HISTORICAL) {
+            // Historical forecast logic
+            setMlLoading(true);
+            try {
+                await loadBothForecasts(dateTo, forecastHours / 24);
+            } catch (err) {
+                setMlError(`Historical forecast error: ${err.message}`);
+            } finally {
+                setMlLoading(false);
+            }
+        } else if (forecastType === FORECAST_UI_TYPES.ML_SOLAR) {
+            // ML forecast logic
+            setMlLoading(true);
+            setMlError(null);
+            
+            try {
+                const currentDate = new Date();
+                const startDateStr = currentDate.toISOString().split('T')[0];
+                
+                // Calculate 48 hours ahead
+                const endDate = new Date(currentDate);
+                endDate.setHours(endDate.getHours() + 48);
+                const endDateStr = endDate.toISOString().split('T')[0];
+                
+                console.log(`📅 Loading 48-hour ML forecast dataset`);
+                console.log(`   From: ${startDateStr} (current date)`);
+                console.log(`   To: ${endDateStr} (48 hours ahead)`);
+                
+                const forecast = await MLForecastService.getSolarForecast(
+                    startDateStr,
+                    endDateStr,
+                    {
+                        useWeather: true,
+                        forceFresh: forceRefresh,
+                        useCache: !forceRefresh,
+                        coordinates: { lat: 51.0447, lon: -114.0719 }
+                    }
+                );
+                
+                if (forecast.success || forecast.data) {
+                    setMlForecast(forecast);
+                    
+                    // Apply initial filter
+                    const filtered = MLForecastService.getFilteredForecast(forecastHours, forecast);
+                    setFilteredForecast(filtered);
+                    
+                    loadApiStats();
+                    
+                    console.log(`✅ 48-hour dataset loaded: ${forecast.data?.length || 0} predictions`);
+                    if (forecast.model_info?.weather_integrated) {
+                        console.log(`🌤️ Weather data: Integrated`);
+                    }
+                    
+                    // Clear force refresh
+                    setForceRefresh(false);
+                } else {
+                    setMlError('ML forecast service returned no data');
+                }
+            } catch (error) {
+                console.error('Failed to load ML forecast:', error);
+                setMlError(`ML forecast error: ${error.message}`);
+            } finally {
+                setMlLoading(false);
+            }
+        }
+    };
+
+    // Handle force refresh
+    const handleForceRefresh = () => {
+        setForceRefresh(true);
+        handleGenerateForecast();
+    };
+
+    // Handle forecast hours dropdown change
+    const handleForecastHoursChange = (e) => {
+  const value = e.target.value;
+  
+  if (value === "custom") {
+    setShowCustomInput(true);
+    setForecastHours(24); // Keep default value for now
+  } else {
+    setShowCustomInput(false);
+    const hours = parseInt(value);
+    setForecastHours(hours);
+    // Apply filter if data exists
+    if (mlForecast) {
+      const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
+      setFilteredForecast(filtered);
     }
+  }
 };
 
-    // Auto-generate forecast when dateTo or type changes
-    useEffect(() => {
-        if (dateTo) {
-            handleGenerateForecast();
+    // Parse date safely (if needed)
+    const parseDateSafely = (dateInput) => {
+        if (!dateInput) return null;
+        
+        if (typeof dateInput === 'string') {
+            let date = new Date(dateInput);
+            if (isNaN(date.getTime())) {
+                date = new Date(dateInput + 'T12:00:00');
+            }
+            return isNaN(date.getTime()) ? null : date;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateTo, forecastDays, forecastType]);
+        
+        if (dateInput instanceof Date) {
+            return isNaN(dateInput.getTime()) ? null : dateInput;
+        }
+        
+        return null;
+    };
+
+    // Get the forecast data to display
+    const displayForecast = filteredForecast || mlForecast;
 
     return (
         <Box>
@@ -158,7 +264,7 @@ const parseDateSafely = (dateInput) => {
                         <ToggleButtonGroup
                             value={forecastType}
                             exclusive
-                            onChange={(e, newType) => newType && setForecastType(newType)}
+                            onChange={handleForecastTypeChange}
                             size="medium"
                             fullWidth
                         >
@@ -185,47 +291,93 @@ const parseDateSafely = (dateInput) => {
                                 <PsychologyIcon fontSize="small" />
                                 {FORECAST_UI_TYPE_LABELS[FORECAST_UI_TYPES.ML_SOLAR]}
                                 <Tooltip 
-                                    title="AI-powered solar generation prediction (24-hour max, for reference only)"
+                                    title="AI-powered solar generation prediction with real-time weather data"
                                     placement="top"
                                 >
                                     <InfoOutlinedIcon fontSize="small" sx={{ ml: 0.5 }} />
                                 </Tooltip>
                             </ToggleButton>
                         </ToggleButtonGroup>
-                        
-                        {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <Typography variant="body2">
-                                    ⚠️ <strong>Note:</strong> AI forecast limited to {ML_FORECAST.MAX_HOURS} hours for accuracy. 
-                                    Results are for reference only - actual generation may vary.
-                                </Typography>
-                            </Alert>
-                        )}
                     </Box>
 
-                    {/* Forecast Period Selector (only for historical) */}
+                    {/* ML Forecast Configuration */}
+                    {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
+                        <Grid container spacing={2} sx={{ mb: 3 }}>
+                            <Grid item xs={12} sm={showCustomInput ? 6 : 8} md={showCustomInput ? 4 : 4}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Forecast Duration</InputLabel>
+                                    <Select
+                                        value={showCustomInput ? "custom" : forecastHours}
+                                        label="Forecast Duration"
+                                        onChange={handleForecastHoursChange}
+                                        startAdornment={<AccessTimeIcon sx={{ mr: 1, color: 'action.active' }} />}
+                                    >
+                                        {quickForecastOptions.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label} {option.value !== "custom" && `(${option.hours}h)`}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+
+                            {showCustomInput && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <TextField
+                                        label="Custom Hours (1-48)"
+                                        type="number"
+                                        value={customHoursInput}
+                                        onChange={handleCustomHoursInput}
+                                        fullWidth
+                                        inputProps={{ min: 1, max: 48 }}
+                                        helperText={`Showing: ${forecastHours} hours`}
+                                        autoFocus
+                                    />
+                                </Grid>
+                            )}
+
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Stack direction="row" spacing={2} alignItems="center">
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleGenerateForecast}
+                                        disabled={mlLoading}
+                                        sx={{ flex: 1 }}
+                                        startIcon={mlLoading ? <CircularProgress size={20} /> : <PsychologyIcon />}
+                                    >
+                                        {mlLoading ? 'Generating...' : 'Generate Forecast'}
+                                    </Button>
+                                    
+                                    <Tooltip title="Force refresh (ignore cache)">
+                                        <Button
+                                            variant="outlined"
+                                            onClick={handleForceRefresh}
+                                            disabled={mlLoading}
+                                        >
+                                            <RefreshIcon />
+                                        </Button>
+                                    </Tooltip>
+                                </Stack>
+                            </Grid>
+                        </Grid>
+                    )}
+
+                    {/* Historical Forecast Configuration */}
                     {forecastType === FORECAST_UI_TYPES.HISTORICAL && (
                         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end', mt: 2 }}>
                             <FormControl sx={{ minWidth: 150 }}>
                                 <InputLabel>Forecast Period</InputLabel>
                                 <Select
-                                    value={forecastDays}
+                                    value={forecastHours / 24}
                                     label="Forecast Period"
-                                    onChange={(e) => setForecastDays(e.target.value)}
+                                    onChange={(e) => setForecastHours(e.target.value * 24)}
                                 >
-                                    <MenuItem value={FORECAST_PERIODS.SEVEN_DAYS}>
-                                        {FORECAST_PERIOD_LABELS[FORECAST_PERIODS.SEVEN_DAYS]}
-                                    </MenuItem>
-                                    <MenuItem value={FORECAST_PERIODS.FOURTEEN_DAYS}>
-                                        {FORECAST_PERIOD_LABELS[FORECAST_PERIODS.FOURTEEN_DAYS]}
-                                    </MenuItem>
-                                    <MenuItem value={FORECAST_PERIODS.THIRTY_DAYS}>
-                                        {FORECAST_PERIOD_LABELS[FORECAST_PERIODS.THIRTY_DAYS]}
-                                    </MenuItem>
+                                    <MenuItem value={7}>7 Days</MenuItem>
+                                    <MenuItem value={14}>14 Days</MenuItem>
+                                    <MenuItem value={30}>30 Days</MenuItem>
                                 </Select>
                             </FormControl>
 
-                            {/* Generate Button */}
                             <Button
                                 variant="contained"
                                 onClick={handleGenerateForecast}
@@ -237,33 +389,42 @@ const parseDateSafely = (dateInput) => {
                         </Box>
                     )}
 
-                    {/* Generate Button for ML (no period selector) */}
-                    {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button
-                                variant="contained"
-                                onClick={handleGenerateForecast}
-                                disabled={mlLoading || !dateTo}
-                                sx={{ height: 56, minWidth: 200 }}
-                                startIcon={mlLoading ? <CircularProgress size={20} /> : <PsychologyIcon />}
-                            >
-                                {mlLoading ? 'Generating AI Forecast...' : 'Generate AI Forecast'}
-                            </Button>
+                    {/* API Stats */}
+                    {apiStats && forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
+                        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="caption" color="text.secondary">
+                                    📊 API Usage Today: {apiStats.calls_today}/{apiStats.max_calls_per_day} calls
+                                </Typography>
+                                <Chip 
+                                    label={`${apiStats.remaining_calls} calls remaining`}
+                                    size="small"
+                                    color={
+                                        apiStats.remaining_calls > 500 ? "success" :
+                                        apiStats.remaining_calls > 200 ? "warning" : "error"
+                                    }
+                                    variant="outlined"
+                                />
+                            </Stack>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                Data cached for 10 minutes • Resets daily at {new Date(apiStats.last_reset).toLocaleTimeString()}
+                            </Typography>
                         </Box>
                     )}
 
                     {/* Info Alert */}
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                        {forecastType === FORECAST_UI_TYPES.HISTORICAL ? (
-                            <>The forecast will predict the next {forecastDays} days starting from the last day available in the DB (2020-11-09).
-                            Consumption forecast uses historical patterns, Generation forecast uses weather data from Open-Meteo API.</>
-                        ) : (
-                            <>🤖 <strong>AI-powered solar generation forecast</strong> (max {ML_FORECAST.MAX_HOURS} hours). 
-                            Uses machine learning model trained on historical solar data.
-                            <br/><br/>
-                            <strong>⚠️ Disclaimer:</strong> Results are for reference only - actual generation may vary based on real-time conditions, equipment performance, and environmental factors.</>
-                        )}
-                    </Alert>
+                    {forecastType === FORECAST_UI_TYPES.ML_SOLAR && displayForecast && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                            <Typography variant="body2">
+                                ⚡ <strong>Smart Caching:</strong> Showing {displayForecast.summary?.actual_hours_shown || 0} of 
+                                requested {displayForecast.summary?.requested_hours || 0} hours. 
+                                {displayForecast.summary?.actual_hours_shown < displayForecast.summary?.requested_hours && 
+                                    " Night-time hours (6PM-6AM) excluded."}
+                                <br/>
+                                <strong>48-hour dataset cached for 10 minutes.</strong>
+                            </Typography>
+                        </Alert>
+                    )}
                 </CardContent>
             </Card>
 
@@ -279,22 +440,52 @@ const parseDateSafely = (dateInput) => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
                     <CircularProgress />
                     <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
-                        {forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 
-                            'Generating AI forecast...' : 
-                            'Loading forecast data...'}
+                        {forecastType === FORECAST_UI_TYPES.ML_SOLAR 
+                            ? `Generating AI-powered solar forecast...`
+                            : `Generating historical forecast...`}
                     </Typography>
                 </Box>
             )}
 
             {/* Forecast Results */}
-            {!loading && !mlLoading && (consumptionForecast || generationForecast || mlForecast) && (
+            {!loading && !mlLoading && (consumptionForecast || generationForecast || displayForecast) && (
                 <>
-                    {/* Show ML Forecast Card if ML type selected */}
-                    {forecastType === FORECAST_UI_TYPES.ML_SOLAR && mlForecast && (
-                        <MLForecastCard forecast={mlForecast} />
+                    {/* Show Enhanced ML Forecast Card */}
+                    {forecastType === FORECAST_UI_TYPES.ML_SOLAR && displayForecast && (
+                        <>
+                            <MLForecastCard 
+                                forecast={displayForecast} 
+                                loading={mlLoading}
+                                apiStats={apiStats}
+                                forecastHours={forecastHours}
+                            />
+                            
+                            {/* Toggle for hourly table */}
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => setShowHourlyTable(!showHourlyTable)}
+                                    startIcon={showHourlyTable ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                >
+                                    {showHourlyTable ? 'Hide Hourly Details' : 'Show Hourly Details'}
+                                </Button>
+                            </Box>
+                            
+                            {/* Hourly table */}
+                            {showHourlyTable && displayForecast && (
+                                <Card sx={{ mb: 3 }}>
+                                    <CardContent>
+                                        <HourlyForecastTable 
+                                            forecastData={displayForecast}
+                                            title={`Hourly Forecast (${displayForecast.summary?.actual_hours_shown || 0} hours)`}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </>
                     )}
                     
-                    {/* Show historical forecast cards if historical type selected */}
+                    {/* Show historical forecast cards */}
                     {forecastType === FORECAST_UI_TYPES.HISTORICAL && consumptionForecast && (
                         <DataAvailabilityCard
                             metadata={consumptionForecast.metadata}
@@ -308,11 +499,11 @@ const parseDateSafely = (dateInput) => {
                         />
                     )}
                     
-                    {/* Forecast Chart - Single component handles both types */}
+                    {/* Forecast Chart */}
                     <ForecastChart
                         consumptionData={forecastType === FORECAST_UI_TYPES.HISTORICAL ? consumptionForecast : null}
                         generationData={forecastType === FORECAST_UI_TYPES.HISTORICAL ? generationForecast : null}
-                        mlForecastData={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? mlForecast : null}
+                        mlForecastData={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? displayForecast : null}
                         forecastType={forecastType}
                         yAxisLabel={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 'Power Output (kW)' : 'Daily Energy (Wh/day)'}
                         unit={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 'kW' : 'Wh'}
@@ -321,28 +512,40 @@ const parseDateSafely = (dateInput) => {
             )}
 
             {/* No Data State */}
-            {!loading && !mlLoading && !consumptionForecast && !generationForecast && !mlForecast && !error && !mlError && (
+            {!loading && !mlLoading && !consumptionForecast && !generationForecast && !displayForecast && !error && !mlError && (
                 <Card>
                     <CardContent>
                         <Box sx={{ textAlign: 'center', py: 4 }}>
                             <Typography variant="h6" color="text.secondary" gutterBottom>
                                 {forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 
-                                    '🤖 Ready for AI Forecast' : 
-                                    '📊 Ready to Generate Forecast'}
+                                    '🤖 AI Solar Forecast Ready' : 
+                                    '📊 Historical Forecast Ready'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" paragraph>
                                 {forecastType === FORECAST_UI_TYPES.ML_SOLAR 
-                                    ? 'Click "Generate AI Forecast" button for AI-powered solar predictions'
+                                    ? `Select forecast duration and click "Generate Forecast"`
                                     : 'Select forecast period, then click "Generate Forecast" button'}
                             </Typography>
+                            <Button
+                                variant="contained"
+                                onClick={handleGenerateForecast}
+                                startIcon={forecastType === FORECAST_UI_TYPES.ML_SOLAR ? 
+                                    <PsychologyIcon /> : 
+                                    <RefreshIcon />}
+                                sx={{ mt: 2 }}
+                            >
+                                Generate Forecast Now
+                            </Button>
+                            
                             {forecastType === FORECAST_UI_TYPES.ML_SOLAR && (
-                                <Alert severity="info" sx={{ maxWidth: 600, mx: 'auto' }}>
+                                <Alert severity="info" sx={{ mt: 2, maxWidth: 600, mx: 'auto' }}>
                                     <Typography variant="body2">
-                                        <strong>AI Forecast Details:</strong>
-                                        <br/>• Max {ML_FORECAST.MAX_HOURS}-hour forecast for accuracy
-                                        <br/>• Uses machine learning model (R²: 0.693)
-                                        <br/>• Trained on historical solar generation data
-                                        <br/>• Results for reference only
+                                        <strong>🤖 AI Solar Forecast Features:</strong>
+                                        <br/>• 48-hour dataset with smart caching
+                                        <br/>• Real-time weather integration
+                                        <br/>• Fast filtering without API calls
+                                        <br/>• Daytime-only predictions (6 AM - 9 PM)
+                                        <br/>• 10-minute cache to reduce API usage
                                     </Typography>
                                 </Alert>
                             )}
