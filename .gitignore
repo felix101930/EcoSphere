@@ -19,10 +19,13 @@ dist/
 build/
 
 # Environment variables
-# Note: .env files are committed for internal team collaboration
-# .env
+.env
 .env.local
 .env.*.local
+.env.*.js
+
+ecosphere-backend/.env
+ecosphere-backend/.env
 
 # IDE
 .vscode/
