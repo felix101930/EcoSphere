@@ -15,6 +15,8 @@ import Sidebar from './components/Layout/Sidebar';
 import AIChatbot from './components/Layout/AIChatbot';
 import ErrorBoundary from './components/Common/ErrorBoundary';
 import LoadingSpinner from './components/Common/LoadingSpinner';
+import AiAnalyst from './pages/AiAnalyst';
+import Layout from "./components/Layout/Layout";
 
 // Protected Route Component
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -170,6 +172,29 @@ function App() {
                   </MainLayout>
                 </ProtectedRoute>
               }
+            />
+
+            <Route
+              path="/quiz-management"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <MainLayout showAIChatbot={false}>
+                    <ComingSoonPage featureName="Quiz Management" />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* AI Analyst Route */}
+            <Route 
+              path="/ai-analyst" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AiAnalyst />
+                  </Layout>
+                </ProtectedRoute>
+              } 
             />
 
             {/* Default Route */}

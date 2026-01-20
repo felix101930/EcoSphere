@@ -1,0 +1,13 @@
+{
+  "best_model": "ensemble",
+  "best_score": 0.8830633523313965,
+  "all_scores": {
+    "xgboost": 0.866919134514688,
+    "lightgbm": 0.868131630418702,
+    "ensemble": 0.8830633523313965
+  },
+  "training_date": "2025-12-20 09:55:22",
+  "dataset": "behavioral_loads_long_final.csv",
+  "features_count": 51,
+  "samples_count": 10875
+}

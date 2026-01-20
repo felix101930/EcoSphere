@@ -1,0 +1,33 @@
+============================================================
+SOLAR FORECASTING MODEL TRAINING SUMMARY
+============================================================
+
+Training Date: 2025-12-23 12:55:53
+Dataset: solar_forecasting_ready_dataset.csv
+Total Samples: 14,649
+Training Samples: 11,719
+Testing Samples: 2,930
+
+============================================================
+MODEL PERFORMANCE COMPARISON
+============================================================
+
+LightGBM:
+  Test R²:    0.9891
+  Test MAE:   0.159 kW
+  Test RMSE:  0.415 kW
+  Test MAPE:  217.52%
+
+XGBoost:
+  Test R²:    0.9881
+  Test MAE:   0.161 kW
+  Test RMSE:  0.433 kW
+  Test MAPE:  212.70%
+
+Prophet:
+  Test R²:    0.8374
+  Test MAE:   1.001 kW
+  Test RMSE:  1.600 kW
+  Test MAPE:  2609.37%
+
+============================================================
