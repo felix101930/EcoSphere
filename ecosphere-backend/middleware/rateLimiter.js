@@ -79,7 +79,7 @@ class RateLimiter {
 // Create rate limiter instances for different endpoints
 const forecastLimiter = new RateLimiter({
     windowMs: 60000,        // 1 minute
-    maxRequests: 200,       // 200 requests per minute per IP (for load testing)
+    maxRequests: 60,        // 60 requests per minute per IP (production setting)
     message: 'Too many forecast requests. Please wait before generating more forecasts.'
 });
 

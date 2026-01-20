@@ -124,7 +124,7 @@ const ForecastTab = ({ dateTo }) => {
                     {consumptionForecast && (
                         <DataAvailabilityCard
                             metadata={consumptionForecast.metadata}
-                            title="Consumption Forecast"
+                            title="Electricity Consumption Forecast"
                         />
                     )}
 
@@ -139,6 +139,9 @@ const ForecastTab = ({ dateTo }) => {
                     <ForecastChart
                         consumptionData={consumptionForecast}
                         generationData={generationForecast}
+                        title="📈 Electricity Forecast"
+                        consumptionLabel="Electricity Consumption Forecast"
+                        generationLabel="Electricity Generation Forecast"
                     />
                 </>
             )}

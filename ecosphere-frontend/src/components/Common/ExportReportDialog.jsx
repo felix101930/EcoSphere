@@ -17,9 +17,9 @@ import PreviewIcon from '@mui/icons-material/Preview';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const ExportReportDialog = ({ 
-  open, 
-  onClose, 
+const ExportReportDialog = ({
+  open,
+  onClose,
   reportType,
   reportTitle
 }) => {
@@ -35,12 +35,25 @@ const ExportReportDialog = ({
         throw new Error('Content area not found');
       }
 
+      // Hide elements marked with data-hide-in-export before capturing
+      const elementsToHide = contentElement.querySelectorAll('[data-hide-in-export="true"]');
+      const originalDisplays = [];
+      elementsToHide.forEach((el, index) => {
+        originalDisplays[index] = el.style.display;
+        el.style.display = 'none';
+      });
+
       // Lower scale for smaller file size
       const canvas = await html2canvas(contentElement, {
         scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
+      });
+
+      // Restore hidden elements
+      elementsToHide.forEach((el, index) => {
+        el.style.display = originalDisplays[index];
       });
 
       // Use JPEG with compression
@@ -63,6 +76,14 @@ const ExportReportDialog = ({
         throw new Error('Content area not found');
       }
 
+      // Hide elements marked with data-hide-in-export before capturing
+      const elementsToHide = contentElement.querySelectorAll('[data-hide-in-export="true"]');
+      const originalDisplays = [];
+      elementsToHide.forEach((el, index) => {
+        originalDisplays[index] = el.style.display;
+        el.style.display = 'none';
+      });
+
       // Lower scale for smaller file size (1.5 instead of 2)
       const canvas = await html2canvas(contentElement, {
         scale: 1.5,
@@ -71,31 +92,36 @@ const ExportReportDialog = ({
         backgroundColor: '#ffffff'
       });
 
+      // Restore hidden elements
+      elementsToHide.forEach((el, index) => {
+        el.style.display = originalDisplays[index];
+      });
+
       const imgWidth = 210;
       const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      
+
       pdf.setFontSize(20);
       pdf.setTextColor(218, 41, 28);
       pdf.text(`GBTAC - ${reportTitle}`, 20, 20);
-      
+
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       const now = new Date();
       const currentDate = now.toLocaleDateString('en-CA');
       const currentTime = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
       pdf.text(`Generated on: ${currentDate} ${currentTime}`, 20, 30);
-      
+
       // Use JPEG with compression for smaller file size (0.85 quality)
       const imgData = canvas.toDataURL('image/jpeg', 0.85);
       let position = 40;
-      
+
       pdf.addImage(imgData, 'JPEG', 10, position, imgWidth - 20, imgHeight);
       heightLeft -= pageHeight;
-      
+
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight + 40;
         pdf.addPage();
@@ -105,10 +131,10 @@ const ExportReportDialog = ({
 
       const timeForFilename = currentTime.replace(':', '-');
       const filename = `${reportType}_Report_${currentDate}_${timeForFilename}.pdf`;
-      
+
       // Download PDF to user's computer
       pdf.save(filename);
-      
+
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -213,7 +239,7 @@ const ExportReportDialog = ({
         <Button onClick={handleClose} disabled={isGenerating}>
           Cancel
         </Button>
-        
+
         {!isPreviewMode ? (
           <>
             <Button

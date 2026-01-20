@@ -1,6 +1,6 @@
 # EcoSphere Algorithms Documentation
 
-**Document Version**: 2026-01-07  
+**Document Version**: 2026-01-16 (Updated: Natural Gas Forecast Algorithms)  
 **Purpose**: Comprehensive documentation of all algorithms, calculations, and API integrations used in the EcoSphere system  
 **Target Audience**: Development team, data scientists, and system maintainers
 
@@ -27,11 +27,12 @@ The EcoSphere system employs various types of algorithms:
 
 | Category | Purpose | Modules |
 |----------|---------|---------|
-| **Time Series Forecasting** | Predict future consumption/generation | Electricity, Water, Thermal |
+| **Time Series Forecasting** | Predict future consumption/generation | Electricity, Water, Natural Gas, Thermal |
 | **Linear Regression** | Weather-based predictions | Electricity (Generation), Water (Rainwater), Thermal |
 | **Statistical Calculations** | Metrics and aggregations | All modules |
-| **Multi-Tier Systems** | Graceful degradation based on data availability | Electricity, Water |
+| **Multi-Tier Systems** | Graceful degradation based on data availability | Electricity, Water, Natural Gas |
 | **Hybrid Models** | Combine multiple approaches | Thermal |
+| **Seasonal Weighted** | Monthly pattern prediction | Natural Gas |
 
 ### 1.2 Key Design Principles
 
@@ -410,6 +411,197 @@ Where:
 **Code Location**: `ecosphere-backend/services/forecastService.js:727-920`
 
 **Weather API**: Open-Meteo API (see section 6.2)
+
+---
+
+## 3.3 Natural Gas Consumption Forecast (Three-Tier System)
+
+**Purpose**: Predict future natural gas consumption based on monthly historical data
+
+**Data Source**: JSON file (`naturalGasMonthlyUsage.json`) with monthly readings from 2023-01 to 2025-11
+
+**Tier System**: 3 tiers optimized for monthly data (not daily like electricity/water)
+
+**Important Note**: Natural gas data is monthly, not hourly/daily. Each data point represents one month's total usage.
+
+---
+
+#### Tier 1: Seasonal Weighted Prediction (Best)
+
+**Confidence**: 75%  
+**Accuracy**: ★★★★☆  
+**Requirements**:
+- At least 24 months (2 years) of historical data
+- Last year same month data available
+- Two years ago same month data available
+
+**Algorithm**: Weighted average of seasonal patterns
+
+**Formula**:
+```
+Prediction = 0.4 × LastYearSameMonth + 0.4 × TwoYearsAgoSameMonth + 0.2 × Recent3MonthAvg
+```
+
+**Weights Rationale**:
+- 40% Last Year Same Month: Strong annual seasonality in natural gas usage (heating in winter)
+- 40% Two Years Ago Same Month: Validates seasonal pattern consistency
+- 20% Recent 3-Month Average: Accounts for recent trends and anomalies
+
+**Why Different from Electricity?**
+- Natural gas has stronger seasonal patterns (heating vs cooling)
+- Monthly data requires different weighting strategy
+- Less emphasis on recent trends, more on seasonal history
+
+**Implementation**:
+- **File**: `ecosphere-backend/services/naturalGasForecastService.js`
+- **Function**: `seasonalWeightedForecast(data, forecastMonths, targetDate)`
+
+**Process**:
+1. For each forecast month:
+   - Get last year same month value
+   - Get two years ago same month value
+   - Calculate recent 3-month average
+2. Apply weighted formula
+3. Handle missing data with fallback to month average across all years
+4. Return monthly predictions
+
+**Date Calculation**:
+- Uses pure math for month calculations (avoids Date object timezone issues)
+- Formula: `forecastMonth = targetMonth + i` (where i = 1 to forecastMonths)
+- Handles year overflow: `if (forecastMonth > 12) { forecastMonth -= 12; forecastYear += 1; }`
+
+**Code Location**: `ecosphere-backend/services/naturalGasForecastService.js:240-310`
+
+---
+
+#### Tier 2: Trend-Based Prediction (Good)
+
+**Confidence**: 60%  
+**Accuracy**: ★★★☆☆  
+**Requirements**:
+- At least 6 months of historical data
+
+**Algorithm**: Linear regression on recent months
+
+**Formula**:
+```
+Trend = Δy / Δx (slope of linear regression)
+Prediction(month) = Intercept + Slope × month_index
+```
+
+**Implementation**:
+- **File**: `ecosphere-backend/services/naturalGasForecastService.js`
+- **Function**: `trendBasedForecast(data, forecastMonths, targetDate)`
+
+**Process**:
+1. Use last 6 months of data
+2. Calculate linear regression:
+   - X values: [0, 1, 2, 3, 4, 5] (month indices)
+   - Y values: [usage values for last 6 months]
+   - Calculate slope and intercept
+3. Extrapolate: `prediction = intercept + slope × (n + i - 1)`
+4. Ensure non-negative values
+
+**Fallback**: If less than 2 data points, use last month's value
+
+**Code Location**: `ecosphere-backend/services/naturalGasForecastService.js:315-365`
+
+---
+
+#### Tier 3: Moving Average (Basic)
+
+**Confidence**: 45%  
+**Accuracy**: ★★☆☆☆  
+**Requirements**:
+- At least 3 months of historical data
+
+**Algorithm**: Simple moving average
+
+**Formula**:
+```
+Prediction = Average(Last 3 Months)
+```
+
+**Implementation**:
+- **File**: `ecosphere-backend/services/naturalGasForecastService.js`
+- **Function**: `movingAverageForecast(data, forecastMonths, targetDate)`
+
+**Process**:
+1. Calculate average of last 3 months
+2. Use same value for all forecast months
+3. Simple but provides baseline estimate
+
+**Code Location**: `ecosphere-backend/services/naturalGasForecastService.js:370-385`
+
+---
+
+### 3.4 Natural Gas Data Structure
+
+**JSON Format**:
+```json
+{
+  "year": 2025,
+  "month": 11,
+  "monthKey": "2025-11",
+  "monthLabel": "Nov 2025",
+  "usage": 720,
+  "readingDate": "2025-12-06"
+}
+```
+
+**Important Understanding**:
+- `readingDate` represents when the meter was read
+- `usage` represents the PREVIOUS month's consumption
+- Example: Reading on Dec 6, 2025 contains November 2025 usage
+
+**Data Conversion**:
+- Original CSV had reading dates with usage values
+- Conversion script (`convert-natural-gas-csv-to-json.js`) correctly mapped:
+  - Reading date → Previous month's usage
+  - Example: Feb 6, 2023 reading (196 GJ) → January 2023 usage
+
+**Data Range**: 2023-01 to 2025-11 (35 months total)
+
+---
+
+### 3.5 Natural Gas Forecast Date Handling
+
+**Challenge**: Avoid Date object timezone issues with monthly data
+
+**Solution**: Pure math-based month calculation
+
+**Frontend Process**:
+1. Get last data point: `{month: "2025-11", usage: 720}` (November 2025)
+2. Parse: `year = 2025, month = 11`
+3. Calculate next month: `nextMonth = 11 + 1 = 12, nextYear = 2025`
+4. Create Date object: `new Date(2025, 11, 1)` (December 1, 2025)
+5. Format and send to backend: `"2025-12-01"`
+
+**Backend Process**:
+1. Receive target date: `"2025-12-01"`
+2. Parse: `targetYear = 2025, targetMonth = 12`
+3. For each forecast iteration (i = 1 to 6):
+   ```javascript
+   forecastMonth = targetMonth + i;  // 12+1=13, 12+2=14, etc.
+   forecastYear = targetYear;
+   
+   // Handle year overflow
+   while (forecastMonth > 12) {
+     forecastMonth -= 12;  // 13-12=1, 14-12=2, etc.
+     forecastYear += 1;    // 2025+1=2026
+   }
+   ```
+4. Result: Dec 2025, Jan 2026, Feb 2026, Mar 2026, Apr 2026, May 2026
+
+**Why This Works**:
+- No Date object manipulation (avoids timezone conversion)
+- Pure integer arithmetic (predictable, no edge cases)
+- Handles year boundaries correctly
+- Works consistently across all browsers and timezones
+
+**Code Location**: 
+- Frontend: `ecosphere-frontend/src/components/NaturalGas/ForecastTab.jsx:34-50`
+- Backend: `ecosphere-backend/services/naturalGasForecastService.js:240-310`
 
 ---
 
@@ -811,6 +1003,8 @@ totalPrecip = Σ(hourlyPrecip)
 
 ### 8.1 Forecast Algorithm Confidence Levels
 
+#### Electricity & Water (Hourly/Daily Data)
+
 | Tier | Algorithm | Confidence | Accuracy | Data Requirements |
 |------|-----------|------------|----------|-------------------|
 | 1 | Holt-Winters | 90% | ★★★★★ | 1 year + 70% complete |
@@ -818,11 +1012,22 @@ totalPrecip = Σ(hourlyPrecip)
 | 3 | Trend-Based | 65% | ★★★☆☆ | 30 days |
 | 4 | Moving Average | 50% | ★★☆☆☆ | 7 days |
 
+#### Natural Gas (Monthly Data)
+
+| Tier | Algorithm | Confidence | Accuracy | Data Requirements |
+|------|-----------|------------|----------|-------------------|
+| 1 | Seasonal Weighted | 75% | ★★★★☆ | 24 months (2 years) |
+| 2 | Trend-Based | 60% | ★★★☆☆ | 6 months |
+| 3 | Moving Average | 45% | ★★☆☆☆ | 3 months |
+
 **Confidence Score Interpretation**:
 - 90%: Very reliable, suitable for planning
 - 80%: Reliable, suitable for most decisions
+- 75%: Good reliability, suitable for monthly planning
 - 65%: Moderate reliability, use with caution
+- 60%: Moderate reliability, rough estimate
 - 50%: Low reliability, rough estimate only
+- 45%: Low reliability, baseline only
 
 ---
 
@@ -1048,6 +1253,10 @@ WEATHER_WEIGHT: 0.2
 | Generation Forecast | `services/forecastService.js` | `generateGenerationForecast()` |
 | Rainwater Forecast | `services/forecastService.js` | `generateRainwaterForecast()` |
 | Thermal Forecast | `services/forecastService.js` | `generateThermalForecast()` |
+| Natural Gas Forecast (All Tiers) | `services/naturalGasForecastService.js` | `generateForecast()` |
+| Natural Gas Seasonal Weighted | `services/naturalGasForecastService.js` | `seasonalWeightedForecast()` |
+| Natural Gas Trend-Based | `services/naturalGasForecastService.js` | `trendBasedForecast()` |
+| Natural Gas Moving Average | `services/naturalGasForecastService.js` | `movingAverageForecast()` |
 | Weather Data Fetch | `services/weatherService.js` | `getWeatherData()` |
 | Weather Aggregation | `services/weatherService.js` | `aggregateToDaily()` |
 

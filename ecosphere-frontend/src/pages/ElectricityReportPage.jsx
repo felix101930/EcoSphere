@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import TimeFilter from '../components/Common/TimeFilter';
+import Disclaimer from '../components/Common/Disclaimer';
 import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
 import NetEnergyTab from '../components/Electricity/NetEnergyTab';
@@ -182,19 +183,25 @@ const ElectricityReportPage = () => {
       />
 
       <Box data-export-content sx={{ px: 4, py: 3 }}>
-        {/* Time Filter - Show for all tabs */}
-        <TimeFilter
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          onDateFromChange={setDateFrom}
-          onDateToChange={setDateTo}
-          onApply={handleApplyFilter}
-          dateRange={dateRange?.consumption}
-          loading={loading}
-        />
+        {/* Disclaimer */}
+        <Disclaimer />
 
-        {/* Main Tabs */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        {/* Time Filter - Show for all tabs - Hide in export */}
+        <Box data-hide-in-export="true">
+          <TimeFilter
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+            onApply={handleApplyFilter}
+            dateRange={dateRange?.consumption}
+            loading={loading}
+            showEquipmentInfo={true}
+          />
+        </Box>
+
+        {/* Main Tabs - Hide in export */}
+        <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab
               label="Consumption"

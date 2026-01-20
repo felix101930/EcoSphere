@@ -14,7 +14,7 @@ const SolarSourceBreakdownChart = ({ data, loading }) => {
     }
 
     const { carport, rooftop } = data.data;
-    
+
     if (!carport || !rooftop) {
       return null;
     }
@@ -85,7 +85,7 @@ const SolarSourceBreakdownChart = ({ data, loading }) => {
     <Card sx={{ mt: 3 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Generation by Solar Source
+          Electricity Generation by Source
         </Typography>
         {data.warning && (
           <Alert severity="warning" sx={{ mb: 2 }}>

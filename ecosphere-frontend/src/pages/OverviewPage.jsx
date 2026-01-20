@@ -1,12 +1,14 @@
 import { Box, Container, Typography, Fab, CircularProgress, Alert } from '@mui/material';
-import { KeyboardArrowUp, Bolt, Water, Thermostat } from '@mui/icons-material';
+import { KeyboardArrowUp, Bolt, Water, Thermostat, LocalFireDepartment } from '@mui/icons-material';
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/Common/PageHeader';
 import CollapsibleSection from '../components/Common/CollapsibleSection';
+import Disclaimer from '../components/Common/Disclaimer';
 import TimePresetSelector from '../components/Overview/TimePresetSelector';
 import ElectricityOverview from '../components/Overview/ElectricityOverview';
 import WaterOverview from '../components/Overview/WaterOverview';
 import ThermalOverview from '../components/Overview/ThermalOverview';
+import NaturalGasOverview from '../components/Overview/NaturalGasOverview';
 import useOverviewData from '../lib/hooks/useOverviewData';
 
 export default function OverviewPage() {
@@ -18,7 +20,8 @@ export default function OverviewPage() {
         error,
         electricityData,
         waterData,
-        thermalData
+        thermalData,
+        naturalGasData
     } = useOverviewData();
 
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -61,6 +64,9 @@ export default function OverviewPage() {
             />
 
             <Container maxWidth="xl" sx={{ mt: 3 }}>
+                {/* Disclaimer */}
+                <Disclaimer />
+
                 {/* Time Preset Selector */}
                 <TimePresetSelector value={timePreset} onChange={setTimePreset} />
 
@@ -106,6 +112,15 @@ export default function OverviewPage() {
                             defaultExpanded={true}
                         >
                             <ThermalOverview data={thermalData} />
+                        </CollapsibleSection>
+
+                        {/* Natural Gas Section */}
+                        <CollapsibleSection
+                            title="Natural Gas"
+                            icon={<LocalFireDepartment sx={{ color: '#FF6B35', fontSize: 28 }} />}
+                            defaultExpanded={true}
+                        >
+                            <NaturalGasOverview data={naturalGasData} />
                         </CollapsibleSection>
                     </>
                 )}

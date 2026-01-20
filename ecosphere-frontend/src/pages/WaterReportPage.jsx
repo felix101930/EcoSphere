@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import TimeFilter from '../components/Common/TimeFilter';
+import Disclaimer from '../components/Common/Disclaimer';
 import RainwaterTab from '../components/Water/RainwaterTab';
 import HotWaterTab from '../components/Water/HotWaterTab';
 import { TAB_TYPES } from '../lib/constants/water';
@@ -177,19 +178,24 @@ const WaterReportPage = () => {
             />
 
             <Box data-export-content sx={{ px: 4, py: 3 }}>
-                {/* Time Filter */}
-                <TimeFilter
-                    dateFrom={dateFrom}
-                    dateTo={dateTo}
-                    onDateFromChange={setDateFrom}
-                    onDateToChange={setDateTo}
-                    onApply={handleApplyFilter}
-                    dateRange={getCurrentDateRange()}
-                    loading={loading}
-                />
+                {/* Disclaimer */}
+                <Disclaimer />
 
-                {/* Main Tabs */}
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                {/* Time Filter - Hide in export */}
+                <Box data-hide-in-export="true">
+                    <TimeFilter
+                        dateFrom={dateFrom}
+                        dateTo={dateTo}
+                        onDateFromChange={setDateFrom}
+                        onDateToChange={setDateTo}
+                        onApply={handleApplyFilter}
+                        dateRange={getCurrentDateRange()}
+                        loading={loading}
+                    />
+                </Box>
+
+                {/* Main Tabs - Hide in export */}
+                <Box data-hide-in-export="true" sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                     <Tabs value={activeTab} onChange={handleTabChange}>
                         <Tab
                             label="Rainwater Harvesting"

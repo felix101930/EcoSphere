@@ -39,7 +39,7 @@ const ThermalControlPanel = ({
 }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 15, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 3, flexWrap: 'wrap' }}>
         {/* Floor Selection */}
         <Box>
           <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -108,7 +108,7 @@ const ThermalControlPanel = ({
               />
             </Box>
           ) : viewMode === VIEW_MODES.MULTIPLE ? (
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-end' }}>
+            <>
               <Box>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
                   From Date
@@ -143,16 +143,18 @@ const ThermalControlPanel = ({
                   }}
                 />
               </Box>
-              <Button
-                variant="contained"
-                startIcon={<TrendingUpIcon />}
-                onClick={onGenerateChart}
-                disabled={loading}
-                sx={{ height: 40 }}
-              >
-                Generate Chart
-              </Button>
-            </Box>
+              <Box>
+                <Button
+                  variant="contained"
+                  startIcon={<TrendingUpIcon />}
+                  onClick={onGenerateChart}
+                  disabled={loading}
+                  sx={{ height: 40 }}
+                >
+                  Generate
+                </Button>
+              </Box>
+            </>
           ) : viewMode === VIEW_MODES.FORECAST ? (
             <Box>
               <Typography variant="body2" color="text.secondary" gutterBottom>

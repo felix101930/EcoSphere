@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { SENSOR_COLORS } from '../../lib/constants/thermal';
+import { SENSOR_COLORS, getSensorDisplayName } from '../../lib/constants/thermal';
 
 // Register Chart.js components
 ChartJS.register(
@@ -46,13 +46,14 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
   const datasets = [];
 
   availableSensorIds.forEach(sensorId => {
+    const sensorNumber = sensorId.replace('_TL2', '');
     const colorInfo = SENSOR_COLORS[sensorId];
     const rgb = colorInfo ? colorInfo.rgb : '128, 128, 128';
-    const name = colorInfo ? colorInfo.name : `Sensor ${sensorId}`;
+    const displayName = getSensorDisplayName(sensorNumber);
 
     // Low boundary (draw first)
     datasets.push({
-      label: `${name} Low`,
+      label: `${displayName} Low`,
       data: dates.map(date => data[date][sensorId]?.low || null),
       borderColor: `rgba(${rgb}, 0.3)`,
       backgroundColor: `rgba(${rgb}, 0)`,
@@ -67,7 +68,7 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
 
     // High boundary (fill down to Low)
     datasets.push({
-      label: `${name} High`,
+      label: `${displayName} High`,
       data: dates.map(date => data[date][sensorId]?.high || null),
       borderColor: `rgba(${rgb}, 0.3)`,
       backgroundColor: `rgba(${rgb}, 0.15)`,
@@ -82,7 +83,7 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
 
     // Average line
     datasets.push({
-      label: `${name} Avg`,
+      label: `${displayName} Avg`,
       data: dates.map(date => data[date][sensorId]?.avg || null),
       borderColor: `rgb(${rgb})`,
       backgroundColor: `rgb(${rgb})`,
@@ -244,8 +245,8 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
             return;
           }
 
-          // Handle sensor datasets
-          const match = clickedLabel.match(/Sensor (\d+)/);
+          // Handle sensor datasets (format: "West 1 (TL20012)")
+          const match = clickedLabel.match(/\(TL(\d+)\)/);
           if (!match) return;
 
           const sensorNumber = match[1];
@@ -257,7 +258,7 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
 
           // Apply the same state to all datasets of this sensor
           chart.data.datasets.forEach((dataset, index) => {
-            if (dataset.label.includes(`Sensor ${sensorNumber}`)) {
+            if (dataset.label.includes(`(TL${sensorNumber})`)) {
               const meta = chart.getDatasetMeta(index);
               meta.hidden = newHiddenState;
             }
@@ -303,8 +304,8 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
             if (datasetLabel.includes('Avg')) {
               const sensorName = datasetLabel.replace(' Avg', '');
 
-              // Extract sensor ID from label
-              const match = sensorName.match(/Sensor (\d+)/);
+              // Extract sensor ID from label (format: "West 1 (TL20012)")
+              const match = sensorName.match(/\(TL(\d+)\)/);
               if (!match) return null;
 
               const sensorId = `${match[1]}_TL2`;
@@ -349,7 +350,7 @@ const ThermalCandlestickChart = ({ data, outdoorTemperature, onDateClick }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
       <Typography variant="h5" gutterBottom>
-        Temperature Range Chart
+        Daily Temperature Trend
       </Typography>
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Days: {dates.length} | Shaded area = High-Low range | Line = Average temperature | Hover to see the details

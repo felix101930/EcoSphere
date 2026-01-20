@@ -9,10 +9,8 @@ import {
   BarElement,
   Title,
   Tooltip,
-  Legend,
-  TimeScale
+  Legend
 } from 'chart.js';
-import 'chartjs-adapter-date-fns';
 import { CHART_COLORS, PHASE_LABELS } from '../../lib/constants/electricity';
 
 // Register ChartJS components
@@ -22,50 +20,96 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend,
-  TimeScale
+  Legend
 );
 
 const PhaseBreakdownChart = ({ data, loading }) => {
-  // Prepare chart data
-  const chartData = useMemo(() => {
+  // Aggregate hourly data to daily data
+  const aggregatedData = useMemo(() => {
     if (!data || !data.data) {
       return null;
     }
 
     const { phaseA, phaseB, phaseC } = data.data;
-    
+
     if (!phaseA || phaseA.length === 0) {
       return null;
     }
 
+    // Group data by date
+    const dailyData = {};
+
+    // Process Phase A
+    phaseA.forEach(item => {
+      const date = item.ts.split(' ')[0]; // Extract date part (YYYY-MM-DD)
+      if (!dailyData[date]) {
+        dailyData[date] = { phaseA: 0, phaseB: 0, phaseC: 0 };
+      }
+      dailyData[date].phaseA += Math.abs(item.value);
+    });
+
+    // Process Phase B
+    phaseB.forEach(item => {
+      const date = item.ts.split(' ')[0];
+      if (!dailyData[date]) {
+        dailyData[date] = { phaseA: 0, phaseB: 0, phaseC: 0 };
+      }
+      dailyData[date].phaseB += Math.abs(item.value);
+    });
+
+    // Process Phase C
+    phaseC.forEach(item => {
+      const date = item.ts.split(' ')[0];
+      if (!dailyData[date]) {
+        dailyData[date] = { phaseA: 0, phaseB: 0, phaseC: 0 };
+      }
+      dailyData[date].phaseC += Math.abs(item.value);
+    });
+
+    // Convert to arrays sorted by date
+    const dates = Object.keys(dailyData).sort();
+
     return {
-      labels: phaseA.map(d => new Date(d.ts)),
+      dates: dates,
+      phaseA: dates.map(date => dailyData[date].phaseA),
+      phaseB: dates.map(date => dailyData[date].phaseB),
+      phaseC: dates.map(date => dailyData[date].phaseC)
+    };
+  }, [data]);
+
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    if (!aggregatedData) {
+      return null;
+    }
+
+    return {
+      labels: aggregatedData.dates,
       datasets: [
         {
           label: PHASE_LABELS.phaseA,
-          data: phaseA.map(d => Math.abs(d.value)),
+          data: aggregatedData.phaseA,
           backgroundColor: CHART_COLORS.PHASE_A + '80',
           borderColor: CHART_COLORS.PHASE_A,
           borderWidth: 1
         },
         {
           label: PHASE_LABELS.phaseB,
-          data: phaseB.map(d => Math.abs(d.value)),
+          data: aggregatedData.phaseB,
           backgroundColor: CHART_COLORS.PHASE_B + '80',
           borderColor: CHART_COLORS.PHASE_B,
           borderWidth: 1
         },
         {
           label: PHASE_LABELS.phaseC,
-          data: phaseC.map(d => Math.abs(d.value)),
+          data: aggregatedData.phaseC,
           backgroundColor: CHART_COLORS.PHASE_C + '80',
           borderColor: CHART_COLORS.PHASE_C,
           borderWidth: 1
         }
       ]
     };
-  }, [data]);
+  }, [aggregatedData]);
 
   // Chart options
   const options = useMemo(() => ({
@@ -85,39 +129,32 @@ const PhaseBreakdownChart = ({ data, loading }) => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += context.parsed.y.toFixed(2) + ' Wh';
+              label += context.parsed.y.toLocaleString() + ' Wh';
             }
             return label;
           },
-          footer: function(tooltipItems) {
+          footer: function (tooltipItems) {
             let sum = 0;
-            tooltipItems.forEach(function(tooltipItem) {
+            tooltipItems.forEach(function (tooltipItem) {
               sum += tooltipItem.parsed.y;
             });
-            return 'Total: ' + sum.toFixed(2) + ' Wh';
+            return 'Total: ' + sum.toLocaleString() + ' Wh';
           }
         }
       }
     },
     scales: {
       x: {
-        type: 'time',
-        time: {
-          unit: 'hour',
-          displayFormats: {
-            hour: 'MMM dd HH:mm'
-          }
-        },
         stacked: true,
         title: {
           display: true,
-          text: 'Time'
+          text: 'Date'
         }
       },
       y: {
@@ -128,7 +165,7 @@ const PhaseBreakdownChart = ({ data, loading }) => {
           text: 'Energy (Wh)'
         },
         ticks: {
-          callback: function(value) {
+          callback: function (value) {
             return value.toLocaleString() + ' Wh';
           }
         }
@@ -140,7 +177,7 @@ const PhaseBreakdownChart = ({ data, loading }) => {
     return (
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Phase Breakdown
+          Electricity Consumption Trend by Phase (Daily)
         </Typography>
         <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography color="text.secondary">
@@ -155,7 +192,7 @@ const PhaseBreakdownChart = ({ data, loading }) => {
     return (
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Phase Breakdown
+          Electricity Consumption Trend by Phase (Daily)
         </Typography>
         <Alert severity="warning" sx={{ mb: 2 }}>
           Phase data is only available from 2020-11-01 to 2020-11-08 (7 days)
@@ -172,7 +209,7 @@ const PhaseBreakdownChart = ({ data, loading }) => {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Phase Breakdown
+        Electricity Consumption Trend by Phase (Daily)
       </Typography>
       {data.warning && (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -182,7 +219,7 @@ const PhaseBreakdownChart = ({ data, loading }) => {
       <Box sx={{ height: 400 }}>
         <Bar data={chartData} options={options} />
       </Box>
-      
+
       {/* Phase Distribution Summary */}
       {data.metrics && (
         <Box sx={{ mt: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>

@@ -30,6 +30,14 @@ const ExportReportDialog = ({ open, onClose }) => {
         throw new Error('Content area not found');
       }
 
+      // Hide elements marked with data-hide-in-export
+      const elementsToHide = contentElement.querySelectorAll('[data-hide-in-export="true"]');
+      const originalDisplays = [];
+      elementsToHide.forEach((el, index) => {
+        originalDisplays[index] = el.style.display;
+        el.style.display = 'none';
+      });
+
       // Hide Custom Calculator if it has no content
       const customCalc = document.querySelector('[data-custom-calculator]');
       const hasContent = customCalc?.getAttribute('data-has-content') === 'true';
@@ -44,6 +52,11 @@ const ExportReportDialog = ({ open, onClose }) => {
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff'
+      });
+
+      // Restore hidden elements
+      elementsToHide.forEach((el, index) => {
+        el.style.display = originalDisplays[index];
       });
 
       // Restore Custom Calculator display
@@ -71,6 +84,14 @@ const ExportReportDialog = ({ open, onClose }) => {
         throw new Error('Content area not found');
       }
 
+      // Hide elements marked with data-hide-in-export
+      const elementsToHide = contentElement.querySelectorAll('[data-hide-in-export="true"]');
+      const originalDisplays = [];
+      elementsToHide.forEach((el, index) => {
+        originalDisplays[index] = el.style.display;
+        el.style.display = 'none';
+      });
+
       // Hide Custom Calculator if it has no content
       const customCalc = document.querySelector('[data-custom-calculator]');
       const hasContent = customCalc?.getAttribute('data-has-content') === 'true';
@@ -87,6 +108,11 @@ const ExportReportDialog = ({ open, onClose }) => {
         backgroundColor: '#ffffff'
       });
 
+      // Restore hidden elements
+      elementsToHide.forEach((el, index) => {
+        el.style.display = originalDisplays[index];
+      });
+
       // Restore Custom Calculator display
       if (customCalc && !hasContent) {
         customCalc.style.display = originalDisplay || '';
@@ -98,25 +124,25 @@ const ExportReportDialog = ({ open, onClose }) => {
       let heightLeft = imgHeight;
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      
+
       pdf.setFontSize(20);
       pdf.setTextColor(218, 41, 28);
       pdf.text('GBTAC - Carbon Footprint Report', 20, 20);
-      
+
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
       const now = new Date();
       const currentDate = now.toLocaleDateString('en-CA');
       const currentTime = now.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false });
       pdf.text(`Generated on: ${currentDate} ${currentTime}`, 20, 30);
-      
+
       // Use JPEG with compression for smaller file size (0.85 quality)
       const imgData = canvas.toDataURL('image/jpeg', 0.85);
       let position = 40;
-      
+
       pdf.addImage(imgData, 'JPEG', 10, position, imgWidth - 20, imgHeight);
       heightLeft -= pageHeight;
-      
+
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight + 40;
         pdf.addPage();
@@ -126,10 +152,10 @@ const ExportReportDialog = ({ open, onClose }) => {
 
       const timeForFilename = currentTime.replace(':', '-');
       const filename = `Carbon_Footprint_Report_${currentDate}_${timeForFilename}.pdf`;
-      
+
       // Download PDF to user's computer
       pdf.save(filename);
-      
+
       setTimeout(() => {
         onClose();
       }, 1000);
@@ -235,7 +261,7 @@ const ExportReportDialog = ({ open, onClose }) => {
         <Button onClick={handleClose} disabled={isGenerating}>
           Cancel
         </Button>
-        
+
         {!isPreviewMode ? (
           <>
             <Button
