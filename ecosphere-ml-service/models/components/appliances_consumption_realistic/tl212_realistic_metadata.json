@@ -1,0 +1,83 @@
+{
+  "component": "Appliances Consumption (Realistic)",
+  "table": "TL212",
+  "model_type": "xgboost",
+  "training_date": "20251219_1543",
+  "data_file": "D:\\Ecosphere\\EcoSphere\\ecosphere-ml-service\\data\\processed\\appliances_consumption_clean.csv",
+  "performance": {
+    "final_mae": 0.1745564959674547,
+    "final_rmse": 0.26106023046643806,
+    "final_r2": 0.7434360315301701,
+    "final_mape": 8.274213241482945,
+    "cv_r2_mean": 0.6559785807087529,
+    "cv_r2_std": 0.0689066477886323,
+    "cv_mae_mean": 0.2116136697550597
+  },
+  "data_info": {
+    "samples": 31232,
+    "features": 14,
+    "date_range": {
+      "start": "2018-09-11T13:15:00",
+      "end": "2019-08-06T11:45:00"
+    },
+    "train_test_gap_days": 1
+  },
+  "feature_engineering": {
+    "approach": "Realistic (no immediate lags)",
+    "key_features": [
+      "hour",
+      "day_of_week",
+      "month",
+      "is_weekend",
+      "hour_sin",
+      "hour_cos",
+      "dow_sin",
+      "dow_cos",
+      "lag_1day",
+      "lag_1week"
+    ]
+  },
+  "notes": "Trained with realistic features to avoid data leakage",
+  "top_features": [
+    {
+      "feature": "lag_1day",
+      "importance": 0.39551639556884766
+    },
+    {
+      "feature": "lag_1week",
+      "importance": 0.1651216298341751
+    },
+    {
+      "feature": "dow_sin",
+      "importance": 0.12937989830970764
+    },
+    {
+      "feature": "hour_cos",
+      "importance": 0.08871831744909286
+    },
+    {
+      "feature": "rolling_24h_mean",
+      "importance": 0.06775448471307755
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.04615473374724388
+    },
+    {
+      "feature": "rolling_24h_std",
+      "importance": 0.028827019035816193
+    },
+    {
+      "feature": "hour_sin",
+      "importance": 0.018157685175538063
+    },
+    {
+      "feature": "hour",
+      "importance": 0.0166004691272974
+    },
+    {
+      "feature": "month",
+      "importance": 0.016069237142801285
+    }
+  ]
+}

@@ -16,9 +16,17 @@ const Sidebar = () => {
 
   // Menu structure matching Figma design
   const menuStructure = [
+
+
     {
       category: 'DASHBOARDS',
       items: [
+        {
+          text: 'AI Analyst',
+          path: '/ai-analyst',
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: null
+        },
         {
           text: 'Overview',
           path: '/overview',
