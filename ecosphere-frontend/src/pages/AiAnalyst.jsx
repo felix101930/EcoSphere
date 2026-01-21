@@ -1,12 +1,12 @@
 // File: ecosphere-frontend/src/pages/AiAnalyst.jsx
-import React, { useState } from 'react';
-import { 
-  Container, TextField, Button, Box, Typography, 
-  CircularProgress, Chip, Stack, Alert, Paper 
+import { useState } from 'react';
+import {
+  Container, TextField, Button, Box, Typography,
+  CircularProgress, Chip, Stack, Alert, Paper
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import AutoGraphIcon from '@mui/icons-material/AutoGraph';
-import DynamicChart from '../components/DynamicChart';
+import AIChartWrapper from '../components/AiAnalyst/AIChartWrapper';
 
 const AiAnalyst = () => {
   const [question, setQuestion] = useState('');
@@ -17,9 +17,10 @@ const AiAnalyst = () => {
   // Pre-canned questions for the Demo
   const quickPrompts = [
     "Show me the indoor temperature for the last 24 hours",
-    "Show me the total solar generation history",
-    "What is the CO2 level right now?",
-    "Show me the lighting usage for the last week"
+    "Show me the total solar generation for the last week",
+    "What is the current CO2 level?",
+    "Show me the lighting usage for the last 3 days",
+    "Display total site consumption for the last 48 hours"
   ];
 
   const handleAsk = async (textOverride = null) => {
@@ -33,15 +34,30 @@ const AiAnalyst = () => {
     if (textOverride) setQuestion(textOverride);
 
     try {
+      // Get user token from sessionStorage
+      const userToken = sessionStorage.getItem('ecosphere_user');
+
+      if (!userToken) {
+        setError("You must be logged in to use AI Analyst.");
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('http://localhost:3001/api/ai/ask', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userToken}`
+        },
         body: JSON.stringify({ question: query }),
       });
 
       const data = await response.json();
 
-      if (data.error) {
+      if (response.status === 403) {
+        // Permission denied
+        setError(data.error || "You don't have permission to access this data.");
+      } else if (data.error) {
         setError(data.error);
       } else {
         setResult(data);
@@ -76,11 +92,11 @@ const AiAnalyst = () => {
             variant="outlined"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
+            onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
             disabled={loading}
           />
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             endIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
             onClick={() => handleAsk()}
             disabled={loading}
@@ -97,12 +113,12 @@ const AiAnalyst = () => {
           </Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {quickPrompts.map((prompt, index) => (
-              <Chip 
-                key={index} 
-                label={prompt} 
-                onClick={() => handleAsk(prompt)} 
-                clickable 
-                color="primary" 
+              <Chip
+                key={index}
+                label={prompt}
+                onClick={() => handleAsk(prompt)}
+                clickable
+                color="primary"
                 variant="outlined"
                 disabled={loading}
               />
@@ -126,10 +142,10 @@ const AiAnalyst = () => {
               {result.answer}
             </Alert>
           )}
-          
-          <DynamicChart 
-            data={result.data} 
-            config={result.chartConfig} 
+
+          <AIChartWrapper
+            data={result.data}
+            config={result.chartConfig}
           />
         </Box>
       )}

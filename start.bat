@@ -46,16 +46,17 @@ if %errorlevel% equ 0 (
 )
 timeout /t 1 /nobreak >nul
 
-REM Clean up ports (kills any process using ports 3001 and 5173)
-echo [4/6] Cleaning up ports 3001 and 5173...
+REM Clean up ports (kills any process using ports 3001, 5173, and 5174)
+echo [4/6] Cleaning up ports 3001, 5173, and 5174...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3001') do taskkill /F /PID %%a >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173') do taskkill /F /PID %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5174') do taskkill /F /PID %%a >nul 2>&1
 echo Ports cleaned
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 REM Start backend in a new terminal window
 echo [5/6] Starting Backend Server...
-start "EcoSphere Backend" cmd /k "cd /d "%~dp0ecosphere-backend" && echo. && echo ========================================== && echo    EcoSphere Backend Server && echo ========================================== && echo. && echo Backend running on: http://localhost:3001 && echo. && echo Test Endpoints: && echo   http://localhost:3001/api/health && echo   http://localhost:3001/api/db/test-connection && echo. && npm start"
+start "EcoSphere Backend" cmd /k "cd /d "%~dp0ecosphere-backend" && echo. && echo ========================================== && echo    EcoSphere Backend Server && echo ========================================== && echo. && echo Backend running on: http://localhost:3001 && echo. && echo AI Analyst Feature: ENABLED && echo   - Gemini API configured && echo   - Text-to-SQL conversion && echo   - Chart.js visualization && echo. && echo Test Endpoints: && echo   http://localhost:3001/api/health && echo   http://localhost:3001/api/db/test-connection && echo. && node server.js"
 
 REM Wait for backend to initialize
 echo Waiting for backend to initialize...
@@ -71,7 +72,7 @@ echo   Services Started Successfully!
 echo ========================================
 echo.
 echo Backend:  http://localhost:3001
-echo Frontend: http://localhost:5173
+echo Frontend: http://localhost:5173 (or 5174 if 5173 is busy)
 echo.
 echo Database: .\SQLEXPRESS (TestSlimDB)
 echo.
@@ -79,14 +80,22 @@ echo Login Credentials:
 echo   Email:    super.admin@edu.sait.ca
 echo   Password: abcd1234
 echo.
+echo AI Analyst Feature:
+echo   - Navigate to AI Analyst page after login
+echo   - Try: "show me basement temperature from 2020/11/1 to 2020/11/8"
+echo   - Try: "What is the current CO2 level?"
+echo.
 echo Test Endpoints:
 echo   http://localhost:3001/api/health
 echo   http://localhost:3001/api/db/test-connection
 echo.
 echo ========================================
 echo   Two new windows have been opened:
-echo   - EcoSphere Backend
-echo   - EcoSphere Frontend
+echo   - EcoSphere Backend (Port 3001)
+echo   - EcoSphere Frontend (Port 5173/5174)
+echo.
+echo   Check the frontend window for the actual
+echo   port number if 5173 is already in use.
 echo.
 echo   You can Ctrl+Click the URLs in those
 echo   windows to open them in your browser.

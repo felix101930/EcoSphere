@@ -132,8 +132,27 @@ class ConnectionManager {
         const lines = filterOutputLines(stdout);
 
         // Parse CSV output into objects
-        // This is a simplified parser - services will handle specific parsing
-        return lines;
+        // Note: sqlcmd is configured with -h -1 (no headers)
+        if (lines.length === 0) {
+            return [];
+        }
+
+        // For AI Analyst queries, we know the format is always: ts, value
+        const headers = ['ts', 'value'];
+
+        // Parse all lines as data (no header row in sqlcmd output)
+        const results = [];
+        for (let i = 0; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            if (values.length >= 2) {
+                results.push({
+                    ts: values[0],
+                    value: parseFloat(values[1]) || values[1]
+                });
+            }
+        }
+
+        return results;
     }
 
     /**
