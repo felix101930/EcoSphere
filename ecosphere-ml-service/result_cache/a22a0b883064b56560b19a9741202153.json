@@ -1,0 +1,138 @@
+{
+  "success": true,
+  "data": [
+    {
+      "timestamp": "2026-01-19T17:00:00",
+      "predicted_kw": 3.27,
+      "hour": 17,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": 4,
+        "clouds_pct": 51,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "broken clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-19T18:00:00",
+      "predicted_kw": 2.94,
+      "hour": 18,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": 2.54,
+        "clouds_pct": 64,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "broken clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-19T19:00:00",
+      "predicted_kw": 2.6,
+      "hour": 19,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -0.28,
+        "clouds_pct": 61,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "broken clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-19T20:00:00",
+      "predicted_kw": 2.22,
+      "hour": 20,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -2.5,
+        "clouds_pct": 57,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "broken clouds"
+      }
+    },
+    {
+      "timestamp": "2026-01-19T21:00:00",
+      "predicted_kw": 1.86,
+      "hour": 21,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1,
+      "weather": {
+        "uv_index": 0,
+        "temperature_c": -5.01,
+        "clouds_pct": 62,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "broken clouds"
+      }
+    }
+  ],
+  "summary": {
+    "total_kwh": 12.89,
+    "peak_kw": 3.27,
+    "prediction_count": 5,
+    "valid_predictions": 5,
+    "date_range": {
+      "start": "2026-01-19",
+      "end": "2026-01-19",
+      "actual_start": "2026-01-19T17:00:00",
+      "actual_end": "2026-01-19T21:00:00",
+      "hours_predicted": 5
+    },
+    "avg_kw_per_day": 12.89,
+    "weather_quality": {
+      "weather_data_available": true,
+      "api_calls_remaining": 940
+    }
+  },
+  "model_info": {
+    "name": "RandomForestRegressor",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17,
+    "missing_features": 0,
+    "weather_integrated": true
+  },
+  "api_stats": {
+    "calls_today": 10,
+    "max_calls_per_day": 950,
+    "remaining_calls": 940,
+    "last_reset": "2026-01-19T14:40:02.324922",
+    "today": "2026-01-19"
+  },
+  "metadata": {
+    "generated_at": "2026-01-19T16:04:37.827675",
+    "coordinates": {
+      "lat": 51.0447,
+      "lon": -114.0719
+    },
+    "time_constraints": {
+      "max_hours_ahead": 48,
+      "current_time": "2026-01-19T16:04:37.145880",
+      "hours_predicted": 5
+    },
+    "cache_info": {
+      "weather_cache_minutes": 10,
+      "result_cache_minutes": 10,
+      "used_cached_data": false
+    }
+  },
+  "_cached": {
+    "cached_at": "2026-01-19T16:04:37.827695",
+    "cache_key": "a22a0b883064b56560b19a9741202153"
+  }
+}

@@ -12,7 +12,7 @@ import joblib
 # CONFIGURATION
 # ============================================
 API_KEY = ""  # Replace with your OpenWeather API key
-MODEL_PATH = "solar_forecast_openweather.pkl"
+MODEL_PATH = "../../models/solar_model_NasaWithOpw/solar_forecast_openweather.pkl"
 CALGARY_LAT = 51.0447
 CALGARY_LON = -114.0719
 
@@ -37,7 +37,7 @@ def make_single_api_call():
         weather_data = response.json()
         print("✅ API call successful")
     except Exception as e:
-        print(f"❌ API Error: {e}")
+        print(f"API Error: {e}")
         return None
     
     return weather_data
@@ -45,7 +45,7 @@ def make_single_api_call():
 def extract_next_hour_data(weather_data):
     """Extract data for the next hour (hourly[1])"""
     if 'hourly' not in weather_data or len(weather_data['hourly']) < 2:
-        print("❌ Not enough hourly data available")
+        print("Not enough hourly data available")
         return None
     
     # Current hour is hourly[0], next hour is hourly[1]

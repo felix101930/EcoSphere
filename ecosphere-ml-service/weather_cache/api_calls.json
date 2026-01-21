@@ -1,0 +1,172 @@
+{
+  "today": "2026-01-20",
+  "calls_today": 9,
+  "last_reset": "2026-01-20T12:22:01.853447",
+  "history": [
+    {
+      "timestamp": "2026-01-16T19:24:28.235442",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-16T19:24:35.056155",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-16T20:09:50.123297",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-16T20:22:44.717653",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-16T20:35:39.092058",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-16T20:36:40.098628",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T14:40:09.916986",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T14:51:14.623012",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T14:53:55.066112",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T15:02:35.836528",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T15:07:41.788171",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T15:35:32.818480",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T15:45:46.183409",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T15:53:50.005721",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:04:34.261874",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:04:37.545300",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:21:14.689996",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:26:22.423897",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:43:28.799758",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:52:23.582855",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T16:54:46.019045",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T17:27:13.140914",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T17:52:25.822878",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-19T18:07:19.702713",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T12:22:16.625653",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T12:40:58.496413",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T13:18:02.846556",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T13:33:26.045459",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T13:49:19.053132",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T14:01:00.557479",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T14:11:23.747367",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T14:21:39.844046",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-20T14:32:14.595499",
+      "endpoint": "onecall",
+      "success": true
+    }
+  ]
+}
