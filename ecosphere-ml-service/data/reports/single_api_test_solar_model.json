@@ -1,0 +1,19 @@
+{
+  "test_timestamp": "2025-12-24T14:01:25.079160",
+  "prediction_timestamp": "2025-12-24T15:00:00",
+  "predicted_kw": 1.2820149538648118,
+  "model_info": {
+    "name": "RandomForest",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17
+  },
+  "weather_conditions": {
+    "uv_index": 0.25,
+    "temperature_c": -17.34,
+    "clouds_pct": 100,
+    "humidity_pct": 75,
+    "wind_speed_ms": 2.09,
+    "pressure_kpa": 102.4,
+    "precipitation_mmh": 0
+  }
+}

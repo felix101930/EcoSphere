@@ -1,0 +1,190 @@
+@startuml deployment-diagram
+skinparam svek true
+
+skinparam linetype ortho
+skinparam backgroundColor #c4e2ff
+skinparam componentStyle rectangle
+skinparam nodeBackgroundColor #E8E8E8
+skinparam nodeBorderColor #666666
+skinparam componentBackgroundColor #FFE6CC
+skinparam componentBorderColor #D79B00
+skinparam databaseBackgroundColor #CCE5FF
+skinparam databaseBorderColor #0066CC
+skinparam cloudBackgroundColor #E6F3FF
+skinparam cloudBorderColor #4682B4
+skinparam arrowColor #333333
+
+' ============================================
+' Presentation Layer (Client Tier)
+' ============================================
+package "Presentation Layer" #E8F4F8 {
+  node "Client PC\n(Admin/TeamMember)" as clientPC <<device>> {
+    component "Web Browser" as browser {
+      component "React Frontend" as react <<application>> {
+        component "Dashboard" as dashboard #B8D4E8
+        component "3D Thermal Viewer" as thermal3D #B8D4E8
+        component "AI Chat" as aiChat #B8D4E8
+      }
+    }
+  }
+
+  node "Visitor Device" as mobile <<device>> {
+    component "Mobile Browser" as mobileBrowser {
+      component "Quiz Interface" as quizInterface #B8D4E8
+      component "QR Scanner" as qrScanner #B8D4E8
+    }
+  }
+}
+
+' ============================================
+' Application Layer (Business Logic Tier)
+' ============================================
+package "Application Layer" #E8F4F8 {
+  node "GBTAC Backend Server" as backendServer <<server>> {
+    component "Node.js" as nodejs <<execution environment>> {
+      
+      component "Request Handler" as requestHandler #B8D4E8
+      
+      frame "Business Services" #F8E8D8 {
+        component "Auth Service" as authService #B8D4E8
+        
+        component "Report Service" as reportService #B8D4E8 {
+          component "Water" as waterReport #B8D4E8
+          component "Electricity" as elecReport #B8D4E8
+          component "Thermal" as thermalReport #B8D4E8
+        }
+        
+        component "History Service" as historyService #B8D4E8
+        
+        component "Notification Service" as notifService #B8D4E8
+        
+        component "Quiz Service" as quizService #B8D4E8
+        
+        component "AI Chat Service" as aiService #B8D4E8
+      }
+      
+      frame "Shared Components" #F8E8D8 {
+        component "Visualization" as visualization #B8D4E8
+        component "Analytics" as analytics #B8D4E8
+      }
+      
+      component "Data Access Service" as dataAccessService #B8D4E8
+    }
+  }
+}
+
+' ============================================
+' Data Layer (Persistence Tier)
+' ============================================
+package "Data Layer" #E8F4F8 {
+  node "Database Server" as dbServer <<server>> {
+    database "GBTAC SQL Database" as sqlDB <<SQL>> {
+      component "User Tables" as userTables #B8D4E8
+      component "Report Tables" as reportTables #B8D4E8
+      component "Quiz Tables" as quizTables #B8D4E8
+      component "History Tables" as historyTables #B8D4E8
+      component "Notification Tables" as notifTables #B8D4E8
+    }
+  }
+}
+
+' ============================================
+' External Services
+' ============================================
+cloud "External Services" as cloud {
+  component "Google Gemini" as gemini <<AI Service>>
+  component "Weather API" as weatherAPI <<Third-party>>
+}
+
+' ============================================
+' Relationships
+' ============================================
+react --> requestHandler : HTTPS/REST API
+qrScanner --> requestHandler : HTTPS/REST API
+
+requestHandler --> authService
+requestHandler --> reportService
+requestHandler --> aiService
+requestHandler --> quizService
+requestHandler --> notifService
+requestHandler --> historyService
+
+reportService --> visualization
+reportService --> analytics
+aiService --> visualization
+aiService --> analytics
+
+authService --> dataAccessService
+reportService --> dataAccessService
+aiService --> dataAccessService
+quizService --> dataAccessService
+historyService --> dataAccessService
+notifService --> dataAccessService
+visualization --> dataAccessService
+analytics --> dataAccessService
+
+dataAccessService --> sqlDB : SQL Queries
+
+aiService --> gemini : AI Requests
+thermalReport --> weatherAPI : Weather Data
+
+' ============================================
+' Layout
+' ============================================
+clientPC -[hidden]right- mobile
+dashboard -[hidden]right- thermal3D
+thermal3D -[hidden]right- aiChat
+
+authService -[hidden]right- reportService
+reportService -[hidden]right- historyService
+historyService -[hidden]right- notifService
+notifService -[hidden]right- quizService
+quizService -[hidden]right- aiService
+
+authService -[hidden]down- visualization
+reportService -[hidden]down- visualization
+historyService -[hidden]down- visualization
+notifService -[hidden]down- analytics
+quizService -[hidden]down- analytics
+aiService -[hidden]down- analytics
+
+visualization -[hidden]right- analytics
+visualization -[hidden]down- dataAccessService
+analytics -[hidden]down- dataAccessService
+
+' ============================================
+' Notes
+' ============================================
+
+note right of mobile
+  **Visitor Access**
+  - Scan QR code
+  - Take quiz
+  - No authentication required
+end note
+
+note bottom of backendServer
+  **Backend Architecture**
+  - Business Services: Core features
+  - Shared Components: Reusable utilities
+  - Visualization & Analytics used by
+    Report Service and AI Chat Service
+end note
+
+note bottom of dbServer
+  **Database Schema**
+  - Users, Reports (Water/Elec/Thermal)
+  - Quizzes & Quiz Results, History, Notifications
+  
+  Note: Quiz results ARE persisted.
+  System tracks visitor participation and
+  can analyze quiz performance over time.
+end note
+
+note bottom of cloud
+  **External APIs**
+  - Gemini: AI-powered chat
+  - Weather: Thermal report data
+end note
+
+@enduml

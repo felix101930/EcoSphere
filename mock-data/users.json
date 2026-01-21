@@ -1,0 +1,43 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "firstName": "Super",
+      "lastName": "Admin",
+      "email": "super.admin@edu.sait.ca",
+      "password": "abcd1234",
+      "role": "SuperAdmin",
+      "permissions": [
+        "electricity",
+        "water",
+        "thermal",
+        "3d-model",
+        "carbon-footprint"
+      ],
+      "createdAt": "2025-12-18T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "firstName": "Xujun",
+      "lastName": "Wang",
+      "email": "xujun.wang@edu.sait.ca",
+      "password": "abcd1234",
+      "role": "Admin",
+      "permissions": []
+    },
+    {
+      "id": 3,
+      "firstName": "Test",
+      "lastName": "Member",
+      "email": "test.member@edu.sait.ca",
+      "password": "abcd1234",
+      "role": "TeamMember",
+      "permissions": [
+        "electricity",
+        "carbon-footprint",
+        "thermal"
+      ]
+    }
+  ],
+  "nextId": 4
+}

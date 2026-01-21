@@ -1,0 +1,184 @@
+@startuml activity-electricity-dashboard
+skinparam svek true
+skinparam linetype ortho
+skinparam backgroundColor #c4e2ff
+skinparam partition {
+    BorderColor #666666
+    BackgroundColor #B0BEC5
+    FontStyle bold
+}
+skinparam activity {
+    BackgroundColor #E8E8E8
+    BorderColor #666666
+    FontStyle bold
+}
+skinparam activityDiamond {
+    BackgroundColor #FFE6CC
+    BorderColor #FF9900
+    FontStyle bold
+}
+skinparam activityStart {
+    Color #4CAF50
+}
+skinparam activityEnd {
+    Color #F44336
+}
+skinparam note {
+    BackgroundColor #FFF9C4
+    BorderColor #FBC02D
+}
+skinparam arrowColor #333333
+
+title Activity Diagram: Electricity Dashboard
+
+|#B0BEC5|TeamMember|
+start
+note right
+    User is logged in.
+    Navigation menu shows only
+    dashboards user has permission to access.
+    If "Electricity" is visible,
+    user already has permission.
+end note
+
+:Click Electricity\nin navigation menu;
+
+|#B0BEC5|UI|
+:Receive dashboard\nrequest;
+
+|#B0BEC5|Database|
+:Fetch real-time\nsensor data;
+note right
+    Read-only query for
+    latest electricity data
+end note
+
+|#B0BEC5|Visualizer|
+:Generate real-time\nconsumption graph;
+
+|#B0BEC5|ElectricityReport|
+:Calculate carbon\nfootprint;
+
+|#B0BEC5|UI|
+:Display dashboard\n(Real-time mode);
+note right
+    Real-time mode shows:
+    - Current consumption
+    - Carbon footprint
+    No forecast/comparison
+end note
+
+|#B0BEC5|TeamMember|
+:View real-time\ndashboard;
+
+if (Select time period?) then
+  -[#green]-> yes;
+  
+  :Select time period\n(e.g., Past 7 Days);
+  
+  |#B0BEC5|UI|
+  :Receive filter\nparameters;
+  
+  |#B0BEC5|Database|
+  :Query historical data\nfor selected period;
+  note right
+      Read-only query for
+      historical sensor data
+  end note
+  
+  |#B0BEC5|Visualizer|
+  :Generate historical\nconsumption graph;
+  
+  |#B0BEC5|ElectricityReport|
+  :Calculate carbon\nfootprint for period;
+  
+  |#B0BEC5|Forecast|
+  :Generate forecast\nfor next period;
+  note right
+      Analyze patterns and
+      predict future consumption
+  end note
+  
+  |#B0BEC5|Visualizer|
+  :Generate forecast\ngraph;
+  
+  |#B0BEC5|PeriodComparison|
+  :Calculate YoY\ncomparison;
+  
+  :Query previous\nyear data;
+  
+  |#B0BEC5|Database|
+  :Return previous\nyear data;
+  
+  |#B0BEC5|PeriodComparison|
+  :Calculate PoP\ncomparison;
+  
+  :Query previous\nperiod data;
+  
+  |#B0BEC5|Database|
+  :Return previous\nperiod data;
+  
+  |#B0BEC5|Visualizer|
+  :Generate comparison\ngraphs;
+  
+  |#B0BEC5|UI|
+  :Display complete report;
+  note right
+      Complete report includes:
+      - Historical data
+      - Carbon footprint
+      - Forecast
+      - YoY/PoP comparisons
+  end note
+  
+  |#B0BEC5|TeamMember|
+  :View complete report;
+  
+  if (Export report?) then
+    -[#green]-> yes;
+    
+    :Request export;
+    
+    |#B0BEC5|UI|
+    :Show graph\nselection dialog;
+    
+    |#B0BEC5|TeamMember|
+    :Select graphs\nto include;
+    
+    |#B0BEC5|ReportCustomization|
+    :Generate preview;
+    
+    |#B0BEC5|UI|
+    :Display preview;
+    
+    |#B0BEC5|TeamMember|
+    :Confirm download;
+    
+    |#B0BEC5|ReportCustomization|
+    :Generate PDF report;
+    
+    |#B0BEC5|UI|
+    :Download file;
+    
+    |#B0BEC5|TeamMember|
+    :Receive PDF file;
+    
+    stop
+    
+  else
+    -[#red]-> no;
+    
+    |#B0BEC5|TeamMember|
+    stop
+    
+  endif
+  
+else
+  -[#red]-> no;
+  
+  |#B0BEC5|TeamMember|
+  stop
+  
+endif
+
+@enduml

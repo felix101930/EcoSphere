@@ -1,0 +1,68 @@
+{
+  "success": true,
+  "data": [
+    {
+      "timestamp": "2026-01-19T16:26:22.015273",
+      "predicted_kw": 5.11,
+      "hour": 16,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 0,
+      "is_fallback": true
+    }
+  ],
+  "summary": {
+    "total_kwh": 5.11,
+    "peak_kw": 5.11,
+    "prediction_count": 1,
+    "valid_predictions": 1,
+    "date_range": {
+      "start": "2026-01-19",
+      "end": "2026-01-19",
+      "actual_start": "2026-01-19T16:26:22.015273",
+      "actual_end": "2026-01-19T16:26:22.015273",
+      "hours_predicted": 1
+    },
+    "avg_kw_per_day": 5.11,
+    "weather_quality": {
+      "weather_data_available": false,
+      "api_calls_remaining": 938
+    }
+  },
+  "model_info": {
+    "name": "RandomForestRegressor",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17,
+    "missing_features": 0,
+    "weather_integrated": true
+  },
+  "api_stats": {
+    "calls_today": 12,
+    "max_calls_per_day": 950,
+    "remaining_calls": 938,
+    "last_reset": "2026-01-19T14:40:02.324922",
+    "today": "2026-01-19"
+  },
+  "metadata": {
+    "generated_at": "2026-01-19T16:26:22.485247",
+    "coordinates": {
+      "lat": 51.0447,
+      "lon": -114.0719
+    },
+    "time_constraints": {
+      "max_hours_ahead": 48,
+      "current_time": "2026-01-19T16:26:22.015273",
+      "hours_predicted": 1
+    },
+    "cache_info": {
+      "weather_cache_minutes": 10,
+      "result_cache_minutes": 10,
+      "used_cached_data": false
+    }
+  },
+  "warning": "Using default weather values (API unavailable or rate limited)",
+  "_cached": {
+    "cached_at": "2026-01-19T16:26:22.485267",
+    "cache_key": "8143f6c99b66c15a12ce3fa51b685d04"
+  }
+}

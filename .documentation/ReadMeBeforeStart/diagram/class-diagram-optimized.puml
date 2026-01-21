@@ -1,0 +1,339 @@
+@startuml class-diagram
+skinparam svek true
+
+skinparam linetype ortho
+skinparam groupInheritance 2
+skinparam backgroundColor #c4e2ff
+skinparam classBackgroundColor #E8E8E8
+skinparam classBorderColor #666666
+skinparam packageBackgroundColor #E6F3FF
+skinparam packageBorderColor #4682B4
+skinparam arrowColor #333333
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam defaultTextAlignment center
+hide circle
+hide stereotype
+
+package "User Management" {
+  abstract class User {
+    - id: int
+    - firstName: String
+    - lastName: String
+    - email: String
+    - password: String
+    - role: String
+    + createUser(id, ...): void
+    + login(email, password): void
+    + logout(): void
+  }
+
+  class Admin {
+    + addUser(...): void
+    + editUserPermissions(...): void
+    + assignRole(userId, role): void
+    + createQuiz(...): Quiz
+    + editQuiz(quizId, ...): void
+    + deleteQuiz(quizId): void
+  }
+
+  class TeamMember {
+    - promptChat: int
+    - permissions: List
+    + getPermissions(): List
+  }
+
+  Admin --|> User : is-a
+  TeamMember --|> User : is-a
+}
+
+class Visitor {
+  + takeQuiz(): void
+  + scanQRCode(): void
+}
+
+package "Security" {
+  class AccessControl {
+    + checkPermission(user, module): boolean
+    + updateUserPermissions(userId, permissions): void
+  }
+
+  Admin ..> AccessControl : uses
+}
+
+package "Data Layer" {
+  interface Database {
+    + executeQuery(...): DataSet
+    + fetchSensorData(): DataSet
+  }
+}
+
+package "Reporting System" {
+  abstract class Report {
+    - id: int
+    - reportType: String
+    + exportReport(): void
+    + filterReport(...): void
+  }
+
+  class WaterReport {
+    - waterConsumption: double
+    - waterCollection: double
+    + generateCollectionVsPrecipitation(...): Chart
+    + calculateEfficiency(...): double
+    + generateZoneMap(...): Map
+  }
+
+  class ElectricityReport {
+    - electricityConsumption: double
+    - electricityGeneration: double
+    + calculateCarbonFootprint(...): double
+    + generateHotspotMap(...): Map
+    + generateCarbonVsConsumptionChart(): Chart
+  }
+
+  class ThermalReport {
+    - heatConsumption: double
+    - indoorTemperature: double
+    - localTemperature: double
+    + generateHeatMap(...): Map
+    + generateTemperatureComparison(...): Chart
+    + integrateWeatherAPI(): WeatherData
+  }
+
+  WaterReport --|> Report : is-a
+  ElectricityReport --|> Report : is-a
+  ThermalReport --|> Report : is-a
+
+  class Forecast {
+    - id: int
+    + generateForecast(...): DataSet
+  }
+
+  Forecast --> Report : generates
+  Report ..> Database : queries
+  Report ..> AccessControl : checks permission
+}
+
+package "Visualization" {
+  class Visualizer {
+    - id: int
+    - visualizeType: String
+    + generateGraph(...): void
+    + calculateSelfSufficiency(...): double
+    + renderHotspotMap(...): Map
+    + renderHeatMap(...): Map
+    + renderWeatherWidget(...): Widget
+  }
+
+  Visualizer --> Report : visualizes
+}
+
+package "Analytics" {
+  class PeriodComparison {
+    - id: int
+    + comparePoP(currentPeriod): double
+    + compareYoY(currentPeriod): double
+    + compareCustom(period1, period2): double
+  }
+
+  Report --> PeriodComparison : compares
+}
+
+package "User Interface" {
+  class UI {
+    - currentView: String
+    + renderView(...): void
+    + updateUI(...): void
+    + displayWarning(...): void
+  }
+
+  class Dashboard {
+    - id: int
+    - dashboardType: String
+    + generateView(user, type): DashboardView
+    + filterByPermissions(user): List
+  }
+
+  class Filter {
+    - id: int
+    - location: String
+    - area: String
+    - timePeriod: String
+    + applyFilter(): DataSet
+    + resetToDefault(): void
+  }
+
+  class ReportCustomization {
+    - id: int
+    - includeGraphs: List
+    + preview(): ReportPreview
+    + download(...): void
+  }
+
+  UI "1" *-- "*" Dashboard : displays
+  UI "1" *-- "1" Filter : owns
+  UI "1" *-- "1" ReportCustomization : owns
+  UI "1" o-- "*" Report : displays
+  UI ..> AccessControl : checks permission
+  Dashboard --> Visualizer : uses
+  Dashboard --> Report : aggregates
+  Dashboard ..> AccessControl : checks permission
+}
+
+User --> UI : uses
+
+package "Carbon Analysis" {
+  class CarbonFootprint {
+    - id: int
+    - co2Emission: double
+    - billEntries: List
+    + calculateFootprint(...): double
+    + addBillEntry(...): void
+    + overrideWithDIY(): DataSet
+  }
+
+  class BillEntry {
+    - id: int
+    - year: int
+    - month: String
+    - electricityUsage: double
+  }
+
+  CarbonFootprint "1" o-- "*" BillEntry : stores
+  CarbonFootprint "1" --> "1" ElectricityReport : calculates
+}
+
+UI "1" *-- "1" CarbonFootprint : owns
+
+package "3D Visualization" {
+  class Thermal3DModel {
+    - id: int
+    - thermal3D: Object
+    + displayTemperatureData(...): void
+  }
+
+  Thermal3DModel --> ThermalReport : displays
+}
+
+package "Weather Services" {
+  interface WeatherAPI {
+    + fetchWeatherData(...): WeatherData
+    + getForecast(...): List
+  }
+
+  class WeatherData {
+    - id: int
+    - temperature: double
+    - humidity: double
+    - windSpeed: double
+    - precipitation: double
+  }
+
+  WeatherAPI ..> WeatherData : returns
+  ThermalReport ..> WeatherAPI : fetches
+  Visualizer --> WeatherData : renders
+}
+
+package "Interactive Features" {
+  class AIChat {
+    - id: int
+    - prompt: String
+    + generateQuery(...): String
+    + handleInvalidQuery(...): String
+  }
+
+  class Quiz {
+    - id: int
+    - questions: List
+    + takeQuiz(): void
+    + editQuestion(...): void
+  }
+
+  class Question {
+    - id: int
+    - text: String
+    - answers: List
+    + validateAnswer(...): boolean
+  }
+
+  class QRCodeManager {
+    - id: int
+    + generateQRForQuiz(...): String
+    + scanQRCode(): void
+  }
+
+  class QuizResult {
+    - id: int
+    - quizId: int
+    - visitorSession: String
+    - score: int
+    - totalQuestions: int
+    - completedAt: Date
+    + saveResult(...): void
+    + getScore(): int
+  }
+
+  Quiz "1" *-- "*" Question : contains
+  Quiz "1" --> "*" QuizResult : has
+  Admin --> QRCodeManager : manages
+  Admin "1" --> "*" Quiz : creates/edits
+  Visitor --> QRCodeManager : uses
+  Visitor "*" --> "*" Quiz : takes
+  QuizResult ..> Database : stores
+}
+
+User --> AIChat : prompts
+AIChat ..> AccessControl : checks permission
+AIChat ..> Database : queries
+
+package "Error Management" {
+  class ExceptionHandler {
+    - id: int
+    - errorType: String
+    - message: String
+    + handleError(...): ErrorDialog
+  }
+
+  class ErrorDialog {
+    - id: int
+    - title: String
+    - icon: String
+    + showBackButton(): boolean
+  }
+
+  ExceptionHandler "1" --> "*" ErrorDialog : creates
+  Filter ..> ExceptionHandler : throws
+  Database ..> ExceptionHandler : throws
+  UI ..> ExceptionHandler : handles
+}
+
+package "History Tracking" {
+  abstract class HistoryLog {
+    - id: int
+    - userId: int
+    - timestamp: Date
+    - details: String
+  }
+
+  class ReportHistory {
+    - filterSettings: Filter
+    + saveReport(...): void
+  }
+
+  class AIQueryHistory {
+    - promptText: String
+    - response: String
+    + logQuery(...): void
+  }
+
+  ReportHistory --|> HistoryLog : is-a
+  AIQueryHistory --|> HistoryLog : is-a
+
+  User "1" o-- "*" HistoryLog : generates
+  ReportHistory "*" --> "1" Report : references
+  ReportHistory --> Filter : stores
+  AIQueryHistory "*" --> "1" AIChat : logs
+}
+
+@enduml

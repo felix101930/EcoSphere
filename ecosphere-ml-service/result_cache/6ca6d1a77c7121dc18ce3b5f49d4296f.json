@@ -1,0 +1,234 @@
+{
+  "success": true,
+  "data": [
+    {
+      "timestamp": "2026-01-19T16:00:00",
+      "predicted_kw": 5.11,
+      "hour": 16,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-19T17:00:00",
+      "predicted_kw": 4.16,
+      "hour": 17,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-19T18:00:00",
+      "predicted_kw": 3.6,
+      "hour": 18,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-19T19:00:00",
+      "predicted_kw": 3.21,
+      "hour": 19,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-19T20:00:00",
+      "predicted_kw": 3.0,
+      "hour": 20,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-19T21:00:00",
+      "predicted_kw": 2.93,
+      "hour": 21,
+      "date": "2026-01-19",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T06:00:00",
+      "predicted_kw": 1.36,
+      "hour": 6,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T07:00:00",
+      "predicted_kw": 1.54,
+      "hour": 7,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T08:00:00",
+      "predicted_kw": 2.48,
+      "hour": 8,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T09:00:00",
+      "predicted_kw": 3.92,
+      "hour": 9,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T10:00:00",
+      "predicted_kw": 4.63,
+      "hour": 10,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T11:00:00",
+      "predicted_kw": 5.03,
+      "hour": 11,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T12:00:00",
+      "predicted_kw": 5.35,
+      "hour": 12,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T13:00:00",
+      "predicted_kw": 5.48,
+      "hour": 13,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T14:00:00",
+      "predicted_kw": 5.39,
+      "hour": 14,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T15:00:00",
+      "predicted_kw": 5.35,
+      "hour": 15,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T16:00:00",
+      "predicted_kw": 5.11,
+      "hour": 16,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T17:00:00",
+      "predicted_kw": 4.16,
+      "hour": 17,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T18:00:00",
+      "predicted_kw": 3.6,
+      "hour": 18,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T19:00:00",
+      "predicted_kw": 3.21,
+      "hour": 19,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T20:00:00",
+      "predicted_kw": 3.0,
+      "hour": 20,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    },
+    {
+      "timestamp": "2026-01-20T21:00:00",
+      "predicted_kw": 2.93,
+      "hour": 21,
+      "date": "2026-01-20",
+      "is_daylight": 1,
+      "is_forecast": 1
+    }
+  ],
+  "summary": {
+    "total_kwh": 84.55,
+    "peak_kw": 5.48,
+    "prediction_count": 22,
+    "valid_predictions": 22,
+    "date_range": {
+      "start": "2026-01-19",
+      "end": "2026-01-20",
+      "actual_start": "2026-01-19T16:00:00",
+      "actual_end": "2026-01-20T21:00:00",
+      "hours_predicted": 22
+    },
+    "avg_kw_per_day": 42.27,
+    "weather_quality": {
+      "weather_data_available": false,
+      "api_calls_remaining": 945
+    }
+  },
+  "model_info": {
+    "name": "RandomForestRegressor",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17,
+    "missing_features": 0,
+    "weather_integrated": false
+  },
+  "api_stats": {
+    "calls_today": 5,
+    "max_calls_per_day": 950,
+    "remaining_calls": 945,
+    "last_reset": "2026-01-19T14:40:02.324922",
+    "today": "2026-01-19"
+  },
+  "metadata": {
+    "generated_at": "2026-01-19T15:34:43.425395",
+    "coordinates": {
+      "lat": 51.0447,
+      "lon": -114.0719
+    },
+    "time_constraints": {
+      "max_hours_ahead": 48,
+      "current_time": "2026-01-19T15:34:42.279632",
+      "hours_predicted": 22
+    },
+    "cache_info": {
+      "weather_cache_minutes": 10,
+      "result_cache_minutes": 10,
+      "used_cached_data": false
+    }
+  },
+  "_cached": {
+    "cached_at": "2026-01-19T15:34:43.425419",
+    "cache_key": "6ca6d1a77c7121dc18ce3b5f49d4296f"
+  }
+}

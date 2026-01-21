@@ -1,0 +1,205 @@
+@startuml erd-diagram
+skinparam svek true
+
+skinparam linetype ortho
+skinparam backgroundColor #c4e2ff
+skinparam object {
+  BackgroundColor #E8E8E8
+  BorderColor #666666
+  HeaderBackgroundColor #FF9999
+}
+skinparam arrowColor #333333
+hide circle
+
+' ============================================
+' User Management
+' ============================================
+object USERS {
+  | PK     | id          | INT          |
+  | NN     | firstName   | VARCHAR(100) |
+  | NN     | lastName    | VARCHAR(100) |
+  | UK,NN  | email       | VARCHAR(255) |
+  | NN     | password    | VARCHAR(255) |
+  | NN,CK  | role        | VARCHAR(50)  |
+  |        | promptChat  | INT          |
+  |        | permissions | JSON         |
+  | NN     | created_at  | TIMESTAMP    |
+  | NN     | updated_at  | TIMESTAMP    |
+}
+
+' ============================================
+' Reporting System
+' ============================================
+object REPORTS {
+  | PK     | id          | INT         |
+  | FK,NN  | user_id     | INT         |
+  | NN,CK  | report_type | VARCHAR(50) |
+  | NN     | created_at  | TIMESTAMP   |
+  | NN     | updated_at  | TIMESTAMP   |
+}
+
+object WATER_REPORTS {
+  | PK,FK  | id                | INT    |
+  | NN     | waterConsumption  | DOUBLE |
+  | NN     | waterCollection   | DOUBLE |
+  |        | efficiency        | DOUBLE |
+}
+
+object ELECTRICITY_REPORTS {
+  | PK,FK  | id                      | INT    |
+  | NN     | electricityConsumption  | DOUBLE |
+  | NN     | electricityGeneration   | DOUBLE |
+  |        | carbonFootprint         | DOUBLE |
+  |        | selfSufficiency         | DOUBLE |
+}
+
+object THERMAL_REPORTS {
+  | PK,FK  | id                     | INT       |
+  | NN     | heatConsumption        | DOUBLE    |
+  | NN     | indoorTemperature      | DOUBLE    |
+  | NN     | localTemperature       | DOUBLE    |
+  |        | weather_temperature    | DOUBLE    |
+  |        | weather_humidity       | DOUBLE    |
+  |        | weather_precipitation  | DOUBLE    |
+  |        | weather_wind_speed     | DOUBLE    |
+  |        | weather_snapshot_time  | TIMESTAMP |
+}
+
+' ============================================
+' Notifications
+' ============================================
+object NOTIFICATIONS {
+  | PK     | id                  | INT          |
+  | FK,NN  | user_id             | INT          |
+  | NN,CK  | type                | VARCHAR(50)  |
+  | NN     | title               | VARCHAR(255) |
+  | NN     | message             | TEXT         |
+  |        | related_entity_type | VARCHAR(50)  |
+  |        | related_entity_id   | INT          |
+  | NN     | is_read             | BOOLEAN      |
+  | NN     | created_at          | TIMESTAMP    |
+  |        | expires_at          | TIMESTAMP    |
+}
+
+' ============================================
+' Interactive Features
+' ============================================
+object QUIZZES {
+  | PK     | id          | INT          |
+  | NN     | title       | VARCHAR(255) |
+  |        | description | TEXT         |
+  | FK,NN  | created_by  | INT          |
+  | NN     | is_active   | BOOLEAN      |
+  | NN     | created_at  | TIMESTAMP    |
+  | NN     | updated_at  | TIMESTAMP    |
+}
+
+object QUESTIONS {
+  | PK     | id             | INT          |
+  | FK,NN  | quiz_id        | INT          |
+  | NN     | question_text  | TEXT         |
+  | NN     | answers        | JSON         |
+  | NN     | correct_answer | VARCHAR(255) |
+  | NN     | order_index    | INT          |
+}
+
+object QUIZ_RESULTS {
+  | PK     | id              | INT          |
+  | FK,NN  | quiz_id         | INT          |
+  |        | visitor_session | VARCHAR(255) |
+  | NN     | score           | INT          |
+  | NN     | total_questions | INT          |
+  | NN     | completed_at    | TIMESTAMP    |
+}
+
+' ============================================
+' History Tracking
+' ============================================
+object HISTORY_LOGS {
+  | PK     | id        | INT         |
+  | FK,NN  | user_id   | INT         |
+  | NN,CK  | log_type  | VARCHAR(50) |
+  | NN     | timestamp | TIMESTAMP   |
+  |        | details   | TEXT        |
+}
+
+object REPORT_HISTORY {
+  | PK,FK  | id                 | INT          |
+  | FK,NN  | report_id          | INT          |
+  |        | filter_location    | VARCHAR(100) |
+  |        | filter_area        | VARCHAR(100) |
+  |        | filter_time_period | VARCHAR(100) |
+}
+
+object AI_QUERY_HISTORY {
+  | PK,FK  | id           | INT         |
+  | NN     | prompt_text  | TEXT        |
+  | NN     | response     | TEXT        |
+  | NN     | query_status | VARCHAR(50) |
+}
+
+' ============================================
+' Layout Control
+' ============================================
+' Top: USERS
+' Bottom row from left to right: REPORTS area -> NOTIFICATIONS -> QUIZZES area
+
+USERS -[hidden]down- REPORTS
+USERS -[hidden]down- NOTIFICATIONS
+USERS -[hidden]down- QUIZZES
+
+REPORTS -[hidden]right- HISTORY_LOGS
+HISTORY_LOGS -[hidden]right- NOTIFICATIONS
+NOTIFICATIONS -[hidden]right- QUIZZES
+
+' ============================================
+' Relationships
+' ============================================
+
+' User relationships
+USERS ||--o{ REPORTS : "creates"
+USERS ||--o{ QUIZZES : "creates"
+USERS ||--o{ HISTORY_LOGS : "generates"
+USERS ||--o{ NOTIFICATIONS : "receives"
+
+' Report relationships
+REPORTS ||--|| WATER_REPORTS : "is"
+REPORTS ||--|| ELECTRICITY_REPORTS : "is"
+REPORTS ||--|| THERMAL_REPORTS : "is"
+REPORTS ||--o{ REPORT_HISTORY : "tracked in"
+
+' Quiz relationships
+QUIZZES ||--|{ QUESTIONS : "contains"
+QUIZZES ||--o{ QUIZ_RESULTS : "has"
+
+' History relationships
+HISTORY_LOGS ||--o| REPORT_HISTORY : "is"
+HISTORY_LOGS ||--o| AI_QUERY_HISTORY : "is"
+
+' Check constraints notes
+note right of USERS
+  role CHECK IN ('Admin', 'TeamMember')
+  permissions: only for TeamMember
+end note
+
+note right of REPORTS
+  report_type CHECK IN 
+  ('Water', 'Electricity', 'Thermal')
+end note
+
+note right of NOTIFICATIONS
+  type CHECK IN:
+  - report_success
+  - report_failed
+  - ai_response
+  - permission_denied
+  - no_data
+  - system_alert
+end note
+
+note right of HISTORY_LOGS
+  log_type CHECK IN 
+  ('report', 'ai_query')
+end note
+
+@enduml

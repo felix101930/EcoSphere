@@ -1,0 +1,58 @@
+{
+  "success": true,
+  "data": [],
+  "summary": {
+    "total_kwh": 0,
+    "peak_kw": 0,
+    "prediction_count": 0,
+    "valid_predictions": 0,
+    "date_range": {
+      "start": "2026-01-16",
+      "end": "2020-11-09",
+      "actual_start": "2026-01-16",
+      "actual_end": "2020-11-09"
+    },
+    "avg_kw_per_day": 0.0,
+    "weather_quality": {
+      "avg_uv_index": 0,
+      "avg_cloud_cover": 0,
+      "weather_data_available": false,
+      "api_calls_remaining": 947
+    }
+  },
+  "model_info": {
+    "name": "RandomForestRegressor",
+    "r2_score": 0.6932793141066783,
+    "features_used": 17,
+    "missing_features": 0,
+    "weather_integrated": true
+  },
+  "api_stats": {
+    "calls_today": 3,
+    "max_calls_per_day": 950,
+    "remaining_calls": 947,
+    "last_reset": "2026-01-16T19:24:17.555519",
+    "today": "2026-01-16"
+  },
+  "metadata": {
+    "generated_at": "2026-01-16T20:09:50.127347",
+    "coordinates": {
+      "lat": 51.0447,
+      "lon": -114.0719
+    },
+    "time_constraints": {
+      "max_hours_ahead": 48,
+      "current_time": "2026-01-16T20:09:49.400248"
+    },
+    "cache_info": {
+      "weather_cache_minutes": 10,
+      "result_cache_minutes": 10,
+      "used_cached_data": true
+    }
+  },
+  "warning": "Using default weather values (API unavailable or rate limited)",
+  "_cached": {
+    "cached_at": "2026-01-16T20:09:50.127376",
+    "cache_key": "8cd970a373bb062a6319c6cf7d827883"
+  }
+}
