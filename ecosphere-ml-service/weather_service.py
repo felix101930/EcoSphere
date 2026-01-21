@@ -13,7 +13,7 @@ class WeatherService:
         self.api_key = api_key or os.environ.get('OPENWEATHER_API_KEY', '')
         if not self.api_key:
             # Fallback to a test key if none provided
-            self.api_key = ''
+            self.api_key = '122c8721896b0b9d64bbd41de74f5363'
             
         self.base_url = "https://api.openweathermap.org/data/3.0/onecall"
         self.cache_dir = Path(__file__).parent / 'weather_cache'
