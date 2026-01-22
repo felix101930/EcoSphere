@@ -5,13 +5,29 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { Paper, Typography, Box } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
-const DynamicChart = ({ data, config }) => {
-  // Empty State
+const DynamicChart = ({ data, config, customEmptyMessage }) => {
+  // Enhanced Empty State
   if (!data || data.length === 0) {
     return (
-      <Paper elevation={3} sx={{ p: 4, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
-        <Typography color="text.secondary">Select sensors and click Generate to view data.</Typography>
+      <Paper elevation={3} sx={{ 
+          p: 4, 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          borderRadius: 2,
+          bgcolor: '#fafafa'
+      }}>
+        <InfoOutlinedIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 2 }} />
+        <Typography variant="h6" color="text.secondary" align="center">
+            {customEmptyMessage || "No Data Available"}
+        </Typography>
+        <Typography variant="body2" color="text.disabled" align="center" sx={{ mt: 1 }}>
+            Adjust your filters or date range to see results.
+        </Typography>
       </Paper>
     );
   }
@@ -39,8 +55,6 @@ const DynamicChart = ({ data, config }) => {
   const renderChart = () => {
     // Multi-Series Mode
     if (config?.type === 'multi' && config.series) {
-        
-        // Switch between Line, Bar, Area based on user selection
         switch (config.chartType) {
             case 'bar':
                 return (
@@ -84,7 +98,12 @@ const DynamicChart = ({ data, config }) => {
 
   return (
     <Paper elevation={3} sx={{ p: 2, height: '100%', width: '100%', borderRadius: 2 }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+                {config?.title || "Analysis Result"}
+            </Typography>
+        </Box>
+        <ResponsiveContainer width="100%" height="90%">
             {renderChart()}
         </ResponsiveContainer>
     </Paper>
