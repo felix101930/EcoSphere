@@ -13,6 +13,7 @@ const userRoutes = require("./routes/userRoutes");
 const electricityRoutes = require("./routes/electricityRoutes");
 const waterRoutes = require("./routes/waterRoutes");
 const naturalGasRoutes = require("./routes/naturalGasRoutes");
+const analyticsRoutes = require('./routes/analyticsRoutes'); 
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use("/api/forecast", forecastLimiter.middleware(), forecastRoutes); // Rate 
 app.use("/api/weather", weatherRoutes);
 app.use("/api/ml", mlRoutes);
 app.use('/api/ai', aiRoutes); 
+app.use('/api/analytics', analyticsRoutes); 
 
 // Health check
 app.get("/api/health", async (req, res) => {

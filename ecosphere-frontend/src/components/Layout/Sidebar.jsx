@@ -28,6 +28,12 @@ const Sidebar = () => {
           permission: null
         },
         {
+          text: 'Custom Analytics',
+          path: '/analytics', // Updated path
+          roles: ['SuperAdmin', 'Admin', 'TeamMember'],
+          permission: null
+        },
+        {
           text: 'Overview',
           path: '/overview',
           roles: ['SuperAdmin', 'Admin', 'TeamMember'],

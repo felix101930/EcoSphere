@@ -17,7 +17,7 @@ import ErrorBoundary from './components/Common/ErrorBoundary';
 import LoadingSpinner from './components/Common/LoadingSpinner';
 import AiAnalyst from './pages/AiAnalyst';
 import Layout from "./components/Layout/Layout";
-
+import CustomAnalytics from './pages/CustomAnalytics';
 // Protected Route Component
 function ProtectedRoute({ children, adminOnly = false }) {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
@@ -81,6 +81,17 @@ function App() {
                   </MainLayout>
                 </ProtectedRoute>
               }
+            />
+            
+            <Route 
+              path="/analytics" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <CustomAnalytics />
+                  </Layout>
+                </ProtectedRoute>
+              } 
             />
 
             <Route

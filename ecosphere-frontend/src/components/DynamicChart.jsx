@@ -1,4 +1,4 @@
-// File: ecosphere-frontend/src/components/DynamicChart.jsx
+// Path: ecosphere-frontend/src/components/DynamicChart.jsx
 import React from 'react';
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
@@ -7,88 +7,84 @@ import {
 import { Paper, Typography, Box } from '@mui/material';
 
 const DynamicChart = ({ data, config }) => {
-  // 1. Handle Empty State
+  // Empty State
   if (!data || data.length === 0) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary', border: '1px dashed grey', borderRadius: 2 }}>
-        <Typography variant="body1">Waiting for data...</Typography>
-      </Box>
+      <Paper elevation={3} sx={{ p: 4, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+        <Typography color="text.secondary">Select sensors and click Generate to view data.</Typography>
+      </Paper>
     );
   }
 
-  // 2. Date Formatter (Makes the X-Axis readable)
   const formatDate = (ts) => {
-    if (!ts) return '';
-    // Tries to create a date object. If invalid, returns string as-is.
     const date = new Date(ts);
-    if (isNaN(date.getTime())) return ts; 
-    
-    return date.toLocaleString('en-US', {
+    return isNaN(date.getTime()) ? ts : date.toLocaleString('en-US', {
       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
   };
 
-  // 3. Common Chart Elements (Grid, Axis, Tooltips)
-  const renderCommonElements = () => [
+  const commonProps = {
+    data: data,
+    margin: { top: 10, right: 30, left: 0, bottom: 0 }
+  };
+
+  const commonElements = [
     <CartesianGrid strokeDasharray="3 3" key="grid" />,
-    <XAxis 
-      dataKey="ts" 
-      tickFormatter={formatDate} 
-      minTickGap={50} // Prevents labels from overlapping
-      key="xaxis" 
-    />,
-    <YAxis key="yaxis" />,
-    <Tooltip 
-      labelFormatter={(label) => new Date(label).toLocaleString()} 
-      key="tooltip" 
-    />,
-    <Legend key="legend" />
+    <XAxis dataKey="ts" tickFormatter={formatDate} minTickGap={50} key="x" />,
+    <YAxis key="y" />,
+    <Tooltip labelFormatter={(label) => new Date(label).toLocaleString()} key="tip" />,
+    <Legend key="leg" />
   ];
 
-  // 4. Chart Switcher logic
   const renderChart = () => {
-    const color = config?.color || "#1976d2"; // Default Blue
-    const title = config?.title || "Value";
-
-    switch (config?.type) {
-      case 'bar':
-        return (
-          <BarChart data={data}>
-            {renderCommonElements()}
-            <Bar dataKey="value" fill={color} name={title} />
-          </BarChart>
-        );
-      case 'area':
-        return (
-          <AreaChart data={data}>
-            {renderCommonElements()}
-            <Area type="monotone" dataKey="value" stroke={color} fill={color} name={title} />
-          </AreaChart>
-        );
-      case 'line':
-      default:
-        return (
-          <LineChart data={data}>
-            {renderCommonElements()}
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke={color} 
-              strokeWidth={2} 
-              dot={false} // Performance optimization for high-density data
-              name={title} 
-            />
-          </LineChart>
-        );
+    // Multi-Series Mode
+    if (config?.type === 'multi' && config.series) {
+        
+        // Switch between Line, Bar, Area based on user selection
+        switch (config.chartType) {
+            case 'bar':
+                return (
+                    <BarChart {...commonProps}>
+                        {commonElements}
+                        {config.series.map(s => (
+                            <Bar key={s.dataKey} dataKey={s.dataKey} fill={s.color} name={s.dataKey} />
+                        ))}
+                    </BarChart>
+                );
+            case 'area':
+                return (
+                    <AreaChart {...commonProps}>
+                        {commonElements}
+                        {config.series.map(s => (
+                            <Area key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} fill={s.color} fillOpacity={0.3} name={s.dataKey} connectNulls />
+                        ))}
+                    </AreaChart>
+                );
+            case 'line':
+            default:
+                return (
+                    <LineChart {...commonProps}>
+                        {commonElements}
+                        {config.series.map(s => (
+                            <Line key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} strokeWidth={2} dot={false} connectNulls name={s.dataKey} />
+                        ))}
+                    </LineChart>
+                );
+        }
     }
+
+    // Single Series Mode (AI Fallback)
+    return (
+        <LineChart {...commonProps}>
+            {commonElements}
+            <Line type="monotone" dataKey="value" stroke={config?.color || "#8884d8"} strokeWidth={2} dot={false} name={config?.title} />
+        </LineChart>
+    );
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, height: 500, width: '100%', mt: 3, borderRadius: 2 }}>
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: config?.color }}>
-            {config?.title || "Analysis Result"}
-        </Typography>
-        <ResponsiveContainer width="100%" height="85%">
+    <Paper elevation={3} sx={{ p: 2, height: '100%', width: '100%', borderRadius: 2 }}>
+        <ResponsiveContainer width="100%" height="100%">
             {renderChart()}
         </ResponsiveContainer>
     </Paper>
