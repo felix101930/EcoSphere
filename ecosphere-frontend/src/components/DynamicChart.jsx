@@ -11,22 +11,47 @@ const DynamicChart = ({ data, config, customEmptyMessage }) => {
   // Enhanced Empty State
   if (!data || data.length === 0) {
     return (
-      <Paper elevation={3} sx={{ 
-          p: 4, 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          borderRadius: 2,
-          bgcolor: '#fafafa'
+      <Paper elevation={3} sx={{
+        p: 4,
+        minHeight: 400,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 2,
+        bgcolor: '#fafafa'
       }}>
         <InfoOutlinedIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 2 }} />
         <Typography variant="h6" color="text.secondary" align="center">
-            {customEmptyMessage || "No Data Available"}
+          {customEmptyMessage || "No Data Available"}
         </Typography>
         <Typography variant="body2" color="text.disabled" align="center" sx={{ mt: 1 }}>
-            Adjust your filters or date range to see results.
+          The query executed successfully but returned no data points.
+        </Typography>
+      </Paper>
+    );
+  }
+
+  // Validate data structure
+  const hasValidData = data.some(item => item.ts && (item.value !== null && item.value !== undefined));
+  if (!hasValidData) {
+    return (
+      <Paper elevation={3} sx={{
+        p: 4,
+        minHeight: 400,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 2,
+        bgcolor: '#fff3e0'
+      }}>
+        <InfoOutlinedIcon sx={{ fontSize: 40, color: 'warning.main', mb: 2 }} />
+        <Typography variant="h6" color="warning.main" align="center">
+          Invalid Data Format
+        </Typography>
+        <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
+          The data returned does not have the expected structure (ts, value).
         </Typography>
       </Paper>
     );
@@ -55,57 +80,60 @@ const DynamicChart = ({ data, config, customEmptyMessage }) => {
   const renderChart = () => {
     // Multi-Series Mode
     if (config?.type === 'multi' && config.series) {
-        switch (config.chartType) {
-            case 'bar':
-                return (
-                    <BarChart {...commonProps}>
-                        {commonElements}
-                        {config.series.map(s => (
-                            <Bar key={s.dataKey} dataKey={s.dataKey} fill={s.color} name={s.dataKey} />
-                        ))}
-                    </BarChart>
-                );
-            case 'area':
-                return (
-                    <AreaChart {...commonProps}>
-                        {commonElements}
-                        {config.series.map(s => (
-                            <Area key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} fill={s.color} fillOpacity={0.3} name={s.dataKey} connectNulls />
-                        ))}
-                    </AreaChart>
-                );
-            case 'line':
-            default:
-                return (
-                    <LineChart {...commonProps}>
-                        {commonElements}
-                        {config.series.map(s => (
-                            <Line key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} strokeWidth={2} dot={false} connectNulls name={s.dataKey} />
-                        ))}
-                    </LineChart>
-                );
-        }
+      switch (config.chartType) {
+        case 'bar':
+          return (
+            <BarChart {...commonProps}>
+              {commonElements}
+              {config.series.map(s => (
+                <Bar key={s.dataKey} dataKey={s.dataKey} fill={s.color} name={s.dataKey} />
+              ))}
+            </BarChart>
+          );
+        case 'area':
+          return (
+            <AreaChart {...commonProps}>
+              {commonElements}
+              {config.series.map(s => (
+                <Area key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} fill={s.color} fillOpacity={0.3} name={s.dataKey} connectNulls />
+              ))}
+            </AreaChart>
+          );
+        case 'line':
+        default:
+          return (
+            <LineChart {...commonProps}>
+              {commonElements}
+              {config.series.map(s => (
+                <Line key={s.dataKey} type="monotone" dataKey={s.dataKey} stroke={s.color} strokeWidth={2} dot={false} connectNulls name={s.dataKey} />
+              ))}
+            </LineChart>
+          );
+      }
     }
 
     // Single Series Mode (AI Fallback)
     return (
-        <LineChart {...commonProps}>
-            {commonElements}
-            <Line type="monotone" dataKey="value" stroke={config?.color || "#8884d8"} strokeWidth={2} dot={false} name={config?.title} />
-        </LineChart>
+      <LineChart {...commonProps}>
+        {commonElements}
+        <Line type="monotone" dataKey="value" stroke={config?.color || "#8884d8"} strokeWidth={2} dot={false} name={config?.title} />
+      </LineChart>
     );
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 2, height: '100%', width: '100%', borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
-                {config?.title || "Analysis Result"}
-            </Typography>
-        </Box>
-        <ResponsiveContainer width="100%" height="90%">
-            {renderChart()}
-        </ResponsiveContainer>
+    <Paper elevation={3} sx={{ p: 2, minHeight: 400, width: '100%', borderRadius: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>
+          {config?.title || "Analysis Result"}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {data.length} data points
+        </Typography>
+      </Box>
+      <ResponsiveContainer width="100%" height={350}>
+        {renderChart()}
+      </ResponsiveContainer>
     </Paper>
   );
 };
