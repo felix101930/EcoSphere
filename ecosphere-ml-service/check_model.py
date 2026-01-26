@@ -1,38 +1,33 @@
-"""
-Check model info for Node.js integration
-"""
 import json
 import joblib
 import sys
 import os
+import traceback
 
 def main():
     try:
-        # Get current directory
         current_dir = os.path.dirname(os.path.abspath(__file__))
         model_path = os.path.join(current_dir, 'solar_forecast_openweather.pkl')
         
-        # Check if file exists
+        print(f"Looking for model at: {model_path}", file=sys.stderr)
+        print(f"File exists: {os.path.exists(model_path)}", file=sys.stderr)
+        
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
         
-        # Load model
+        print(f"File size: {os.path.getsize(model_path)} bytes", file=sys.stderr)
+        
+        # Try to load with more specific error handling
         model_data = joblib.load(model_path)
         
-        # Prepare info
+        print("Model loaded successfully!", file=sys.stderr)
+        
         info = {
             'success': True,
             'model': {
-                'type': type(model_data.get('model')).__name__,
-                'feature_count': len(model_data.get('feature_names', [])),
-                'metrics': model_data.get('metrics', {}),
+                'type': type(model_data.get('model')).__name__ if 'model' in model_data else 'Unknown',
+                'keys': list(model_data.keys()),
                 'loaded': True
-            },
-            'service': {
-                'python_version': sys.version.split()[0],
-                'model_path': model_path,
-                'file_exists': os.path.exists(model_path),
-                'file_size': os.path.getsize(model_path)
             }
         }
         
@@ -42,11 +37,9 @@ def main():
         error_info = {
             'success': False,
             'error': str(e),
-            'model': {
-                'loaded': False
-            }
+            'traceback': traceback.format_exc()
         }
-        print(json.dumps(error_info))
+        print(json.dumps(error_info, default=str))
 
 if __name__ == "__main__":
     main()

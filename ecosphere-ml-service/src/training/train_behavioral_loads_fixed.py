@@ -1,5 +1,5 @@
 # train_behavioral_loads_fixed.py
-print("🚀 BEHAVIORAL LOADS TRAINING - FIXED VERSION")
+print("BEHAVIORAL LOADS TRAINING - FIXED VERSION")
 print("=" * 70)
 
 import pandas as pd
@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore')
 try:
     from behavioral_ensemble import WeightedEnsemble
 except ImportError:
-    print("⚠️  behavioral_ensemble.py not found. Creating WeightedEnsemble class locally...")
+    print("behavioral_ensemble.py not found. Creating WeightedEnsemble class locally...")
     
     class WeightedEnsemble:
         """Pickleable weighted ensemble model"""
@@ -61,7 +61,7 @@ FINAL_DATASET_FILE = os.path.join(
     "behavioral_loads_long_final.csv"
 )
 
-print(f"🎯 Training on: {FINAL_DATASET_FILE}")
+print(f"Training on: {FINAL_DATASET_FILE}")
 MODEL_DIR = os.path.join(project_root, "models", "behavioral_loads_production_fixed")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -179,10 +179,10 @@ def main():
         return
     
     df = pd.read_csv(FINAL_DATASET_FILE)
-    print(f"✅ Loaded {len(df):,} samples")
+    print(f"Loaded {len(df):,} samples")
     
     # Prepare data
-    print(f"\n1. 🔧 PREPARING DATA")
+    print(f"\n1. PREPARING DATA")
     print("-" * 50)
     
     # Separate features and target
@@ -202,7 +202,7 @@ def main():
     print(f"   Samples: {len(X_final):,}")
     
     # Create splits
-    print(f"\n2. 📊 CREATING TRAIN/TEST SPLIT")
+    print(f"\n2. CREATING TRAIN/TEST SPLIT")
     print("-" * 50)
     
     split_idx = int(len(X_final) * 0.8)
@@ -217,7 +217,7 @@ def main():
     # Train models
     all_results = {}
     
-    print(f"\n3. 🌲 TRAINING XGBOOST")
+    print(f"\n3. TRAINING XGBOOST")
     print("-" * 50)
     
     xgb_model = xgb.XGBRegressor(
@@ -239,8 +239,8 @@ def main():
         'test_mae': mean_absolute_error(y_test, y_pred_test)
     }
     
-    print(f"   ✅ Test R²:  {xgb_results['test_r2']:.4f}")
-    print(f"   ✅ Test MAE: {xgb_results['test_mae']:.3f}")
+    print(f"  Test R²:  {xgb_results['test_r2']:.4f}")
+    print(f"  Test MAE: {xgb_results['test_mae']:.3f}")
     
     # Save XGBoost
     xgb_path = save_model_safely(
@@ -248,7 +248,7 @@ def main():
         'xgboost', 'xgboost'
     )
     
-    print(f"\n4. 💡 TRAINING LIGHTGBM")
+    print(f"\n4. TRAINING LIGHTGBM")
     print("-" * 50)
     
     lgb_model = lgb.LGBMRegressor(
@@ -270,8 +270,8 @@ def main():
         'test_mae': mean_absolute_error(y_test, y_pred_test)
     }
     
-    print(f"   ✅ Test R²:  {lgb_results['test_r2']:.4f}")
-    print(f"   ✅ Test MAE: {lgb_results['test_mae']:.3f}")
+    print(f"   Test R²:  {lgb_results['test_r2']:.4f}")
+    print(f"   Test MAE: {lgb_results['test_mae']:.3f}")
     
     # Save LightGBM
     lgb_path = save_model_safely(
@@ -279,7 +279,7 @@ def main():
         'lightgbm', 'lightgbm'
     )
     
-    print(f"\n5. 🤝 TRAINING ENSEMBLE")
+    print(f"\n5. TRAINING ENSEMBLE")
     print("-" * 50)
     
     ensemble, base_models = create_ensemble_model(X_train, y_train)
@@ -313,8 +313,8 @@ def main():
     best_score = all_results[best_model_name]
     
     print(f"\n{'='*70}")
-    print(f"🏆 BEST MODEL: {best_model_name.upper()}")
-    print(f"📊 Test R²:    {best_score:.4f}")
+    print(f"BEST MODEL: {best_model_name.upper()}")
+    print(f"Test R²:    {best_score:.4f}")
     
     # Save best model info
     best_model_info = {
@@ -331,21 +331,21 @@ def main():
     with open(info_path, 'w') as f:
         json.dump(best_model_info, f, indent=2)
     
-    print(f"\n✅ Models saved to: {MODEL_DIR}")
-    print(f"✅ Best model info: {info_path}")
+    print(f"\nModels saved to: {MODEL_DIR}")
+    print(f"Best model info: {info_path}")
     
     # Performance comparison
     baseline_r2 = 0.497
     improvement = best_score - baseline_r2
     improvement_pct = (improvement / baseline_r2) * 100
     
-    print(f"\n📈 PERFORMANCE IMPROVEMENT:")
+    print(f"\nPERFORMANCE IMPROVEMENT:")
     print(f"   Baseline R²: {baseline_r2:.3f}")
     print(f"   Best R²:     {best_score:.3f}")
     print(f"   Improvement: +{improvement:.3f} ({improvement_pct:.1f}%)")
     
     if improvement_pct > 70:
-        print(f"   🎉 OUTSTANDING IMPROVEMENT ACHIEVED!")
+        print(f"OUTSTANDING IMPROVEMENT ACHIEVED!")
 
 if __name__ == "__main__":
     main()

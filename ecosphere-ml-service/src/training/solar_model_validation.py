@@ -7,7 +7,7 @@ import joblib
 def validate_model_response():
     """Test if model responds correctly to weather variables"""
     
-    print("🔬 MODEL RESPONSE VALIDATION TEST")
+    print("MODEL RESPONSE VALIDATION TEST")
     print("="*60)
     
     # Load model
@@ -64,7 +64,7 @@ def validate_model_response():
         prediction_log1p = model.predict(features_scaled)[0]
         prediction_kw = np.expm1(prediction_log1p)
         
-        print(f"📊 SCENARIO {i}: {scenario['name']}")
+        print(f"SCENARIO {i}: {scenario['name']}")
         print(f"   UV Index: {scenario['uv_index']:.1f}")
         print(f"   Cloud Cover: {scenario['clouds_pct']}%")
         print(f"   Temperature: {scenario['temperature_c']}°C")
@@ -74,14 +74,14 @@ def validate_model_response():
         # Physics check
         if scenario['uv_index'] > 5 and scenario['clouds_pct'] < 30:
             if prediction_kw < 5:
-                print(f"   ⚠️  SUSPICIOUS: High UV + Clear sky but low prediction")
+                print(f"   SUSPICIOUS: High UV + Clear sky but low prediction")
             else:
-                print(f"   ✅ REASONABLE: Good conditions → good prediction")
+                print(f"   REASONABLE: Good conditions → good prediction")
         elif scenario['uv_index'] < 1 and scenario['clouds_pct'] > 80:
             if prediction_kw > 5:
-                print(f"   ⚠️  SUSPICIOUS: Poor conditions but high prediction")
+                print(f"   SUSPICIOUS: Poor conditions but high prediction")
             else:
-                print(f"   ✅ REASONABLE: Poor conditions → low prediction")
+                print(f"   REASONABLE: Poor conditions → low prediction")
         print()
 
 def create_test_features(scenario):

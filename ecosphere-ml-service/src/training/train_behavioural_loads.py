@@ -1,5 +1,5 @@
 # train_behavioral_loads_final_production.py
-print("🚀 BEHAVIORAL LOADS TRAINING - PRODUCTION READY")
+print("BEHAVIORAL LOADS TRAINING - PRODUCTION READY")
 print("=" * 70)
 
 import pandas as pd
@@ -30,7 +30,7 @@ FINAL_DATASET_FILE = os.path.join(
     "behavioral_loads_long_final.csv"
 )
 
-print(f"🎯 Training on: {FINAL_DATASET_FILE}")
+print(f"Training on: {FINAL_DATASET_FILE}")
 MODEL_DIR = os.path.join(project_root, "models", "behavioral_loads_production")
 os.makedirs(MODEL_DIR, exist_ok=True)
 
@@ -61,14 +61,14 @@ def prepare_data(df):
     # Convert back to DataFrame
     X_final = pd.DataFrame(X_selected, columns=kept_features)
     
-    print(f"\n   📊 Final feature count: {X_final.shape[1]}")
+    print(f"\n Final feature count: {X_final.shape[1]}")
     print(f"   Target range: [{y.min():.3f}, {y.max():.3f}]")
     
     return X_final, y, X_final.columns.tolist()
 
 def create_splits(X, y, test_size=0.2):
     """Create time series splits"""
-    print(f"\n2. 📊 CREATING TRAIN/TEST SPLIT")
+    print(f"\n2.CREATING TRAIN/TEST SPLIT")
     print("-" * 50)
     
     # Time series split (preserve order)
@@ -80,14 +80,14 @@ def create_splits(X, y, test_size=0.2):
     y_train = y.iloc[:split_idx].reset_index(drop=True)
     y_test = y.iloc[split_idx:].reset_index(drop=True)
     
-    print(f"📊 Train samples: {len(X_train):,} ({len(X_train)/len(X)*100:.1f}%)")
-    print(f"📊 Test samples:  {len(X_test):,} ({len(X_test)/len(X)*100:.1f}%)")
+    print(f"Train samples: {len(X_train):,} ({len(X_train)/len(X)*100:.1f}%)")
+    print(f"Test samples:  {len(X_test):,} ({len(X_test)/len(X)*100:.1f}%)")
     
     return X_train, X_test, y_train, y_test
 
 def train_xgboost_model(X_train, y_train, X_test, y_test):
     """Train XGBoost model"""
-    print(f"\n3. 🌲 TRAINING XGBOOST")
+    print(f"\n3. TRAINING XGBOOST")
     print("-" * 50)
     
     try:
@@ -142,33 +142,33 @@ def train_xgboost_model(X_train, y_train, X_test, y_test):
             'best_n_estimators': best_n
         }
         
-        print(f"\n   ✅ Best n_estimators: {best_n}")
-        print(f"   ✅ Training R²:  {train_r2:.4f}")
-        print(f"   ✅ Test R²:      {test_r2:.4f}")
-        print(f"   ✅ Test MAE:     {test_mae:.3f}")
-        print(f"   ✅ Test RMSE:    {test_rmse:.3f}")
+        print(f"\n   Best n_estimators: {best_n}")
+        print(f"   Training R²:  {train_r2:.4f}")
+        print(f"   Test R²:      {test_r2:.4f}")
+        print(f"   Test MAE:     {test_mae:.3f}")
+        print(f"   Test RMSE:    {test_rmse:.3f}")
         
         # Overfitting check
         overfit_diff = train_r2 - test_r2
-        print(f"\n   📊 Overfitting check:")
+        print(f"\n   Overfitting check:")
         print(f"      Train-Test difference: {overfit_diff:.4f}")
         
         if overfit_diff > 0.15:
-            print(f"      ⚠️  Significant overfitting")
+            print(f"  Significant overfitting")
         elif overfit_diff > 0.1:
-            print(f"      ⚠️  Moderate overfitting")
+            print(f"      Moderate overfitting")
         else:
-            print(f"      ✅ Good generalization")
+            print(f"      Good generalization")
         
         return results
         
     except Exception as e:
-        print(f"   ❌ XGBoost Error: {e}")
+        print(f"   XGBoost Error: {e}")
         return None
 
 def train_lightgbm_model(X_train, y_train, X_test, y_test):
     """Train LightGBM model"""
-    print(f"\n4. 💡 TRAINING LIGHTGBM")
+    print(f"\n4. TRAINING LIGHTGBM")
     print("-" * 50)
     
     try:
@@ -219,19 +219,19 @@ def train_lightgbm_model(X_train, y_train, X_test, y_test):
             'test_mae': test_mae
         }
         
-        print(f"\n   ✅ Training R²:  {train_r2:.4f}")
-        print(f"   ✅ Test R²:      {test_r2:.4f}")
-        print(f"   ✅ Test MAE:     {test_mae:.3f}")
+        print(f"\n Training R²:  {train_r2:.4f}")
+        print(f"   Test R²:      {test_r2:.4f}")
+        print(f"   Test MAE:     {test_mae:.3f}")
         
         return results
         
     except Exception as e:
-        print(f"   ❌ LightGBM Error: {e}")
+        print(f"   LightGBM Error: {e}")
         return None
 
 def train_random_forest_model(X_train, y_train, X_test, y_test):
     """Train Random Forest model"""
-    print(f"\n5. 🌳 TRAINING RANDOM FOREST")
+    print(f"\n5. TRAINING RANDOM FOREST")
     print("-" * 50)
     
     try:
@@ -265,14 +265,14 @@ def train_random_forest_model(X_train, y_train, X_test, y_test):
         }
         
         print(f"Done")
-        print(f"   ✅ Training R²:  {train_r2:.4f}")
-        print(f"   ✅ Test R²:      {test_r2:.4f}")
-        print(f"   ✅ Test MAE:     {test_mae:.3f}")
-        
+        print(f"   Training R²:  {train_r2:.4f}")
+        print(f"   Test R²:      {test_r2:.4f}")
+        print(f"   Test MAE:     {test_mae:.3f}")
+
         return results
         
     except Exception as e:
-        print(f"   ❌ Random Forest Error: {e}")
+        print(f" Random Forest Error: {e}")
         return None
 
 class WeightedEnsemble:
@@ -312,7 +312,7 @@ class WeightedEnsemble:
 
 def train_weighted_ensemble(X_train, y_train, X_test, y_test):
     """Train weighted ensemble model"""
-    print(f"\n6. 🤝 TRAINING WEIGHTED ENSEMBLE")
+    print(f"\n6. TRAINING WEIGHTED ENSEMBLE")
     print("-" * 50)
     
     try:
@@ -374,21 +374,21 @@ def train_weighted_ensemble(X_train, y_train, X_test, y_test):
             }
         }
         
-        print(f"   ✅ Training R²:  {train_r2:.4f}")
-        print(f"   ✅ Test R²:      {test_r2:.4f}")
-        print(f"   ✅ Test MAE:     {test_mae:.3f}")
+        print(f"  Training R²:  {train_r2:.4f}")
+        print(f"  Test R²:      {test_r2:.4f}")
+        print(f"  Test MAE:     {test_mae:.3f}")
         
         return results
         
     except Exception as e:
-        print(f"   ❌ Ensemble Error: {e}")
+        print(f"   Ensemble Error: {e}")
         import traceback
         traceback.print_exc()
         return None
 
 def save_models(models_results, feature_names, output_dir):
     """Save all trained models"""
-    print(f"\n7. 💾 SAVING MODELS")
+    print(f"\n7. SAVING MODELS")
     print("-" * 50)
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -447,7 +447,7 @@ def save_models(models_results, feature_names, output_dir):
             joblib.dump(model_package, model_path)
             
             saved_models[model_name] = model_path
-            print(f"   ✅ {model_name}: {model_path}")
+            print(f"  {model_name}: {model_path}")
     
     # Save best model
     if models_results:
@@ -491,13 +491,13 @@ def save_models(models_results, feature_names, output_dir):
         best_model_path = os.path.join(output_dir, "best_model.pkl")
         joblib.dump(best_model_package, best_model_path)
         
-        print(f"\n   🏆 Best model ({best_model_name}) saved as: {best_model_path}")
+        print(f"\n Best model ({best_model_name}) saved as: {best_model_path}")
     
     return saved_models
 
 def create_final_report(models_results, output_dir):
     """Create final performance report"""
-    print(f"\n8. 📋 FINAL PERFORMANCE REPORT")
+    print(f"\n8. FINAL PERFORMANCE REPORT")
     print("-" * 50)
     
     report = []
@@ -527,7 +527,7 @@ def create_final_report(models_results, output_dir):
         best_model_name = max(valid_models.keys(), key=lambda x: valid_models[x]['test_r2'])
         best_result = valid_models[best_model_name]
         
-        report.append("🏆 BEST MODEL DETAILS")
+        report.append(" BEST MODEL DETAILS")
         report.append("-" * 40)
         report.append(f"Model: {best_model_name.upper()}")
         report.append(f"Test R²: {best_result['test_r2']:.4f}")
@@ -545,23 +545,23 @@ def create_final_report(models_results, output_dir):
         improvement_pct = (improvement / baseline_r2) * 100
         
         report.append("")
-        report.append("📈 IMPROVEMENT OVER BASELINE")
+        report.append("IMPROVEMENT OVER BASELINE")
         report.append("-" * 40)
         report.append(f"Baseline R²: {baseline_r2:.3f}")
         report.append(f"New R²:      {best_result['test_r2']:.3f}")
         report.append(f"Improvement: +{improvement:.3f} ({improvement_pct:.1f}%)")
         
         if improvement_pct > 75:
-            report.append("🎉 OUTSTANDING IMPROVEMENT!")
+            report.append(" OUTSTANDING IMPROVEMENT!")
         elif improvement_pct > 50:
-            report.append("🎉 EXCELLENT IMPROVEMENT!")
+            report.append(" EXCELLENT IMPROVEMENT!")
         elif improvement_pct > 30:
-            report.append("👍 VERY GOOD IMPROVEMENT!")
+            report.append(" VERY GOOD IMPROVEMENT!")
         else:
-            report.append("📈 MODERATE IMPROVEMENT")
-    
+            report.append(" MODERATE IMPROVEMENT")
+
     report.append("")
-    report.append("🎯 PRODUCTION RECOMMENDATIONS")
+    report.append("PRODUCTION RECOMMENDATIONS")
     report.append("-" * 40)
     report.append("1. Use the best model for all predictions")
     report.append("2. Monitor MAE weekly - retrain if >20% increase")
@@ -574,7 +574,7 @@ def create_final_report(models_results, output_dir):
     with open(report_path, 'w', encoding='utf-8') as f:
         f.write('\n'.join(report))
     
-    print(f"✅ Report saved: {report_path}")
+    print(f"Report saved: {report_path}")
     
     # Print summary
     print("\n" + "=" * 70)
@@ -586,16 +586,16 @@ def create_final_report(models_results, output_dir):
         best_result = valid_models[best_model_name]
         
         print(f"\n🏆 Best Model: {best_model_name.upper()}")
-        print(f"📊 Test R²:    {best_result['test_r2']:.4f}")
-        print(f"📊 Test MAE:   {best_result['test_mae']:.3f} kWh")
+        print(f" Test R²:    {best_result['test_r2']:.4f}")
+        print(f" Test MAE:   {best_result['test_mae']:.3f} kWh")
         
         # Show all model performances
-        print(f"\n📈 All Models Performance:")
+        print(f"\n All Models Performance:")
         for model_name, results in valid_models.items():
             if results:
                 print(f"   {model_name:<15} R²: {results['test_r2']:.4f}, MAE: {results['test_mae']:.3f}")
     
-    print(f"\n✅ Models saved to: {output_dir}")
+    print(f"\nModels saved to: {output_dir}")
 
 def main():
     """Main training pipeline"""
@@ -603,11 +603,11 @@ def main():
     print("-" * 50)
     
     if not os.path.exists(FINAL_DATASET_FILE):
-        print(f"❌ Dataset not found: {FINAL_DATASET_FILE}")
+        print(f"Dataset not found: {FINAL_DATASET_FILE}")
         return
     
     df = pd.read_csv(FINAL_DATASET_FILE)
-    print(f"✅ Loaded {len(df):,} samples")
+    print(f"Loaded {len(df):,} samples")
     
     # Prepare data
     X, y, feature_names = prepare_data(df)
@@ -640,7 +640,7 @@ def main():
     # Create final report
     create_final_report(models_results, MODEL_DIR)
     
-    print(f"\n✅ Training completed successfully!")
+    print(f"\nTraining completed successfully!")
     
     # Feature importance for best model
     valid_models = {k: v for k, v in models_results.items() if v is not None}
@@ -649,7 +649,7 @@ def main():
         best_model = valid_models[best_model_name]['model']
         
         if hasattr(best_model, 'feature_importances_'):
-            print(f"\n🔍 Top Features for {best_model_name.upper()}:")
+            print(f"\nTop Features for {best_model_name.upper()}:")
             importances = best_model.feature_importances_
             feat_importance = pd.DataFrame({
                 'feature': feature_names,

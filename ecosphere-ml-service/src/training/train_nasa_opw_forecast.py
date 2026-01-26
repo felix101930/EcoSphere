@@ -38,12 +38,12 @@ class SolarForecastTrainer:
         
         # Load the dataset
         self.df = pd.read_csv(self.data_path, parse_dates=['timestamp'])
-        print(f"✅ Loaded {len(self.df):,} samples")
-        print(f"📅 Date range: {self.df['timestamp'].min()} to {self.df['timestamp'].max()}")
+        print(f" Loaded {len(self.df):,} samples")
+        print(f" Date range: {self.df['timestamp'].min()} to {self.df['timestamp'].max()}")
         
         # CRITICAL: Check if we have actual solar generation data
         if 'total_solar_kw' not in self.df.columns:
-            print("❌ ERROR: 'total_solar_kw' column not found!")
+            print(" ERROR: 'total_solar_kw' column not found!")
             print("Available columns:", self.df.columns.tolist())
             return None
         
@@ -51,7 +51,7 @@ class SolarForecastTrainer:
         before_zeros = len(self.df)
         self.df = self.df[self.df['total_solar_kw'] > 0.1].copy()  # Keep only meaningful generation
         after_zeros = len(self.df)
-        print(f"✅ Removed {before_zeros - after_zeros:,} zero/low-generation samples")
+        print(f" Removed {before_zeros - after_zeros:,} zero/low-generation samples")
         
         # Check for UV index column
         uv_col = None
@@ -62,9 +62,9 @@ class SolarForecastTrainer:
                 break
         
         if uv_col:
-            print(f"✅ Using UV index from column: {uv_col}")
+            print(f" Using UV index from column: {uv_col}")
         else:
-            print("⚠️  WARNING: No UV index column found!")
+            print("  WARNING: No UV index column found!")
             # Create synthetic UV index based on hour and month
             self.df['hour'] = self.df['timestamp'].dt.hour
             self.df['month'] = self.df['timestamp'].dt.month
@@ -75,7 +75,7 @@ class SolarForecastTrainer:
         # Use log1p transformation for target
         self.df['log1p_solar'] = np.log1p(self.df['total_solar_kw'])
         
-        print(f"\n📊 DATASET STATISTICS:")
+        print(f"\n DATASET STATISTICS:")
         print(f"   Shape: {self.df.shape[0]:,} rows × {self.df.shape[1]} columns")
         print(f"   Solar Generation:")
         print(f"     Mean: {self.df['total_solar_kw'].mean():.2f} kW")
@@ -84,14 +84,14 @@ class SolarForecastTrainer:
         print(f"     Std:  {self.df['total_solar_kw'].std():.2f} kW")
         
         # Check distribution
-        print(f"\n📈 DATA DISTRIBUTION:")
+        print(f"\n DATA DISTRIBUTION:")
         print(f"   UV Index: Mean={self.df['uv_index'].mean():.2f}, Max={self.df['uv_index'].max():.2f}")
         
         return self.df
     
     def select_features_for_openweather(self):
         """Select features available from OpenWeather API v3.0"""
-        print(f"\n🔧 SELECTING OPENWEATHER API v3.0 COMPATIBLE FEATURES")
+        print(f"\n SELECTING OPENWEATHER API v3.0 COMPATIBLE FEATURES")
         print("-" * 50)
         
         # Features available in OpenWeather One Call API 3.0
@@ -140,7 +140,7 @@ class SolarForecastTrainer:
             if feature not in self.feature_names and feature in self.df.columns:
                 self.feature_names.append(feature)
         
-        print(f"✅ Selected {len(self.feature_names)} OpenWeather-compatible features:")
+        print(f" Selected {len(self.feature_names)} OpenWeather-compatible features:")
         for i, feature in enumerate(self.feature_names[:15], 1):  # Show first 15
             print(f"   {i:2}. {feature}")
         if len(self.feature_names) > 15:
@@ -197,7 +197,7 @@ class SolarForecastTrainer:
     
     def train_and_compare_models(self):
         """Train and compare 3 models"""
-        print(f"\n🤖 TRAINING AND COMPARING 3 MODELS")
+        print(f"\n TRAINING AND COMPARING 3 MODELS")
         print("-" * 50)
         
         # Prepare data
@@ -214,7 +214,7 @@ class SolarForecastTrainer:
         y_train = y.iloc[:split_idx]
         y_test = y.iloc[split_idx:]
         
-        print(f"📊 DATA SPLIT:")
+        print(f" DATA SPLIT:")
         print(f"   Training: {len(X_train):,} samples ({split_idx/len(X)*100:.1f}%)")
         print(f"   Testing:  {len(X_test):,} samples ({(len(X)-split_idx)/len(X)*100:.1f}%)")
         
@@ -229,7 +229,7 @@ class SolarForecastTrainer:
         best_r2 = -float('inf')
         
         for model_name, model_func in models_to_train.items():
-            print(f"\n🚀 Training {model_name}...")
+            print(f"\n Training {model_name}...")
             
             try:
                 model = model_func(X_train, y_train, X_test, y_test)
@@ -276,16 +276,16 @@ class SolarForecastTrainer:
                     self.best_model_name = model_name
                     self.metrics = self.all_models_results[model_name].copy()
                     del self.metrics['model']
-                    print(f"     ✅ New best model!")
+                    print(f"      New best model!")
                     
             except Exception as e:
-                print(f"   ❌ Error: {e}")
+                print(f"    Error: {e}")
                 self.all_models_results[model_name] = {'error': str(e)}
         
         # Display comparison
         self._display_model_comparison()
         
-        print(f"\n🏆 BEST MODEL: {self.best_model_name}")
+        print(f"\n BEST MODEL: {self.best_model_name}")
         print(f"   R²:  {self.metrics['r2']:.4f}")
         print(f"   MAE: {self.metrics['mae']:.3f} kW")
         
@@ -293,7 +293,7 @@ class SolarForecastTrainer:
     
     def _display_model_comparison(self):
         """Display comparison table"""
-        print(f"\n📊 MODEL COMPARISON")
+        print(f"\n MODEL COMPARISON")
         print("-" * 60)
         print(f"{'Model':<12} {'R²':>8} {'MAE (kW)':>10} {'RMSE (kW)':>12}")
         print("-" * 60)
@@ -387,10 +387,10 @@ class SolarForecastTrainer:
     def analyze_predictions(self):
         """Analyze model predictions"""
         if not self.best_model:
-            print("❌ No model trained yet")
+            print(" No model trained yet")
             return
         
-        print(f"\n🔍 ANALYZING {self.best_model_name} PREDICTIONS")
+        print(f"\n ANALYZING {self.best_model_name} PREDICTIONS")
         print("-" * 50)
         
         # Prepare data
@@ -414,12 +414,12 @@ class SolarForecastTrainer:
                 'importance': self.best_model.feature_importances_
             }).sort_values('importance', ascending=False)
             
-            print(f"🎯 TOP 10 FEATURE IMPORTANCE:")
+            print(f" TOP 10 FEATURE IMPORTANCE:")
             for i, (_, row) in enumerate(importance.head(10).iterrows(), 1):
                 print(f"   {i:2}. {row['feature']:25} {row['importance']:.4f}")
         
         # Show predictions vs actual
-        print(f"\n🔍 SAMPLE PREDICTIONS (First 10 test samples):")
+        print(f"\n SAMPLE PREDICTIONS (First 10 test samples):")
         for i in range(min(10, len(y_pred))):
             actual = y_actual.iloc[i]
             pred = y_pred[i]
@@ -433,11 +433,11 @@ class SolarForecastTrainer:
     
     def save_best_model(self, output_path="solar_forecast_model.pkl"):
         """Save the best model"""
-        print(f"\n💾 SAVING BEST MODEL: {self.best_model_name}")
+        print(f"\n SAVING BEST MODEL: {self.best_model_name}")
         print("-" * 50)
         
         if not self.best_model:
-            print("❌ No model to save")
+            print(" No model to save")
             return None
         
         # Create model package
@@ -477,7 +477,7 @@ class SolarForecastTrainer:
         
         # Save model
         joblib.dump(model_package, output_path)
-        print(f"✅ Model saved to: {output_path}")
+        print(f" Model saved to: {output_path}")
         
         # Save metadata
         metadata = {
@@ -508,14 +508,14 @@ class SolarForecastTrainer:
         with open(metadata_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
         
-        print(f"📄 Metadata saved to: {metadata_path}")
+        print(f"Metadata saved to: {metadata_path}")
         
         return output_path
 
 def main():
     """Main training function"""
     print("\n" + "="*70)
-    print("☀️ SOLAR FORECASTING FOR OPENWEATHER API v3.0")
+    print(" SOLAR FORECASTING FOR OPENWEATHER API v3.0")
     print("   TRAINS 3 MODELS & SAVES BEST ONE")
     print("="*70)
     
@@ -529,7 +529,7 @@ def main():
     # 2. Load and prepare data
     df = trainer.load_and_prepare_data()
     if df is None:
-        print("❌ Failed to load data")
+        print(" Failed to load data")
         return
     
     # 3. Select OpenWeather-compatible features
@@ -537,7 +537,7 @@ def main():
     
     # 4. Train and compare models
     print(f"\n{'='*70}")
-    print("🤖 TRAINING 3 MODELS:")
+    print(" TRAINING 3 MODELS:")
     print("   1. LightGBM")
     print("   2. XGBoost")
     print("   3. RandomForest")
@@ -546,7 +546,7 @@ def main():
     best_model = trainer.train_and_compare_models()
     
     if best_model is None:
-        print("❌ Model training failed")
+        print(" Model training failed")
         return
     
     # 5. Analyze predictions
@@ -559,29 +559,29 @@ def main():
     create_openweather_integration_code(OUTPUT_MODEL)
     
     print(f"\n{'='*70}")
-    print("🎉 TRAINING COMPLETE!")
+    print("TRAINING COMPLETE!")
     print("="*70)
     
     # Final recommendations
-    print(f"\n🚀 PRODUCTION DEPLOYMENT:")
+    print(f"\n PRODUCTION DEPLOYMENT:")
     print(f"   1. Model file: {OUTPUT_MODEL}")
     print(f"   2. OpenWeather API integration: openweather_integration.py")
     print(f"   3. Example usage: example_forecast.py")
     
-    print(f"\n💡 MODEL PERFORMANCE INTERPRETATION:")
+    print(f"\n MODEL PERFORMANCE INTERPRETATION:")
     r2 = trainer.metrics.get('r2', 0)
     if r2 > 0.8:
-        print(f"   ✅ Excellent model (R²={r2:.3f})")
+        print(f"    Excellent model (R²={r2:.3f})")
     elif r2 > 0.6:
-        print(f"   ⚠️  Good model (R²={r2:.3f}) - consider feature engineering")
+        print(f"     Good model (R²={r2:.3f}) - consider feature engineering")
     elif r2 > 0.3:
-        print(f"   ⚠️  Fair model (R²={r2:.3f}) - needs improvement")
+        print(f"     Fair model (R²={r2:.3f}) - needs improvement")
     else:
-        print(f"   ❌ Poor model (R²={r2:.3f}) - check data quality")
+        print(f"    Poor model (R²={r2:.3f}) - check data quality")
 
 def create_openweather_integration_code(model_path="solar_forecast_openweather.pkl"):
     """Create OpenWeather API integration code"""
-    print(f"\n🔧 CREATING OPENWEATHER API INTEGRATION")
+    print(f"\nCREATING OPENWEATHER API INTEGRATION")
     print("-" * 50)
     
     integration_code = '''"""
@@ -618,7 +618,7 @@ class OpenWeatherSolarForecaster:
         self.api_key = api_key
         self.base_url = "https://api.openweathermap.org/data/3.0/onecall"
         
-        print(f"✅ Loaded {self.model_name} model")
+        print(f" Loaded {self.model_name} model")
         print(f"   Performance: R²={self.metrics.get('r2', 0):.3f}")
         print(f"   Features: {len(self.feature_names)}")
     
@@ -647,7 +647,7 @@ class OpenWeatherSolarForecaster:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"❌ API Error: {e}")
+            print(f" API Error: {e}")
             return {}
     
     def convert_hourly_to_features(self, hourly_data: List[Dict]) -> pd.DataFrame:
@@ -770,19 +770,19 @@ class OpenWeatherSolarForecaster:
         Returns:
             DataFrame with solar predictions for each hour
         """
-        print(f"🌤️  Getting weather forecast for lat={lat}, lon={lon}...")
+        print(f" Getting weather forecast for lat={lat}, lon={lon}...")
         
         # Get weather forecast
         weather_data = self.get_weather_forecast(lat, lon, units='metric')
         
         if not weather_data or 'hourly' not in weather_data:
-            print("❌ No hourly forecast data available")
+            print(" No hourly forecast data available")
             return pd.DataFrame()
         
         # Get hourly data (limit to requested hours)
         hourly_data = weather_data['hourly'][:hours]
         
-        print(f"✅ Got {len(hourly_data)} hours of forecast data")
+        print(f" Got {len(hourly_data)} hours of forecast data")
         
         # Convert to features
         features_df = self.convert_hourly_to_features(hourly_data)
@@ -803,7 +803,7 @@ class OpenWeatherSolarForecaster:
             peak_kw = solar_hours['predicted_kw'].max()
             peak_hour = solar_hours.loc[solar_hours['predicted_kw'].idxmax(), 'timestamp'] if peak_kw > 0 else None
             
-            print(f"\n📊 SOLAR FORECAST SUMMARY:")
+            print(f"\n SOLAR FORECAST SUMMARY:")
             print(f"   Total {hours}h generation: {total_kwh:.1f} kWh")
             print(f"   Peak generation: {peak_kw:.2f} kW")
             if peak_hour:
@@ -831,12 +831,12 @@ if __name__ == "__main__":
     forecast = forecaster.forecast_solar(CALGARY_LAT, CALGARY_LON, hours=48)
     
     if not forecast.empty:
-        print(f"\n📅 FIRST 12 HOURS OF FORECAST:")
+        print(f"\n FIRST 12 HOURS OF FORECAST:")
         print(forecast.head(12).to_string())
         
         # Save to CSV
         forecast.to_csv('solar_forecast_48h.csv', index=False)
-        print(f"\n💾 Forecast saved to solar_forecast_48h.csv")
+        print(f"\nForecast saved to solar_forecast_48h.csv")
 '''
     
     # Save integration code
@@ -844,7 +844,7 @@ if __name__ == "__main__":
     with open(integration_path, 'w', encoding='utf-8') as f:
         f.write(integration_code)
     
-    print(f"✅ OpenWeather integration code saved to: {integration_path}")
+    print(f" OpenWeather integration code saved to: {integration_path}")
     
     # Create simple example
     example_code = '''"""
@@ -886,9 +886,9 @@ if not forecast.empty:
     with open(example_path, 'w', encoding='utf-8') as f:
         f.write(example_code)
     
-    print(f"📝 Example usage saved to: {example_path}")
+    print(f"Example usage saved to: {example_path}")
     
-    print(f"\n🔑 NEXT STEPS:")
+    print(f"\nNEXT STEPS:")
     print(f"   1. Get OpenWeather API key from: https://openweathermap.org/api")
     print(f"   2. Update API_KEY in example_forecast.py")
     print(f"   3. Run: python example_forecast.py")

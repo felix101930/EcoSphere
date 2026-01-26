@@ -35,7 +35,7 @@ def make_single_api_call():
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         weather_data = response.json()
-        print("✅ API call successful")
+        print("API call successful")
     except Exception as e:
         print(f"API Error: {e}")
         return None
@@ -150,7 +150,7 @@ def convert_to_nasa_features(next_hour_data):
 
 def load_and_predict(features_dict):
     """Load model and make prediction"""
-    print("\n🤖 LOADING MODEL AND MAKING PREDICTION")
+    print("\nLOADING MODEL AND MAKING PREDICTION")
     print("-" * 50)
     
     # Load model
@@ -162,11 +162,11 @@ def load_and_predict(features_dict):
         metrics = model_data.get('metrics', {})
         model_name = model_data.get('model_name', 'Unknown')
         
-        print(f"✅ Loaded {model_name} model")
+        print(f"Loaded {model_name} model")
         print(f"   Training R²: {metrics.get('r2', 0):.3f}")
         print(f"   Features expected: {len(feature_names)}")
     except Exception as e:
-        print(f"❌ Error loading model: {e}")
+        print(f"Error loading model: {e}")
         return None
     
     # ============================================
@@ -182,7 +182,7 @@ def load_and_predict(features_dict):
             features_df[req_feature] = 0  # Fill missing with 0
     
     if missing_features:
-        print(f"⚠️  Missing {len(missing_features)} features (filled with 0):")
+        print(f"Missing {len(missing_features)} features (filled with 0):")
         for feat in missing_features[:5]:
             print(f"   - {feat}")
         if len(missing_features) > 5:
@@ -213,7 +213,7 @@ def display_results(weather_data, features, prediction):
     dt = datetime.fromtimestamp(weather_data['hourly'][1]['dt'])
     
     print("\n" + "="*60)
-    print("🎯 TEST RESULTS: SINGLE API CALL COMPLETE")
+    print("TEST RESULTS: SINGLE API CALL COMPLETE")
     print("="*60)
     
     # Display weather conditions
@@ -229,7 +229,7 @@ def display_results(weather_data, features, prediction):
     print(f"   Daylight:       {'Yes' if features.get('is_daylight', 0) == 1 else 'No'}")
     
     # Display prediction
-    print(f"\n🔮 SOLAR GENERATION PREDICTION:")
+    print(f"\nSOLAR GENERATION PREDICTION:")
     print(f"   Predicted Output: {prediction['prediction_kw']:.2f} kW")
     
     # Confidence indicator
@@ -255,16 +255,16 @@ def display_results(weather_data, features, prediction):
     print(f"   {explanation}")
     
     # Model info
-    print(f"\n📊 MODEL INFORMATION:")
+    print(f"\nODEL INFORMATION:")
     print(f"   Model: {prediction['model_name']}")
     print(f"   Training R²: {prediction['r2_score']:.3f}")
     print(f"   Features used: {prediction['features_used']}")
     
     if prediction['missing_features'] > 0:
-        print(f"   ⚠️  Missing features: {prediction['missing_features']} (filled with 0)")
+        print(f"Missing features: {prediction['missing_features']} (filled with 0)")
     
-    print(f"\n✅ API CALLS MADE: 1")
-    print("✅ PREDICTIONS MADE: 1")
+    print(f"\nAPI CALLS MADE: 1")
+    print("PREDICTIONS MADE: 1")
     
     # Save for reference
     save_test_result(dt, features, prediction)
@@ -297,12 +297,12 @@ def save_test_result(timestamp, features, prediction):
     with open(filename, 'w') as f:
         json.dump(result, f, indent=2)
     
-    print(f"\n💾 Test result saved to: {filename}")
+    print(f"\nTest result saved to: {filename}")
 
 def main():
     """Main test function"""
     print("\n" + "="*60)
-    print("🚀 SINGLE API CALL SOLAR FORECAST TEST")
+    print("SINGLE API CALL SOLAR FORECAST TEST")
     print("   Tests NASA-trained model with OpenWeather data")
     print("="*60)
     
@@ -319,7 +319,7 @@ def main():
     # 3. Convert OpenWeather data to NASA features
     nasa_features = convert_to_nasa_features(next_hour_data)
     
-    print(f"✅ Converted {len(nasa_features)} features to NASA format")
+    print(f"Converted {len(nasa_features)} features to NASA format")
     
     # 4. Load model and make prediction
     prediction = load_and_predict(nasa_features)
@@ -330,7 +330,7 @@ def main():
     display_results(weather_data, nasa_features, prediction)
     
     print(f"\n" + "="*60)
-    print("✅ TEST COMPLETE!")
+    print("TEST COMPLETE!")
     print("="*60)
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 # src/training/train_components.py
-print("🏢 COMPONENT-BASED FORECASTING - FINAL VERSION")
+print("COMPONENT-BASED FORECASTING - FINAL VERSION")
 print("=" * 70)
 
 import os
@@ -49,15 +49,15 @@ class ComponentForecaster:
         print(f"\n📂 Loading normalized data...")
         
         if not os.path.exists(self.normalized_file):
-            print(f"❌ Normalized data not found: {self.normalized_file}")
+            print(f"Normalized data not found: {self.normalized_file}")
             return None
         
         df = pd.read_csv(self.normalized_file, parse_dates=['timestamp'])
         df.set_index('timestamp', inplace=True)
         df = df.sort_index()
         
-        print(f"✅ Loaded {len(df):,} records")
-        print(f"📅 Range: {df.index.min()} to {df.index.max()}")
+        print(f"Loaded {len(df):,} records")
+        print(f"Range: {df.index.min()} to {df.index.max()}")
         
         return df
     
@@ -97,20 +97,20 @@ class ComponentForecaster:
     
     def train_component(self, df, target_col, safe_name, display_name):
         """Train model for a single component"""
-        print(f"\n🎯 Training {display_name} ({target_col})...")
+        print(f"\nTraining {display_name} ({target_col})...")
         
         # Check if we have enough data
         if target_col not in df.columns:
-            print(f"   ❌ Column not found: {target_col}")
+            print(f" Column not found: {target_col}")
             return None
         
         component_data = df[[target_col]].dropna()
         if len(component_data) < 100:
-            print(f"   ❌ Insufficient data: {len(component_data):,} records")
+            print(f" Insufficient data: {len(component_data):,} records")
             return None
         
-        print(f"   📊 Mean: {component_data[target_col].mean():.2f} kWh")
-        print(f"   📈 Records: {len(component_data):,}")
+        print(f"   Mean: {component_data[target_col].mean():.2f} kWh")
+        print(f"   Records: {len(component_data):,}")
         
         # Create features
         component_type = 'consumption' if 'consumption' in safe_name else 'generation'
@@ -120,7 +120,7 @@ class ComponentForecaster:
         X = features_df.drop(target_col, axis=1)
         y = features_df[target_col]
         
-        print(f"   🔧 Features: {len(X.columns)}")
+        print(f"  Features: {len(X.columns)}")
         
         # Time-series cross-validation
         n_samples = len(X)
@@ -138,7 +138,7 @@ class ComponentForecaster:
             }
         }
         
-        print(f"   📐 {n_splits}-fold time-series CV")
+        print(f" {n_splits}-fold time-series CV")
         
         for fold, (train_idx, test_idx) in enumerate(tscv.split(X), 1):
             X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
@@ -184,10 +184,10 @@ class ComponentForecaster:
                     best_model_name = model_name
         
         if best_model is None:
-            print(f"   ❌ Could not train model")
+            print(f" Could not train model")
             return None
         
-        print(f"   🏆 Best: {best_model_name} (MAE: {best_score:.2f} kWh)")
+        print(f" Best: {best_model_name} (MAE: {best_score:.2f} kWh)")
         
         # Train final model on all data
         X_final = X.copy()
@@ -202,7 +202,7 @@ class ComponentForecaster:
         y_final = y_final.loc[X_final.index]
         
         if len(X_final) < 100:
-            print(f"   ❌ Insufficient data for final training")
+            print(f" Insufficient data for final training")
             return None
         
         best_model.fit(X_final, y_final)
@@ -271,8 +271,8 @@ class ComponentForecaster:
         with open(metadata_file, 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        print(f"   ✅ Model saved: {simple_file}")
-        print(f"   📊 MAPE: {metadata['test_mape']:.1f}%")
+        print(f" Model saved: {simple_file}")
+        print(f" MAPE: {metadata['test_mape']:.1f}%")
         
         return metadata
     
@@ -289,7 +289,7 @@ class ComponentForecaster:
         
         # Train consumption components
         print(f"\n{'='*70}")
-        print("🏠 TRAINING CONSUMPTION COMPONENTS")
+        print("TRAINING CONSUMPTION COMPONENTS")
         print("=" * 70)
         
         for target_col, safe_name, display_name in self.consumption_components:
@@ -301,7 +301,7 @@ class ComponentForecaster:
         
         # Train generation components
         print(f"\n{'='*70}")
-        print("☀️  TRAINING GENERATION COMPONENTS")
+        print("TRAINING GENERATION COMPONENTS")
         print("=" * 70)
         
         for target_col, safe_name, display_name in self.generation_components:
@@ -314,7 +314,7 @@ class ComponentForecaster:
         # Create summary
         if trained_models:
             print(f"\n{'='*70}")
-            print("📊 TRAINING SUMMARY")
+            print("TRAINING SUMMARY")
             print("=" * 70)
             
             summary_data = []
@@ -345,12 +345,12 @@ class ComponentForecaster:
             summary_file = os.path.join(self.models_dir, "training_summary.csv")
             summary_df.to_csv(summary_file, index=False)
             
-            print(f"\n💾 Summary saved: {summary_file}")
-            print(f"\n🎉 Successfully trained {len(trained_models)} components!")
+            print(f"\nSummary saved: {summary_file}")
+            print(f"\nSuccessfully trained {len(trained_models)} components!")
             
             # Calculate expected total accuracy
             if total_consumption_mae > 0:
-                print(f"\n📈 EXPECTED TOTAL ACCURACY:")
+                print(f"\nEXPECTED TOTAL ACCURACY:")
                 print(f"   Total Consumption MAE: {total_consumption_mae:.2f} kWh")
                 print(f"   Total Generation MAE: {total_generation_mae:.2f} kWh")
                 print(f"   Net Energy MAE: {total_consumption_mae + total_generation_mae:.2f} kWh")
@@ -358,15 +358,15 @@ class ComponentForecaster:
                 # Compare with your original model (1072.3 kWh MAE)
                 original_mae = 1072.3
                 improvement = ((original_mae - (total_consumption_mae + total_generation_mae)) / original_mae) * 100
-                print(f"\n🚀 IMPROVEMENT OVER SINGLE MODEL:")
+                print(f"\nIMPROVEMENT OVER SINGLE MODEL:")
                 print(f"   Original model MAE: {original_mae:.1f} kWh")
                 print(f"   Component model MAE: {total_consumption_mae + total_generation_mae:.1f} kWh")
                 print(f"   Improvement: {improvement:.1f}% better!")
         else:
-            print(f"\n❌ No models were successfully trained")
+            print(f"\nNo models were successfully trained")
         
         print(f"\n{'='*70}")
-        print("🎯 NEXT STEPS:")
+        print("NEXT STEPS:")
         print("=" * 70)
         print("1. Models saved in: models/components/")
         print("2. Use forecast_components.py to make predictions")

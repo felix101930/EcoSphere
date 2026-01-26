@@ -1,5 +1,5 @@
 # predict_behavioral_loads_working.py
-print("🔮 BEHAVIORAL LOADS PREDICTION - WORKING VERSION")
+print("BEHAVIORAL LOADS PREDICTION - WORKING VERSION")
 print("=" * 70)
 
 import pandas as pd
@@ -28,7 +28,7 @@ def load_simple_model():
             model_files.append(file)
     
     if not model_files:
-        print(f"❌ No model files found in {MODEL_DIR}")
+        print(f"No model files found in {MODEL_DIR}")
         # Try the production_fixed directory
         alt_dir = os.path.join(project_root, "models", "behavioral_loads_production")
         if os.path.exists(alt_dir):
@@ -37,7 +37,7 @@ def load_simple_model():
                     model_files.append(os.path.join(alt_dir, file))
     
     if not model_files:
-        print(f"❌ No model files found")
+        print(f"No model files found")
         return None
     
     # Use the first model
@@ -61,7 +61,7 @@ def load_simple_model():
             metrics = {}
             model_type = type(model).__name__
         
-        print(f"✅ Model type: {model_type}")
+        print(f"Model type: {model_type}")
         print(f"   Features: {len(feature_names) if feature_names else 'unknown'}")
         
         if metrics.get('test_r2'):
@@ -77,7 +77,7 @@ def load_simple_model():
         }
         
     except Exception as e:
-        print(f"❌ Error loading model: {e}")
+        print(f"Error loading model: {e}")
         return None
 
 def create_features_for_prediction(feature_names=None, load_type='appliances'):
@@ -182,7 +182,7 @@ def make_prediction(model_data, load_type='appliances'):
         prediction = model.predict(X_pred)[0]
         return prediction
     except Exception as e:
-        print(f"❌ Prediction error: {e}")
+        print(f"Prediction error: {e}")
         # Try without feature ordering
         try:
             prediction = model.predict(X_pred)[0]
@@ -195,7 +195,7 @@ def main():
     # Load model
     model_data = load_simple_model()
     if not model_data:
-        print(f"\n⚠️  Trying alternative approach...")
+        print(f"\nTrying alternative approach...")
         
         # Try to load from the production directory
         prod_dir = os.path.join(project_root, "models", "behavioral_loads_production")
@@ -215,14 +215,14 @@ def main():
                             }
                             print(f"✅ Loaded best model")
                     except Exception as e:
-                        print(f"❌ Error: {e}")
+                        print(f"Error: {e}")
         
         if not model_data:
-            print(f"❌ Could not load any model")
+            print(f"Could not load any model")
             return
     
     # Make predictions for all load types
-    print(f"\n🔮 MAKING PREDICTIONS")
+    print(f"\nMAKING PREDICTIONS")
     print("-" * 50)
     
     now = datetime.now()
@@ -256,19 +256,19 @@ def main():
         # Calculate total
         total = sum(p['predicted_kwh'] for p in predictions)
         
-        print(f"\n📊 TOTAL PREDICTED CONSUMPTION: {total:.2f} kWh")
+        print(f"\nTOTAL PREDICTED CONSUMPTION: {total:.2f} kWh")
         
         # Find highest and lowest
         if len(predictions) > 1:
             max_load = max(predictions, key=lambda x: x['predicted_kwh'])
             min_load = min(predictions, key=lambda x: x['predicted_kwh'])
             
-            print(f"\n📈 HIGHEST: {max_load['load_type']} ({max_load['predicted_kwh']:.2f} kWh)")
-            print(f"📉 LOWEST:  {min_load['load_type']} ({min_load['predicted_kwh']:.2f} kWh)")
+            print(f"\nHIGHEST: {max_load['load_type']} ({max_load['predicted_kwh']:.2f} kWh)")
+            print(f"LOWEST:  {min_load['load_type']} ({min_load['predicted_kwh']:.2f} kWh)")
         
         # Time-based recommendations
         hour = now.hour
-        print(f"\n🎯 RECOMMENDATIONS:")
+        print(f"\nRECOMMENDATIONS:")
         
         if 17 <= hour <= 21:
             print("   • Evening peak hours - reduce non-essential loads")
@@ -276,7 +276,7 @@ def main():
             print("   • Night hours - good for scheduled tasks")
         
         if total > 8:
-            print("   • ⚠️  High total consumption - consider energy saving")
+            print("   • High total consumption - consider energy saving")
         
         # Save predictions
         predictions_df = pd.DataFrame(predictions)
@@ -289,11 +289,11 @@ def main():
         predictions_df.to_csv(output_path, index=False)
         predictions_df.to_csv(root_output, index=False)
         
-        print(f"\n✅ Predictions saved to:")
+        print(f"\nPredictions saved to:")
         print(f"   {output_path}")
         print(f"   {root_output}")
     
-    print(f"\n✅ Prediction completed!")
+    print(f"\nPrediction completed!")
 
 if __name__ == "__main__":
     main()
