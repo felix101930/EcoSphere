@@ -3,14 +3,14 @@
     "2026-01-26": [
       {
         "hour": 14,
-        "timestamp": "2026-01-26T14:00:17.259267",
-        "uv_index": 0.92,
-        "temperature_c": -7.1,
-        "humidity_pct": 74,
+        "timestamp": "2026-01-26T14:42:17.460067",
+        "uv_index": 0.55,
+        "temperature_c": -7.44,
+        "humidity_pct": 76,
         "pressure_kpa": 102.1,
-        "dew_point_c": -10.52,
-        "wind_speed_ms": 2.5,
-        "wind_direction_deg": 141,
+        "dew_point_c": -10.55,
+        "wind_speed_ms": 2.98,
+        "wind_direction_deg": 133,
         "clouds_pct": 75,
         "visibility_m": 10000,
         "precipitation_mmh": 0,
@@ -20,14 +20,14 @@
       },
       {
         "hour": 15,
-        "timestamp": "2026-01-26T15:00:17.259267",
-        "uv_index": 0.55,
-        "temperature_c": -6.84,
-        "humidity_pct": 76,
+        "timestamp": "2026-01-26T15:42:17.460067",
+        "uv_index": 0.21,
+        "temperature_c": -7.02,
+        "humidity_pct": 78,
         "pressure_kpa": 102.1,
-        "dew_point_c": -9.97,
-        "wind_speed_ms": 2.98,
-        "wind_direction_deg": 133,
+        "dew_point_c": -9.85,
+        "wind_speed_ms": 2.9,
+        "wind_direction_deg": 126,
         "clouds_pct": 80,
         "visibility_m": 10000,
         "precipitation_mmh": 0,
@@ -37,14 +37,14 @@
       },
       {
         "hour": 16,
-        "timestamp": "2026-01-26T16:00:17.259267",
-        "uv_index": 0.21,
-        "temperature_c": -6.35,
-        "humidity_pct": 80,
+        "timestamp": "2026-01-26T16:42:17.460067",
+        "uv_index": 0,
+        "temperature_c": -6.57,
+        "humidity_pct": 82,
         "pressure_kpa": 102.2,
-        "dew_point_c": -8.91,
-        "wind_speed_ms": 2.9,
-        "wind_direction_deg": 126,
+        "dew_point_c": -8.84,
+        "wind_speed_ms": 2.68,
+        "wind_direction_deg": 141,
         "clouds_pct": 85,
         "visibility_m": 10000,
         "precipitation_mmh": 0,
@@ -54,32 +54,15 @@
       },
       {
         "hour": 17,
-        "timestamp": "2026-01-26T17:00:17.259267",
+        "timestamp": "2026-01-26T17:42:17.460067",
         "uv_index": 0,
-        "temperature_c": -5.96,
-        "humidity_pct": 85,
+        "temperature_c": -6.34,
+        "humidity_pct": 87,
         "pressure_kpa": 102.3,
-        "dew_point_c": -7.83,
-        "wind_speed_ms": 2.68,
-        "wind_direction_deg": 141,
-        "clouds_pct": 90,
-        "visibility_m": 10000,
-        "precipitation_mmh": 0,
-        "weather_main": "Clouds",
-        "weather_description": "overcast clouds",
-        "is_daylight": 1
-      },
-      {
-        "hour": 18,
-        "timestamp": "2026-01-26T18:00:17.259267",
-        "uv_index": 0,
-        "temperature_c": -5.89,
-        "humidity_pct": 90,
-        "pressure_kpa": 102.4,
-        "dew_point_c": -7.11,
+        "dew_point_c": -7.94,
         "wind_speed_ms": 1.96,
         "wind_direction_deg": 135,
-        "clouds_pct": 95,
+        "clouds_pct": 90,
         "visibility_m": 5762,
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
@@ -87,16 +70,16 @@
         "is_daylight": 1
       },
       {
-        "hour": 19,
-        "timestamp": "2026-01-26T19:00:17.259267",
+        "hour": 18,
+        "timestamp": "2026-01-26T18:42:17.460067",
         "uv_index": 0,
-        "temperature_c": -4.85,
-        "humidity_pct": 99,
-        "pressure_kpa": 102.6,
-        "dew_point_c": -13.52,
+        "temperature_c": -5.51,
+        "humidity_pct": 92,
+        "pressure_kpa": 102.5,
+        "dew_point_c": -6.48,
         "wind_speed_ms": 1.66,
         "wind_direction_deg": 128,
-        "clouds_pct": 100,
+        "clouds_pct": 95,
         "visibility_m": 4629,
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
@@ -104,8 +87,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 20,
-        "timestamp": "2026-01-26T20:00:17.259267",
+        "hour": 19,
+        "timestamp": "2026-01-26T19:42:17.460067",
         "uv_index": 0,
         "temperature_c": -4.46,
         "humidity_pct": 100,
@@ -121,8 +104,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 21,
-        "timestamp": "2026-01-26T21:00:17.259267",
+        "hour": 20,
+        "timestamp": "2026-01-26T20:42:17.460067",
         "uv_index": 0,
         "temperature_c": -5.54,
         "humidity_pct": 99,
@@ -138,8 +121,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 22,
-        "timestamp": "2026-01-26T22:00:17.259267",
+        "hour": 21,
+        "timestamp": "2026-01-26T21:42:17.460067",
         "uv_index": 0,
         "temperature_c": -6.9,
         "humidity_pct": 99,
@@ -152,11 +135,11 @@
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
         "weather_description": "overcast clouds",
-        "is_daylight": 0
+        "is_daylight": 1
       },
       {
-        "hour": 23,
-        "timestamp": "2026-01-26T23:00:17.259267",
+        "hour": 22,
+        "timestamp": "2026-01-26T22:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.38,
         "humidity_pct": 98,
@@ -170,12 +153,10 @@
         "weather_main": "Clouds",
         "weather_description": "overcast clouds",
         "is_daylight": 0
-      }
-    ],
-    "2026-01-27": [
+      },
       {
-        "hour": 0,
-        "timestamp": "2026-01-27T00:00:17.259267",
+        "hour": 23,
+        "timestamp": "2026-01-26T23:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.98,
         "humidity_pct": 98,
@@ -189,10 +170,12 @@
         "weather_main": "Clouds",
         "weather_description": "overcast clouds",
         "is_daylight": 0
-      },
+      }
+    ],
+    "2026-01-27": [
       {
-        "hour": 1,
-        "timestamp": "2026-01-27T01:00:17.259267",
+        "hour": 0,
+        "timestamp": "2026-01-27T00:42:17.460067",
         "uv_index": 0,
         "temperature_c": -8.31,
         "humidity_pct": 97,
@@ -208,8 +191,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 2,
-        "timestamp": "2026-01-27T02:00:17.259267",
+        "hour": 1,
+        "timestamp": "2026-01-27T01:42:17.460067",
         "uv_index": 0,
         "temperature_c": -9.3,
         "humidity_pct": 97,
@@ -225,8 +208,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 3,
-        "timestamp": "2026-01-27T03:00:17.259267",
+        "hour": 2,
+        "timestamp": "2026-01-27T02:42:17.460067",
         "uv_index": 0,
         "temperature_c": -10.17,
         "humidity_pct": 95,
@@ -242,8 +225,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 4,
-        "timestamp": "2026-01-27T04:00:17.259267",
+        "hour": 3,
+        "timestamp": "2026-01-27T03:42:17.460067",
         "uv_index": 0,
         "temperature_c": -9.99,
         "humidity_pct": 93,
@@ -259,8 +242,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 5,
-        "timestamp": "2026-01-27T05:00:17.259267",
+        "hour": 4,
+        "timestamp": "2026-01-27T04:42:17.460067",
         "uv_index": 0,
         "temperature_c": -10.27,
         "humidity_pct": 91,
@@ -276,8 +259,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 6,
-        "timestamp": "2026-01-27T06:00:17.259267",
+        "hour": 5,
+        "timestamp": "2026-01-27T05:42:17.460067",
         "uv_index": 0,
         "temperature_c": -12.66,
         "humidity_pct": 90,
@@ -290,11 +273,11 @@
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
         "weather_description": "few clouds",
-        "is_daylight": 1
+        "is_daylight": 0
       },
       {
-        "hour": 7,
-        "timestamp": "2026-01-27T07:00:17.259267",
+        "hour": 6,
+        "timestamp": "2026-01-27T06:42:17.460067",
         "uv_index": 0,
         "temperature_c": -12.43,
         "humidity_pct": 89,
@@ -310,8 +293,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 8,
-        "timestamp": "2026-01-27T08:00:17.259267",
+        "hour": 7,
+        "timestamp": "2026-01-27T07:42:17.460067",
         "uv_index": 0,
         "temperature_c": -12.19,
         "humidity_pct": 89,
@@ -327,8 +310,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 9,
-        "timestamp": "2026-01-27T09:00:17.259267",
+        "hour": 8,
+        "timestamp": "2026-01-27T08:42:17.460067",
         "uv_index": 0.12,
         "temperature_c": -11.08,
         "humidity_pct": 87,
@@ -344,8 +327,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 10,
-        "timestamp": "2026-01-27T10:00:17.259267",
+        "hour": 9,
+        "timestamp": "2026-01-27T09:42:17.460067",
         "uv_index": 0.5,
         "temperature_c": -7.39,
         "humidity_pct": 81,
@@ -361,8 +344,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 11,
-        "timestamp": "2026-01-27T11:00:17.259267",
+        "hour": 10,
+        "timestamp": "2026-01-27T10:42:17.460067",
         "uv_index": 0.91,
         "temperature_c": -4.73,
         "humidity_pct": 77,
@@ -378,8 +361,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 12,
-        "timestamp": "2026-01-27T12:00:17.259267",
+        "hour": 11,
+        "timestamp": "2026-01-27T11:42:17.460067",
         "uv_index": 1.24,
         "temperature_c": -2.75,
         "humidity_pct": 74,
@@ -395,8 +378,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 13,
-        "timestamp": "2026-01-27T13:00:17.259267",
+        "hour": 12,
+        "timestamp": "2026-01-27T12:42:17.460067",
         "uv_index": 1.27,
         "temperature_c": -1.33,
         "humidity_pct": 73,
@@ -412,8 +395,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 14,
-        "timestamp": "2026-01-27T14:00:17.259267",
+        "hour": 13,
+        "timestamp": "2026-01-27T13:42:17.460067",
         "uv_index": 1.04,
         "temperature_c": -0.46,
         "humidity_pct": 75,
@@ -429,8 +412,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 15,
-        "timestamp": "2026-01-27T15:00:17.259267",
+        "hour": 14,
+        "timestamp": "2026-01-27T14:42:17.460067",
         "uv_index": 0.63,
         "temperature_c": -0.52,
         "humidity_pct": 82,
@@ -446,8 +429,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 16,
-        "timestamp": "2026-01-27T16:00:17.259267",
+        "hour": 15,
+        "timestamp": "2026-01-27T15:42:17.460067",
         "uv_index": 0.25,
         "temperature_c": -2.42,
         "humidity_pct": 86,
@@ -463,8 +446,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 17,
-        "timestamp": "2026-01-27T17:00:17.259267",
+        "hour": 16,
+        "timestamp": "2026-01-27T16:42:17.460067",
         "uv_index": 0,
         "temperature_c": -5.32,
         "humidity_pct": 86,
@@ -480,8 +463,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 18,
-        "timestamp": "2026-01-27T18:00:17.259267",
+        "hour": 17,
+        "timestamp": "2026-01-27T17:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.13,
         "humidity_pct": 87,
@@ -497,8 +480,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 19,
-        "timestamp": "2026-01-27T19:00:17.259267",
+        "hour": 18,
+        "timestamp": "2026-01-27T18:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.95,
         "humidity_pct": 89,
@@ -514,8 +497,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 20,
-        "timestamp": "2026-01-27T20:00:17.259267",
+        "hour": 19,
+        "timestamp": "2026-01-27T19:42:17.460067",
         "uv_index": 0,
         "temperature_c": -8.1,
         "humidity_pct": 90,
@@ -531,8 +514,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 21,
-        "timestamp": "2026-01-27T21:00:17.259267",
+        "hour": 20,
+        "timestamp": "2026-01-27T20:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.51,
         "humidity_pct": 89,
@@ -548,8 +531,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 22,
-        "timestamp": "2026-01-27T22:00:17.259267",
+        "hour": 21,
+        "timestamp": "2026-01-27T21:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.39,
         "humidity_pct": 88,
@@ -562,11 +545,11 @@
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
         "weather_description": "broken clouds",
-        "is_daylight": 0
+        "is_daylight": 1
       },
       {
-        "hour": 23,
-        "timestamp": "2026-01-27T23:00:17.259267",
+        "hour": 22,
+        "timestamp": "2026-01-27T22:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.91,
         "humidity_pct": 87,
@@ -580,12 +563,10 @@
         "weather_main": "Clouds",
         "weather_description": "broken clouds",
         "is_daylight": 0
-      }
-    ],
-    "2026-01-28": [
+      },
       {
-        "hour": 0,
-        "timestamp": "2026-01-28T00:00:17.259267",
+        "hour": 23,
+        "timestamp": "2026-01-27T23:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.78,
         "humidity_pct": 86,
@@ -599,10 +580,12 @@
         "weather_main": "Clouds",
         "weather_description": "overcast clouds",
         "is_daylight": 0
-      },
+      }
+    ],
+    "2026-01-28": [
       {
-        "hour": 1,
-        "timestamp": "2026-01-28T01:00:17.259267",
+        "hour": 0,
+        "timestamp": "2026-01-28T00:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.59,
         "humidity_pct": 86,
@@ -618,8 +601,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 2,
-        "timestamp": "2026-01-28T02:00:17.259267",
+        "hour": 1,
+        "timestamp": "2026-01-28T01:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.3,
         "humidity_pct": 87,
@@ -635,8 +618,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 3,
-        "timestamp": "2026-01-28T03:00:17.259267",
+        "hour": 2,
+        "timestamp": "2026-01-28T02:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.71,
         "humidity_pct": 88,
@@ -652,8 +635,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 4,
-        "timestamp": "2026-01-28T04:00:17.259267",
+        "hour": 3,
+        "timestamp": "2026-01-28T03:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.25,
         "humidity_pct": 88,
@@ -669,8 +652,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 5,
-        "timestamp": "2026-01-28T05:00:17.259267",
+        "hour": 4,
+        "timestamp": "2026-01-28T04:42:17.460067",
         "uv_index": 0,
         "temperature_c": -7.19,
         "humidity_pct": 89,
@@ -686,8 +669,8 @@
         "is_daylight": 0
       },
       {
-        "hour": 6,
-        "timestamp": "2026-01-28T06:00:17.259267",
+        "hour": 5,
+        "timestamp": "2026-01-28T05:42:17.460067",
         "uv_index": 0,
         "temperature_c": -6.86,
         "humidity_pct": 90,
@@ -700,11 +683,11 @@
         "precipitation_mmh": 0,
         "weather_main": "Clouds",
         "weather_description": "overcast clouds",
-        "is_daylight": 1
+        "is_daylight": 0
       },
       {
-        "hour": 7,
-        "timestamp": "2026-01-28T07:00:17.259267",
+        "hour": 6,
+        "timestamp": "2026-01-28T06:42:17.460067",
         "uv_index": 0,
         "temperature_c": -6.69,
         "humidity_pct": 91,
@@ -720,8 +703,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 8,
-        "timestamp": "2026-01-28T08:00:17.259267",
+        "hour": 7,
+        "timestamp": "2026-01-28T07:42:17.460067",
         "uv_index": 0,
         "temperature_c": -6.72,
         "humidity_pct": 92,
@@ -737,8 +720,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 9,
-        "timestamp": "2026-01-28T09:00:17.259267",
+        "hour": 8,
+        "timestamp": "2026-01-28T08:42:17.460067",
         "uv_index": 0.11,
         "temperature_c": -6.22,
         "humidity_pct": 90,
@@ -754,8 +737,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 10,
-        "timestamp": "2026-01-28T10:00:17.259267",
+        "hour": 9,
+        "timestamp": "2026-01-28T09:42:17.460067",
         "uv_index": 0.43,
         "temperature_c": -5.59,
         "humidity_pct": 88,
@@ -771,8 +754,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 11,
-        "timestamp": "2026-01-28T11:00:17.259267",
+        "hour": 10,
+        "timestamp": "2026-01-28T10:42:17.460067",
         "uv_index": 0.76,
         "temperature_c": -4.76,
         "humidity_pct": 86,
@@ -788,8 +771,8 @@
         "is_daylight": 1
       },
       {
-        "hour": 12,
-        "timestamp": "2026-01-28T12:00:17.259267",
+        "hour": 11,
+        "timestamp": "2026-01-28T11:42:17.460067",
         "uv_index": 1,
         "temperature_c": -3.95,
         "humidity_pct": 85,
@@ -805,8 +788,25 @@
         "is_daylight": 1
       },
       {
+        "hour": 12,
+        "timestamp": "2026-01-28T12:42:17.460067",
+        "uv_index": 0.96,
+        "temperature_c": -3.06,
+        "humidity_pct": 85,
+        "pressure_kpa": 102.0,
+        "dew_point_c": -5.52,
+        "wind_speed_ms": 1.66,
+        "wind_direction_deg": 162,
+        "clouds_pct": 100,
+        "visibility_m": 10000,
+        "precipitation_mmh": 0,
+        "weather_main": "Clouds",
+        "weather_description": "overcast clouds",
+        "is_daylight": 1
+      },
+      {
         "hour": 13,
-        "timestamp": "2026-01-28T13:00:17.259267",
+        "timestamp": "2026-01-28T13:42:17.460067",
         "uv_index": 0.96,
         "temperature_c": -3.06,
         "humidity_pct": 85,
@@ -823,7 +823,7 @@
       }
     ]
   },
-  "cached_at": "2026-01-26T14:00:17.774060",
+  "cached_at": "2026-01-26T14:42:17.858102",
   "lat": 51.0447,
   "lon": -114.0719,
   "date_range": "2026-01-26_2026-01-28"

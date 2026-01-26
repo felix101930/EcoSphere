@@ -306,7 +306,7 @@ const HourlyForecastTable = ({ forecastData, title = "Hourly Forecast Details" }
       {/* Summary Statistics */}
       <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          📊 Hourly Summary
+          Hourly Summary
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
           <Box>

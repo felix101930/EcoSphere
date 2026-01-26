@@ -40,7 +40,7 @@ class MLForecastService {
       // Check if we have valid cached data (unless force refresh)
       if (useCache && !forceFresh && this.isCacheValid()) {
         console.log(
-          `📦 Using cached 48-hour dataset (age: ${Math.round((Date.now() - this.cacheTimestamp) / 1000)}s)`,
+          `Using cached 48-hour dataset (age: ${Math.round((Date.now() - this.cacheTimestamp) / 1000)}s)`,
         );
         return this.fullDatasetCache;
       }
@@ -54,7 +54,7 @@ class MLForecastService {
       const adjustedDateTo = end.toISOString().split("T")[0];
 
       console.log(
-        `📡 Fetching 48-hour forecast: ${adjustedDateFrom} to ${adjustedDateTo}`,
+        `Fetching 48-hour forecast: ${adjustedDateFrom} to ${adjustedDateTo}`,
       );
 
       // Build query parameters
@@ -100,9 +100,9 @@ class MLForecastService {
       this.cacheTimestamp = Date.now();
 
       console.log(
-        `✅ 48-hour dataset loaded: ${result.data?.length || 0} predictions`,
+        `48-hour dataset loaded: ${result.data?.length || 0} predictions`,
       );
-      console.log(`💾 Cached for ${this.CACHE_DURATION / 60000} minutes`);
+      console.log(`Cached for ${this.CACHE_DURATION / 60000} minutes`);
 
       return this.fullDatasetCache;
     } catch (error) {
@@ -110,7 +110,7 @@ class MLForecastService {
 
       // If cache exists but API failed, return cached data
       if (this.fullDatasetCache && !forceFresh) {
-        console.log("⚠️ API failed, using cached data");
+        console.log("API failed, using cached data");
         return this.fullDatasetCache;
       }
 
@@ -143,25 +143,18 @@ class MLForecastService {
     console.log(
       `🔍 Filtering ${forecast.data.length} data points for ${hours} hours`,
     );
-    console.log(`⏰ Current time: ${now.toLocaleTimeString()}`);
+    console.log(`Current time: ${now.toLocaleTimeString()}`);
+    console.log(
+      `Total available daylight hours in backend response: ${forecast.data.length}`,
+    );
 
     // Filter: only future predictions starting from next hour
     const filteredData = forecast.data
       .filter((item) => {
         const itemTime = new Date(item.timestamp);
 
-        // Skip if in the past
-        if (itemTime < now) {
-          console.log(`⏪ Skipping past hour: ${itemTime.toLocaleString()}`);
-          return false;
-        }
-
-        // Skip current hour if more than 30 minutes have passed
-        const isCurrentHour = itemTime.getHours() === currentHour;
-        if (isCurrentHour && currentMinute > 30) {
-          console.log(
-            `⏳ Skipping current hour (over 30 min passed): ${itemTime.toLocaleTimeString()}`,
-          );
+        // Skip if in the past (before current hour)
+        if (itemTime.getTime() < now.getTime() - currentMinute * 60 * 1000) {
           return false;
         }
 
@@ -169,22 +162,29 @@ class MLForecastService {
       })
       .slice(0, hours); // Take only requested hours
 
-    console.log(`✅ Filtered to ${filteredData.length} hours`);
+    console.log(
+      `Filtered to ${filteredData.length} hours (requested: ${hours})`,
+    );
+    if (filteredData.length < hours) {
+      console.log(
+        `Available hours (${filteredData.length}) less than requested (${hours})`,
+      );
+    }
 
     // Debug: Check if we have empty data in the filtered result
     if (filteredData.length > 0) {
       console.log(
-        `📊 First hour: ${new Date(filteredData[0].timestamp).toLocaleString()} - ${filteredData[0].predicted_kw}kW`,
+        `First hour: ${new Date(filteredData[0].timestamp).toLocaleString()} - ${filteredData[0].predicted_kw}kW`,
       );
       console.log(
-        `📊 Last hour: ${new Date(filteredData[filteredData.length - 1].timestamp).toLocaleString()} - ${filteredData[filteredData.length - 1].predicted_kw}kW`,
+        `Last hour: ${new Date(filteredData[filteredData.length - 1].timestamp).toLocaleString()} - ${filteredData[filteredData.length - 1].predicted_kw}kW`,
       );
 
       // Check for empty hours in the middle
       filteredData.forEach((item, index) => {
         if (!item.weather || Object.keys(item.weather).length === 0) {
           console.log(
-            `⚠️ Empty weather at index ${index}: ${new Date(item.timestamp).toLocaleTimeString()}`,
+            `Empty weather at index ${index}: ${new Date(item.timestamp).toLocaleTimeString()}`,
           );
         }
       });
@@ -229,7 +229,7 @@ class MLForecastService {
       const lastItem = filteredData[filteredData.length - 1];
       if (!lastItem.weather || Object.keys(lastItem.weather).length === 0) {
         console.log(
-          `🔧 Fixing empty weather for last hour: ${new Date(lastItem.timestamp).toLocaleString()}`,
+          `Fixing empty weather for last hour: ${new Date(lastItem.timestamp).toLocaleString()}`,
         );
 
         // Try to find weather data from previous hours
@@ -240,7 +240,7 @@ class MLForecastService {
 
         if (previousItemWithWeather) {
           lastItem.weather = { ...previousItemWithWeather.weather };
-          console.log(`✅ Fixed last hour weather using previous data`);
+          console.log(`Fixed last hour weather using previous data`);
         } else {
           // Use default weather values
           lastItem.weather = {
@@ -299,7 +299,7 @@ class MLForecastService {
    * Get fallback forecast when ML service fails
    */
   getFallbackForecast() {
-    console.log("⚠️ Using fallback forecast data");
+    console.log("Using fallback forecast data");
 
     // Generate 48 hours of fallback data
     const hourlyData = [];
@@ -412,7 +412,7 @@ class MLForecastService {
    * Format forecast for charts with weather data
    */
   formatForecastForCharts(forecastData) {
-    console.log("📈 Formatting forecast for charts:", forecastData);
+    console.log("Formatting forecast for charts:", forecastData);
 
     if (!forecastData || !forecastData.data || forecastData.data.length === 0) {
       console.warn("No forecast data to format");
@@ -425,7 +425,7 @@ class MLForecastService {
     }
 
     const limitedData = forecastData.data;
-    console.log(`📊 Formatting ${limitedData.length} data points`);
+    console.log(`Formatting ${limitedData.length} data points`);
 
     const hourly = limitedData.map((item) => ({
       timestamp: new Date(item.timestamp),
@@ -462,7 +462,7 @@ class MLForecastService {
         })),
     };
 
-    console.log("🌤️ Weather series counts:", {
+    console.log("Weather series counts:", {
       uv_index: weatherSeries.uv_index.length,
       cloud_cover: weatherSeries.cloud_cover.length,
       temperature: weatherSeries.temperature.length,
@@ -559,7 +559,7 @@ class MLForecastService {
   clearCache() {
     this.fullDatasetCache = null;
     this.cacheTimestamp = null;
-    console.log("🗑️ Cleared ML forecast cache");
+    console.log("Cleared ML forecast cache");
   }
 
   /**

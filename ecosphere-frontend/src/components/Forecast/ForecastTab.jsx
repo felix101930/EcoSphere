@@ -47,7 +47,6 @@ const [mlError, setMlError] = useState(null);
 const [forecastHours, setForecastHours] = useState(24);
 const [customHoursInput, setCustomHoursInput] = useState('');
 const [showCustomInput, setShowCustomInput] = useState(false);
-const [forceRefresh, setForceRefresh] = useState(false);
 const [apiStats, setApiStats] = useState(null);
 const [showHourlyTable, setShowHourlyTable] = useState(false);
 
@@ -58,7 +57,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
   { value: 12, label: "Next 12 Hours", hours: 12 },
   { value: 24, label: "Next 24 Hours", hours: 24 },
   { value: 48, label: "Next 48 Hours", hours: 48 },
-  { value: "custom", label: "Custom Hours (1-30)" },
+  { value: "custom", label: "Custom Hours (1-32)" },
 ];
 
     // Custom hook for historical forecasts
@@ -90,8 +89,8 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
     setCustomHoursInput(value);
     
     if (value && !isNaN(value) && value > 0) {
-        // Limit to 30 hours maximum
-        const hours = Math.min(Math.max(1, parseInt(value)), 30);
+        // Limit to 32 hours maximum
+        const hours = Math.min(Math.max(1, parseInt(value)), 32);
         setForecastHours(hours);
         // Apply filter if data exists
         if (mlForecast) {
@@ -160,8 +159,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                     endDateStr,
                     {
                         useWeather: true,
-                        forceFresh: forceRefresh,
-                        useCache: !forceRefresh,
+                        useCache: true,
                         coordinates: { lat: 51.0447, lon: -114.0719 }
                     }
                 );
@@ -179,9 +177,6 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                     if (forecast.model_info?.weather_integrated) {
                         console.log(`🌤️ Weather data: Integrated`);
                     }
-                    
-                    // Clear force refresh
-                    setForceRefresh(false);
                 } else {
                     setMlError('ML forecast service returned no data');
                 }
@@ -194,20 +189,14 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
         }
     };
 
-    // Handle force refresh
-    const handleForceRefresh = () => {
-        setForceRefresh(true);
-        handleGenerateForecast();
-    };
-
     // Handle forecast hours dropdown change
     const handleForecastHoursChange = (e) => {
     const value = e.target.value;
     
     if (value === "custom") {
         setShowCustomInput(true);
-        setCustomHoursInput("");
-        setForecastHours(12); // Set a reasonable default
+        setCustomHoursInput("1");
+        setForecastHours(1); // Set default to 1 hour
     } else {
         setShowCustomInput(false);
         const hours = parseInt(value);
@@ -330,19 +319,19 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                                 {showCustomInput && (
                                 <Grid item xs={12} sm={6} md={4}>
                                     <TextField
-                                    label="Custom Hours (1-30)"
+                                    label="Custom Hours (1-32)"
                                     type="number"
                                     value={customHoursInput}
                                     onChange={handleCustomHoursInput}
                                     fullWidth
                                     inputProps={{ 
                                         min: 1, 
-                                        max: 30,
+                                        max: 32,
                                         step: 1 
                                     }}
-                                    helperText={`Max 30 hours for meaningful results`}
+                                    helperText={`Max 32 hours for meaningful results`}
                                     autoFocus
-                                    error={customHoursInput && (parseInt(customHoursInput) < 1 || parseInt(customHoursInput) > 30)}
+                                    error={customHoursInput && (parseInt(customHoursInput) < 1 || parseInt(customHoursInput) > 32)}
                                     />
                                 </Grid>
                                 )}
@@ -360,20 +349,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                                     </Button>
                                 </Grid>
 
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <Tooltip title="Force refresh forecast and bypass cache">
-                                        <Button
-                                            variant="outlined"
-                                            onClick={handleForceRefresh}
-                                            disabled={mlLoading}
-                                            fullWidth
-                                            sx={{ height: '56px' }}
-                                            startIcon={<RefreshIcon />}
-                                        >
-                                            Force Refresh
-                                        </Button>
-                                    </Tooltip>
-                                </Grid>
+
                             </Grid>
                         </>
                     )}
@@ -493,7 +469,7 @@ const [showHourlyTable, setShowHourlyTable] = useState(false);
                                     <CardContent>
                                         <HourlyForecastTable 
                                             forecastData={displayForecast}
-                                            title={`Hourly Forecast (${displayForecast.summary?.actual_hours_shown || 0} hours)`}
+                                            title={`Hourly Forecast (${displayForecast.summary?.actual_hours_shown || 0} hour${(displayForecast.summary?.actual_hours_shown || 0) === 1 ? '' : 's'})`}
                                         />
                                     </CardContent>
                                 </Card>

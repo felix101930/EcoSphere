@@ -1,6 +1,6 @@
 {
   "today": "2026-01-26",
-  "calls_today": 1,
+  "calls_today": 3,
   "last_reset": "2026-01-26T14:00:04.893214",
   "history": [
     {
@@ -190,6 +190,16 @@
     },
     {
       "timestamp": "2026-01-26T14:00:17.772289",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-26T14:28:14.756953",
+      "endpoint": "onecall",
+      "success": true
+    },
+    {
+      "timestamp": "2026-01-26T14:42:17.856209",
       "endpoint": "onecall",
       "success": true
     }
