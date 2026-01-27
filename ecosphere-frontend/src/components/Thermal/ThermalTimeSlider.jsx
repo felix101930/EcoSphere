@@ -1,7 +1,7 @@
 // Thermal Time Slider - Control time navigation
-import { Box, Slider, IconButton, Typography, CircularProgress } from '@mui/material';
-import { 
-  PlayArrow as PlayIcon, 
+import { Box, Slider, IconButton, Typography, CircularProgress, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  PlayArrow as PlayIcon,
   Pause as PauseIcon,
   SkipPrevious as PrevIcon,
   SkipNext as NextIcon
@@ -11,10 +11,15 @@ import { TIME_CONTROL_CONFIG, UI_CONFIG } from '../../lib/constants/thermal';
 
 const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime, mode = 'single', dateList = [], detailData = {}, sensorIds = [], loading = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(TIME_CONTROL_CONFIG.DEFAULT_PLAYBACK_SPEED);
 
   // Auto-play functionality
   useEffect(() => {
     if (!isPlaying) return;
+
+    // Get animation speed based on current playback speed
+    const speedConfig = TIME_CONTROL_CONFIG.PLAYBACK_SPEEDS.find(s => s.value === playbackSpeed);
+    const animationSpeed = speedConfig ? speedConfig.speed : TIME_CONTROL_CONFIG.ANIMATION_SPEED_SINGLE;
 
     const interval = setInterval(() => {
       onIndexChange((prev) => {
@@ -24,10 +29,10 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
         }
         return prev + 1;
       });
-    }, TIME_CONTROL_CONFIG.ANIMATION_SPEED_SINGLE); // Same speed for both modes
+    }, animationSpeed);
 
     return () => clearInterval(interval);
-  }, [isPlaying, maxIndex, onIndexChange]);
+  }, [isPlaying, maxIndex, onIndexChange, playbackSpeed]);
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -48,6 +53,12 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
     onIndexChange(newValue);
   };
 
+  const handleSpeedChange = (event, newSpeed) => {
+    if (newSpeed !== null) {
+      setPlaybackSpeed(newSpeed);
+    }
+  };
+
   // Generate marks based on mode
   const generateMarks = () => {
     if (mode === 'single') {
@@ -55,23 +66,23 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
     } else {
       // For multiple days mode, show date marks at day boundaries
       if (dateList.length === 0 || Object.keys(detailData).length === 0) return [];
-      
+
       const marks = [];
       let cumulativeIndex = 0;
-      
+
       dateList.forEach((date) => {
         const dateObj = new Date(date + 'T00:00:00');
         const label = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        
+
         // Add mark at the start of each day
         marks.push({ value: cumulativeIndex, label });
-        
+
         // Calculate cumulative index for next day
         if (detailData[date] && detailData[date][sensorIds[0]]) {
           cumulativeIndex += detailData[date][sensorIds[0]].length;
         }
       });
-      
+
       return marks;
     }
   };
@@ -104,42 +115,42 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
           </Typography>
         </Box>
       )}
-      
+
       <Typography variant="h6" gutterBottom>
         ⏱️ Time Control
       </Typography>
-      
+
       {/* Control buttons */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, opacity: loading ? 0.5 : 1 }}>
-        <IconButton 
-          onClick={handlePrevious} 
+        <IconButton
+          onClick={handlePrevious}
           disabled={currentIndex === 0 || loading}
-          sx={{ 
+          sx={{
             bgcolor: '#f5f5f5',
             '&:hover': { bgcolor: '#e0e0e0' }
           }}
         >
           <PrevIcon />
         </IconButton>
-        
-        <IconButton 
+
+        <IconButton
           onClick={handlePlayPause}
           disabled={loading}
-          sx={{ 
+          sx={{
             bgcolor: isPlaying ? '#DA291C' : '#4CAF50',
             color: 'white',
-            '&:hover': { 
+            '&:hover': {
               bgcolor: isPlaying ? '#A6192E' : '#45a049'
             }
           }}
         >
           {isPlaying ? <PauseIcon /> : <PlayIcon />}
         </IconButton>
-        
-        <IconButton 
+
+        <IconButton
           onClick={handleNext}
           disabled={currentIndex === maxIndex || loading}
-          sx={{ 
+          sx={{
             bgcolor: '#f5f5f5',
             '&:hover': { bgcolor: '#e0e0e0' }
           }}
@@ -149,6 +160,44 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
 
         <Typography variant="body1" sx={{ ml: 2, fontWeight: 'bold' }}>
           {currentTime}
+        </Typography>
+      </Box>
+
+      {/* Playback Speed Control */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, opacity: loading ? 0.5 : 1 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+          Playback Speed:
+        </Typography>
+        <ToggleButtonGroup
+          value={playbackSpeed}
+          exclusive
+          onChange={handleSpeedChange}
+          aria-label="playback speed"
+          size="small"
+          disabled={loading}
+        >
+          {TIME_CONTROL_CONFIG.PLAYBACK_SPEEDS.map((speed) => (
+            <ToggleButton
+              key={speed.value}
+              value={speed.value}
+              aria-label={`${speed.label} speed`}
+              sx={{
+                px: 2,
+                '&.Mui-selected': {
+                  bgcolor: '#DA291C',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: '#A6192E'
+                  }
+                }
+              }}
+            >
+              {speed.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+          ({TIME_CONTROL_CONFIG.PLAYBACK_SPEEDS.find(s => s.value === playbackSpeed)?.speed || 500}ms/frame)
         </Typography>
       </Box>
 
@@ -171,10 +220,10 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
             } else {
               // Show date and time for multiple days mode
               if (Object.keys(detailData).length === 0) return '';
-              
+
               const allTimePoints = [];
               const dates = dateList;
-              
+
               dates.forEach(date => {
                 const dateData = detailData[date];
                 if (dateData && dateData[sensorIds[0]]) {
@@ -183,12 +232,12 @@ const ThermalTimeSlider = ({ currentIndex, maxIndex, onIndexChange, currentTime,
                   });
                 }
               });
-              
+
               if (allTimePoints[value]) {
                 const { date, ts } = allTimePoints[value];
                 const dateObj = new Date(date + 'T00:00:00');
                 const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                
+
                 // Parse time from timestamp
                 const timeMatch = ts.match(/(\d{2}):(\d{2})/);
                 if (timeMatch) {

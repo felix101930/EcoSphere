@@ -232,6 +232,17 @@ export const TIME_CONTROL_CONFIG = {
   ANIMATION_SPEED_SINGLE: 500,
   ANIMATION_SPEED_MULTIPLE: 500,
 
+  // Playback speed options
+  PLAYBACK_SPEEDS: [
+    { value: 1, label: '1x', speed: 500 },
+    { value: 1.5, label: '1.5x', speed: 333 },
+    { value: 2, label: '2x', speed: 250 },
+    { value: 3, label: '3x', speed: 167 }
+  ],
+
+  // Default playback speed
+  DEFAULT_PLAYBACK_SPEED: 1,
+
   // Slider marks for single day mode (96 intervals)
   SINGLE_DAY_MARKS: [
     { value: 0, label: '00:00' },
