@@ -1,6 +1,10 @@
 // Overall Trend Chart Component - Line chart for consumption/generation/net energy
 import { useMemo, useState } from 'react';
-import { Box, Paper, Typography, FormControlLabel, Switch } from '@mui/material';
+import React from 'react';
+import { Box, Paper, Typography, FormControlLabel, Switch, Button, ButtonGroup } from '@mui/material';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,6 +18,7 @@ import {
   TimeScale
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
 import { CHART_COLORS } from '../../lib/constants/electricity';
 
@@ -27,7 +32,8 @@ ChartJS.register(
   Tooltip,
   Legend,
   TimeScale,
-  annotationPlugin
+  annotationPlugin,
+  zoomPlugin
 );
 
 /**
@@ -112,6 +118,9 @@ const OverallTrendChart = ({
 }) => {
   // State for showing/hiding peak and valley annotations
   const [showAnnotations, setShowAnnotations] = useState(true);
+
+  // Reference to chart instance for zoom controls
+  const chartRef = React.useRef(null);
 
   // Detect daily peaks and valleys
   const peaksAndValleys = useMemo(() => {
@@ -235,11 +244,39 @@ const OverallTrendChart = ({
     return {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,
+      transitions: {
+        zoom: {
+          animation: {
+            duration: 0
+          }
+        }
+      },
       interaction: {
         mode: 'index',
         intersect: false,
       },
       plugins: {
+        zoom: {
+          pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: null
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.02
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'x'
+          },
+          limits: {
+            x: { min: 'original', max: 'original' }
+          }
+        },
         legend: {
           display: true,
           position: 'top',
@@ -311,7 +348,119 @@ const OverallTrendChart = ({
         }
       }
     };
-  }, [unit, yAxisLabel, peaksAndValleys, showAnnotations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit, yAxisLabel, peaksAndValleys]);
+
+  // Update chart annotations when showAnnotations changes without resetting zoom
+  React.useEffect(() => {
+    if (chartRef.current && chartRef.current.options) {
+      // Rebuild annotations based on current showAnnotations state
+      const annotations = {};
+
+      peaksAndValleys.peaks.forEach((peak, index) => {
+        const timestamp = new Date(peak.timestamp);
+
+        annotations[`peakPoint${index}`] = {
+          type: 'point',
+          xValue: timestamp,
+          yValue: peak.value,
+          backgroundColor: 'rgba(255, 99, 132, 0.8)',
+          borderColor: 'rgb(255, 99, 132)',
+          borderWidth: 2,
+          radius: 5
+        };
+
+        if (showAnnotations) {
+          const hour = timestamp.getHours();
+          const timeLabel = hour === 0 ? '12 a.m.' :
+            hour < 12 ? `${hour} a.m.` :
+              hour === 12 ? '12 p.m.' :
+                `${hour - 12} p.m.`;
+
+          annotations[`peak${index}`] = {
+            type: 'label',
+            xValue: timestamp,
+            yValue: peak.value,
+            yAdjust: -25,
+            backgroundColor: 'rgba(255, 99, 132, 0.9)',
+            borderColor: 'rgb(255, 99, 132)',
+            borderWidth: 2,
+            borderRadius: 4,
+            color: 'white',
+            content: [`${timeLabel}`, `${peak.value.toFixed(0)} ${unit}`],
+            font: {
+              size: 10,
+              weight: 'bold'
+            },
+            padding: 6
+          };
+        }
+      });
+
+      peaksAndValleys.valleys.forEach((valley, index) => {
+        const timestamp = new Date(valley.timestamp);
+
+        annotations[`valleyPoint${index}`] = {
+          type: 'point',
+          xValue: timestamp,
+          yValue: valley.value,
+          backgroundColor: 'rgba(54, 162, 235, 0.8)',
+          borderColor: 'rgb(54, 162, 235)',
+          borderWidth: 2,
+          radius: 5
+        };
+
+        if (showAnnotations) {
+          const hour = timestamp.getHours();
+          const timeLabel = hour === 0 ? '12 a.m.' :
+            hour < 12 ? `${hour} a.m.` :
+              hour === 12 ? '12 p.m.' :
+                `${hour - 12} p.m.`;
+
+          annotations[`valley${index}`] = {
+            type: 'label',
+            xValue: timestamp,
+            yValue: valley.value,
+            yAdjust: 25,
+            backgroundColor: 'rgba(54, 162, 235, 0.9)',
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 2,
+            borderRadius: 4,
+            color: 'white',
+            content: [`${timeLabel}`, `${valley.value.toFixed(0)} ${unit}`],
+            font: {
+              size: 10,
+              weight: 'bold'
+            },
+            padding: 6
+          };
+        }
+      });
+
+      // Update annotations without recreating the chart
+      chartRef.current.options.plugins.annotation.annotations = annotations;
+      chartRef.current.update('none');
+    }
+  }, [showAnnotations, peaksAndValleys, unit]);
+
+  // Zoom control handlers
+  const handleZoomIn = () => {
+    if (chartRef.current) {
+      chartRef.current.zoom(1.2);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (chartRef.current) {
+      chartRef.current.zoom(0.8);
+    }
+  };
+
+  const handleResetZoom = () => {
+    if (chartRef.current) {
+      chartRef.current.resetZoom();
+    }
+  };
 
   if (!chartData) {
     return (
@@ -334,19 +483,32 @@ const OverallTrendChart = ({
         <Typography variant="h6">
           {title}
         </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showAnnotations}
-              onChange={(e) => setShowAnnotations(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Show Peak/Valley Labels"
-        />
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <ButtonGroup variant="outlined" size="small">
+            <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
+              Zoom In
+            </Button>
+            <Button onClick={handleZoomOut} startIcon={<ZoomOutIcon />}>
+              Zoom Out
+            </Button>
+            <Button onClick={handleResetZoom} startIcon={<RestartAltIcon />}>
+              Reset
+            </Button>
+          </ButtonGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showAnnotations}
+                onChange={(e) => setShowAnnotations(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Show Peak/Valley Labels"
+          />
+        </Box>
       </Box>
       <Box sx={{ height: 400 }}>
-        <Line data={chartData} options={options} />
+        <Line ref={chartRef} data={chartData} options={options} />
       </Box>
     </Paper>
   );
