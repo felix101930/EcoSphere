@@ -243,7 +243,8 @@ class ElectricityService {
    * Get phase breakdown data (TL342-345)
    * Available: 2020-11-01 to 2020-11-08 (7 days only)
    * Note: Phase tables use 1-minute intervals (~10,378 records per 7 days)
-   * This method aggregates to hourly data for better frontend performance
+   * Data represents instantaneous power readings (W or Wh), not increments
+   * This method aggregates to hourly data using AVG for correct power calculation
    * Optimized query using DATEPART for fast grouping
    */
   static async getPhaseBreakdownData(dateFrom, dateTo) {
@@ -258,8 +259,9 @@ class ElectricityService {
 
     for (const [key, tableName] of Object.entries(tables)) {
       // Optimized aggregation using DATEPART - much faster than DATEADD/DATEDIFF
+      // Use AVG because data represents instantaneous power readings, not increments
       // Format: YYYY-MM-DD HH:00:00
-      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
       const command = buildSqlcmdCommand(query);
 
       try {
@@ -292,7 +294,8 @@ class ElectricityService {
    * TL209: Lighting (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
    * TL211: Equipment/R&D (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
    * TL212: Appliances (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
-   * Note: Aggregated to hourly sums for consistent interval across all breakdowns
+   * Note: Data represents instantaneous power readings, not increments
+   * Aggregated to hourly averages for consistent interval across all breakdowns
    * Optimized query using DATEPART for fast grouping
    */
   static async getEquipmentBreakdownData(dateFrom, dateTo) {
@@ -308,8 +311,9 @@ class ElectricityService {
 
     for (const [key, tableName] of Object.entries(tables)) {
       // Optimized aggregation using DATEPART - much faster than DATEADD/DATEDIFF
+      // Use AVG because data represents instantaneous power readings, not increments
       // Format: YYYY-MM-DD HH:00:00
-      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+      const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
       const command = buildSqlcmdCommand(query);
 
       try {
