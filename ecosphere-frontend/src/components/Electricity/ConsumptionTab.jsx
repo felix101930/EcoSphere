@@ -113,6 +113,8 @@ const ConsumptionTab = ({
       <Alert severity="info" sx={{ mt: 2 }}>
         Data Source: {data.dataSource} | Records: {data.count} |
         Date Range: {data.dateFrom} to {data.dateTo}
+        <br />
+        Note: Data is stored at hourly intervals in the database (TL341 table contains hourly increment values)
       </Alert>
     </Box>
   );
