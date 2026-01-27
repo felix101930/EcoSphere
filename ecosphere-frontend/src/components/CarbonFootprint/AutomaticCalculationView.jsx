@@ -3,6 +3,7 @@ import { Line } from 'react-chartjs-2';
 import { CHART_COLORS, CARBON_INTENSITY } from '../../lib/constants/carbonFootprint';
 import NoDataMessage from '../Common/NoDataMessage';
 import { DATA_RANGES } from '../../lib/constants/carbonFootprint';
+import CarbonFootprintAlgorithmInfo from './CarbonFootprintAlgorithmInfo';
 
 export default function AutomaticCalculationView({ data, carbonIntensity, isSingleDay }) {
     if (!data || !data.data || data.data.length === 0) {
@@ -10,7 +11,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity, isSing
             <Card sx={{ mb: 3 }}>
                 <CardContent>
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                        Automatic Calculation
+                        Carbon Footprint Calculation
                     </Typography>
                     <NoDataMessage
                         moduleName="Carbon Footprint"
@@ -158,7 +159,7 @@ export default function AutomaticCalculationView({ data, carbonIntensity, isSing
         <Card sx={{ mb: 3 }}>
             <CardContent>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    Automatic Calculation
+                    Carbon Footprint Calculation
                 </Typography>
 
                 {/* Metrics */}

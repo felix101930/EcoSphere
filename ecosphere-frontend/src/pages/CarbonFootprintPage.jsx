@@ -7,6 +7,7 @@ import ExportReportDialog from '../components/CarbonFootprint/ExportReportDialog
 import TimePresetSelector from '../components/CarbonFootprint/TimePresetSelector';
 import AutomaticCalculationView from '../components/CarbonFootprint/AutomaticCalculationView';
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
+import CarbonFootprintAlgorithmInfo from '../components/CarbonFootprint/CarbonFootprintAlgorithmInfo';
 import useCarbonFootprintData from '../lib/hooks/useCarbonFootprintData';
 import { CARBON_INTENSITY, TIME_PRESETS } from '../lib/constants/carbonFootprint';
 import {
@@ -141,6 +142,11 @@ export default function CarbonFootprintPage() {
           carbonIntensity={carbonIntensity}
           isSingleDay={isSingleDay}
         />
+
+        {/* Algorithm Information */}
+        {consumptionData && consumptionData.data && consumptionData.data.length > 0 && (
+          <CarbonFootprintAlgorithmInfo />
+        )}
 
         {/* Custom Calculator (User Input) */}
         <CustomCalculator
