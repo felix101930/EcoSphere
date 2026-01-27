@@ -8,9 +8,10 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { EQUIPMENT_LABELS } from '../../lib/constants/electricity';
 
-// Register ChartJS components
+// Register ChartJS components (WITHOUT datalabels - we'll use it locally)
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -77,6 +78,19 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
             return `${label}: ${value.toFixed(2)} Wh (${percentage}%)`;
           }
         }
+      },
+      datalabels: {
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 14
+        },
+        formatter: (value, context) => {
+          const total = context.dataset.data.reduce((a, b) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          const valueInWh = value.toFixed(0);
+          return `${percentage}%\n${valueInWh} Wh`;
+        }
       }
     }
   }), []);
@@ -125,7 +139,7 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
         </Alert>
       )}
       <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <Pie data={chartData} options={options} />
+        <Pie data={chartData} options={options} plugins={[ChartDataLabels]} />
       </Box>
     </Paper>
   );
