@@ -35,23 +35,23 @@ export const FLOOR_CONFIGS = {
 
 export const SENSOR_POSITIONS = {
   basement: {
-    '20004': { top: '18%', right: '8%', width: '180px', height: '100px' },
-    '20005': { top: '48%', left: '12%', width: '280px', height: '180px' },
-    '20006': { top: '52%', right: '20%', width: '240px', height: '140px' }
+    '20004': { top: '15%', right: '1%', width: '200px', height: '100px' },
+    '20005': { top: '30%', left: '25%', width: '200px', height: '100px' },
+    '20006': { top: '45%', right: '1%', width: '200px', height: '100px' }
   },
   level1: {
-    '20007': { top: '42%', left: '8%', width: '200px', height: '120px' },
-    '20008': { top: '68%', left: '8%', width: '200px', height: '120px' },
-    '20009': { top: '68%', left: '42%', width: '200px', height: '120px' },
-    '20010': { top: '30%', right: '8%', width: '200px', height: '120px' },
-    '20011': { top: '12%', left: '42%', width: '200px', height: '120px' }
+    '20007': { top: '5%', left: '20%', width: '200px', height: '100px' },
+    '20008': { top: '50%', left: '35%', width: '200px', height: '100px' },
+    '20009': { top: '50%', left: '55%', width: '200px', height: '100px' },
+    '20010': { top: '15%', right: '8%', width: '200px', height: '100px' },
+    '20011': { top: '15%', left: '42%', width: '200px', height: '100px' }
   },
   level2: {
-    '20012': { top: '35%', left: '8%', width: '200px', height: '120px' },
-    '20013': { top: '15%', left: '42%', width: '200px', height: '120px' },
-    '20014': { top: '35%', right: '8%', width: '200px', height: '120px' },
-    '20015': { top: '65%', left: '42%', width: '200px', height: '120px' },
-    '20016': { top: '65%', left: '15%', width: '200px', height: '120px' }
+    '20012': { top: '10%', left: '25%', width: '200px', height: '100px' },
+    '20013': { top: '15%', left: '45%', width: '200px', height: '100px' },
+    '20014': { top: '30%', right: '10%', width: '200px', height: '100px' },
+    '20015': { top: '55%', right: '30%', width: '200px', height: '100px' },
+    '20016': { top: '50%', left: '25%', width: '200px', height: '100px' }
   }
 };
 
@@ -63,12 +63,12 @@ export const SENSOR_LOCATION_NAMES = {
   // Basement sensors
   '20004': 'East 1',
   '20005': 'West 1',
-  '20006': 'South 1',
+  '20006': 'East 2',
 
   // Level 1 sensors
   '20007': 'West 1',
-  '20008': 'West 2',
-  '20009': 'South 1',
+  '20008': 'South 1',
+  '20009': 'South 2',
   '20010': 'East 1',
   '20011': 'North 1',
 
