@@ -124,10 +124,8 @@ const EquipmentBreakdownChart = ({ data, loading }) => {
           {data.warning}
         </Alert>
       )}
-      <Box sx={{ height: 400, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <Box sx={{ width: '100%', maxWidth: 500 }}>
-          <Pie data={chartData} options={options} />
-        </Box>
+      <Box sx={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Pie data={chartData} options={options} />
       </Box>
     </Paper>
   );
