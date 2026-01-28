@@ -6,6 +6,7 @@ import MetricsCards from './MetricsCards';
 import BreakdownSelector from './BreakdownSelector';
 import OverallTrendChart from './OverallTrendChart';
 import SolarSourceBreakdownChart from './SolarSourceBreakdownChart';
+import DataSourceInfo from './DataSourceInfo';
 
 const GenerationTab = ({
   data,
@@ -84,11 +85,25 @@ const GenerationTab = ({
         />
       )}
 
-      {/* Data Source Info */}
-      <Alert severity="info" sx={{ mt: 2 }}>
-        Data Source: {data.dataSource} | Records: {data.count} |
-        Date Range: {data.dateFrom} to {data.dateTo}
-      </Alert>
+      {/* Data Source Info - Dynamic based on selected breakdown */}
+      {selectedBreakdown === GENERATION_BREAKDOWNS.OVERALL && (
+        <DataSourceInfo
+          dataSource={data.dataSource}
+          count={data.count}
+          dateFrom={data.dateFrom}
+          dateTo={data.dateTo}
+          note="Data is stored at hourly intervals in the database (TL340 table contains hourly increment values)"
+        />
+      )}
+
+      {selectedBreakdown === GENERATION_BREAKDOWNS.SOURCE && solarSourceBreakdownData && (
+        <DataSourceInfo
+          dataSource="Solar Source Tables (TL252, TL253)"
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          note="Solar source data uses 1-minute intervals, aggregated to hourly averages. TL252 (Carport), TL253 (Rooftop). Available: 2019-03-08 to 2020-11-08"
+        />
+      )}
     </Box>
   );
 };
