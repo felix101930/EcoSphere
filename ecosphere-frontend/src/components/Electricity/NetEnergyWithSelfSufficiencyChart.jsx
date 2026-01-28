@@ -39,8 +39,12 @@ ChartJS.register(
 const CHART_COLORS = {
     CONSUMPTION: '#DA291C',  // SAIT Red
     GENERATION: '#4CAF50',   // Green
-    NET_ENERGY: '#9C27B0'    // Purple
+    NET_ENERGY: '#9C27B0',   // Purple
+    SELF_SUFFICIENCY: '#2196F3',  // Blue
+    THRESHOLD: '#FF9800'     // Orange for 100% threshold line
 };
+
+const SELF_SUFFICIENCY_THRESHOLD = 100;
 
 const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, generationData, selfSufficiencyData }) => {
     // Debug: Log received data
@@ -59,7 +63,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
     // Reference to chart instance for zoom controls
     const chartRef = React.useRef(null);
 
-    // Prepare chart data with three lines
+    // Prepare chart data with four lines
     const chartData = useMemo(() => {
         if (!netEnergyData || netEnergyData.length === 0) {
             return null;
@@ -76,7 +80,8 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                     borderWidth: 2,
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    tension: 0.1
+                    tension: 0.1,
+                    yAxisID: 'y-energy'
                 },
                 {
                     label: 'Generation (Wh)',
@@ -86,7 +91,8 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                     borderWidth: 2,
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    tension: 0.1
+                    tension: 0.1,
+                    yAxisID: 'y-energy'
                 },
                 {
                     label: 'Net Energy (Wh)',
@@ -96,13 +102,25 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                     borderWidth: 2,
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    tension: 0.1
+                    tension: 0.1,
+                    yAxisID: 'y-energy'
+                },
+                {
+                    label: 'Self-Supply Rate (%)',
+                    data: selfSufficiencyData?.map(d => d.value) || [],
+                    borderColor: CHART_COLORS.SELF_SUFFICIENCY,
+                    backgroundColor: CHART_COLORS.SELF_SUFFICIENCY + '20',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    tension: 0.1,
+                    yAxisID: 'y-percentage'
                 }
             ]
         };
-    }, [netEnergyData, consumptionData, generationData]);
+    }, [netEnergyData, consumptionData, generationData, selfSufficiencyData]);
 
-    // Chart options
+    // Chart options with dual Y-axis
     const options = useMemo(() => {
         return {
             responsive: true,
@@ -174,14 +192,15 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
+                            const datasetLabel = context.dataset.label || '';
+                            const value = context.parsed.y;
+
+                            if (datasetLabel.includes('Self-Supply')) {
+                                const status = value >= SELF_SUFFICIENCY_THRESHOLD ? 'Self-sufficient' : 'Grid dependent';
+                                return `${datasetLabel}: ${value.toFixed(2)}% (${status})`;
+                            } else {
+                                return `${datasetLabel}: ${value.toFixed(2)} Wh`;
                             }
-                            if (context.parsed.y !== null) {
-                                label += context.parsed.y.toFixed(2) + ' Wh';
-                            }
-                            return label;
                         }
                     }
                 }
@@ -200,7 +219,9 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                         text: 'Date'
                     }
                 },
-                y: {
+                'y-energy': {
+                    type: 'linear',
+                    position: 'left',
                     beginAtZero: false,
                     title: {
                         display: true,
@@ -210,6 +231,28 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                         callback: function (value) {
                             return value.toLocaleString() + ' Wh';
                         }
+                    },
+                    grid: {
+                        drawOnChartArea: true
+                    }
+                },
+                'y-percentage': {
+                    type: 'linear',
+                    position: 'right',
+                    min: 0,
+                    title: {
+                        display: true,
+                        text: 'Self-Supply Rate (%)',
+                        color: CHART_COLORS.SELF_SUFFICIENCY
+                    },
+                    ticks: {
+                        color: CHART_COLORS.SELF_SUFFICIENCY,
+                        callback: function (value) {
+                            return value.toFixed(0) + '%';
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false
                     }
                 }
             },
@@ -223,6 +266,38 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
             }
         };
     }, []);
+
+    // Chart plugins for 100% threshold line on right Y-axis
+    const plugins = useMemo(() => [{
+        id: 'thresholdLine',
+        afterDatasetsDraw: (chart) => {
+            const { ctx, chartArea: { left, right }, scales } = chart;
+            const yScale = scales['y-percentage'];
+
+            if (!yScale) return;
+
+            const yPos = yScale.getPixelForValue(SELF_SUFFICIENCY_THRESHOLD);
+
+            // Draw threshold line
+            ctx.save();
+            ctx.strokeStyle = CHART_COLORS.THRESHOLD;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(left, yPos);
+            ctx.lineTo(right, yPos);
+            ctx.stroke();
+            ctx.restore();
+
+            // Add label
+            ctx.save();
+            ctx.fillStyle = CHART_COLORS.THRESHOLD;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('100% (Self-sufficient)', right - 10, yPos - 5);
+            ctx.restore();
+        }
+    }], []);
 
     // Zoom control handlers
     const handleZoomIn = () => {
@@ -371,7 +446,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         return (
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                    Consumption, Generation & Net Energy Trend (Daily)
+                    Consumption, Generation, Net Energy Trend & Self-Supply Rate (Daily)
                 </Typography>
                 <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography color="text.secondary">
@@ -386,7 +461,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">
-                    Consumption, Generation & Net Energy Trend (Daily)
+                    Consumption, Generation, Net Energy Trend & Self-Supply Rate (Daily)
                 </Typography>
                 <ButtonGroup variant="outlined" size="small">
                     <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
@@ -401,7 +476,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 </ButtonGroup>
             </Box>
             <Box sx={{ height: 400, position: 'relative' }}>
-                <Line ref={chartRef} data={chartData} options={options} />
+                <Line ref={chartRef} data={chartData} options={options} plugins={plugins} />
 
                 {/* Day Navigation Buttons - Only show in 26-hour day view */}
                 {isInDayView && (
