@@ -107,7 +107,7 @@ export default function TimePresetSelector({
 
             {/* Available Range Info */}
             <Alert severity="info" sx={{ mt: 2 }}>
-                Available Range: {DATA_RANGES.electricity.start} to {DATA_RANGES.electricity.end}
+                Available Date Range: {DATA_RANGES.electricity.start} to {DATA_RANGES.electricity.end}
             </Alert>
         </Paper>
     );

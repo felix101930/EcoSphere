@@ -206,7 +206,7 @@ const ElectricityReportPage = () => {
             onDateFromChange={setDateFrom}
             onDateToChange={setDateTo}
             onApply={handleApplyFilter}
-            dateRange={dateRange?.consumption}
+            dateRange={dateRange?.overall || dateRange?.consumption}
             loading={loading}
             showEquipmentInfo={true}
           />

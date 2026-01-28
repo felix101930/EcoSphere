@@ -257,7 +257,7 @@ const TimeFilter = ({
             {/* Available Range Info */}
             {dateRange && (
                 <Alert severity="info" sx={{ mt: 2 }}>
-                    Available Range: {dateRange.minDate} to {dateRange.maxDate}
+                    Available Date Range: {dateRange.minDate} to {dateRange.maxDate}
                 </Alert>
             )}
         </Paper>

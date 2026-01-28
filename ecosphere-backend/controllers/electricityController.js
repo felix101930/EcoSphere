@@ -7,12 +7,52 @@ const { asyncHandler, createDataFetcher, createBreakdownDataFetcher } = require(
 
 /**
  * Get available date range for electricity data
+ * Returns the actual available date range across all electricity tables
  */
 const getAvailableDateRange = asyncHandler(async (req, res) => {
-  // Get date ranges for primary tables
-  const consumptionRange = await ElectricityService.getAvailableDateRange('30000_TL341');
-  const generationRange = await ElectricityService.getAvailableDateRange('30000_TL340');
-  const netEnergyRange = await ElectricityService.getAvailableDateRange('30000_TL339');
+  // Get date ranges for all electricity tables
+  const [
+    consumptionRange,
+    generationRange,
+    netEnergyRange,
+    phaseRange,
+    equipmentRanges,
+    solarRanges
+  ] = await Promise.all([
+    ElectricityService.getAvailableDateRange('30000_TL341'),
+    ElectricityService.getAvailableDateRange('30000_TL340'),
+    ElectricityService.getAvailableDateRange('30000_TL339'),
+    ElectricityService.getAvailableDateRange('30000_TL342'), // Phase Total
+    Promise.all([
+      ElectricityService.getAvailableDateRange('30000_TL213'), // Panel2A-1
+      ElectricityService.getAvailableDateRange('30000_TL4'),   // Ventilation
+      ElectricityService.getAvailableDateRange('30000_TL209'), // Lighting
+      ElectricityService.getAvailableDateRange('30000_TL211'), // Equipment
+      ElectricityService.getAvailableDateRange('30000_TL212')  // Appliances
+    ]),
+    Promise.all([
+      ElectricityService.getAvailableDateRange('30000_TL252'), // Carport
+      ElectricityService.getAvailableDateRange('30000_TL253')  // Rooftop
+    ])
+  ]);
+
+  // Find the earliest minDate and latest maxDate across all tables
+  const allRanges = [
+    consumptionRange,
+    generationRange,
+    netEnergyRange,
+    phaseRange,
+    ...equipmentRanges,
+    ...solarRanges
+  ].filter(range => range !== null);
+
+  const overallMinDate = allRanges.reduce((min, range) => {
+    return !min || range.minDate < min ? range.minDate : min;
+  }, null);
+
+  const overallMaxDate = allRanges.reduce((max, range) => {
+    return !max || range.maxDate > max ? range.maxDate : max;
+  }, null);
 
   // Use custom response format to maintain backward compatibility
   res.json({
@@ -20,7 +60,12 @@ const getAvailableDateRange = asyncHandler(async (req, res) => {
     dateRanges: {
       consumption: consumptionRange,
       generation: generationRange,
-      netEnergy: netEnergyRange
+      netEnergy: netEnergyRange,
+      // Add overall range that spans all tables
+      overall: {
+        minDate: overallMinDate,
+        maxDate: overallMaxDate
+      }
     }
   });
 });
