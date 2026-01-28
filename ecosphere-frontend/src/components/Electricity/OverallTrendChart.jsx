@@ -23,6 +23,14 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
 import { CHART_COLORS } from '../../lib/constants/electricity';
+import {
+  detectDailyPeaksAndValleys,
+  createPeakPointAnnotation,
+  createPeakLabelAnnotation,
+  createValleyPointAnnotation,
+  createValleyLabelAnnotation,
+  createDayViewPointAnnotation
+} from '../../lib/utils/chartAnnotations';
 
 // Register ChartJS components
 ChartJS.register(
@@ -37,77 +45,6 @@ ChartJS.register(
   annotationPlugin,
   zoomPlugin
 );
-
-/**
- * Detect daily peaks and valleys in time series data
- * Finds the highest and lowest value for each day
- * @param {Array} data - Array of {ts, value} objects
- * @returns {Object} - {peaks: [], valleys: []}
- */
-const detectDailyPeaksAndValleys = (data) => {
-  if (!data || data.length === 0) return { peaks: [], valleys: [] };
-
-  // Group data by date
-  const dailyData = {};
-
-  data.forEach((item, index) => {
-    const date = item.ts.split(' ')[0]; // Extract date part (YYYY-MM-DD)
-    const value = Math.abs(item.value);
-
-    if (!dailyData[date]) {
-      dailyData[date] = {
-        peak: { value: -Infinity, timestamp: null, index: -1 },
-        valley: { value: Infinity, timestamp: null, index: -1 }
-      };
-    }
-
-    // Update peak
-    if (value > dailyData[date].peak.value) {
-      dailyData[date].peak = {
-        value: value,
-        timestamp: item.ts,
-        index: index
-      };
-    }
-
-    // Update valley
-    if (value < dailyData[date].valley.value) {
-      dailyData[date].valley = {
-        value: value,
-        timestamp: item.ts,
-        index: index
-      };
-    }
-  });
-
-  // Convert to arrays
-  const peaks = [];
-  const valleys = [];
-
-  Object.keys(dailyData).sort().forEach(date => {
-    const dayData = dailyData[date];
-
-    if (dayData.peak.timestamp) {
-      peaks.push({
-        date: date,
-        value: dayData.peak.value,
-        timestamp: dayData.peak.timestamp,
-        index: dayData.peak.index
-      });
-    }
-
-    if (dayData.valley.timestamp) {
-      valleys.push({
-        date: date,
-        value: dayData.valley.value,
-        timestamp: dayData.valley.timestamp,
-        index: dayData.valley.index
-      });
-    }
-  });
-
-  return { peaks, valleys };
-};
 
 const OverallTrendChart = ({
   data,
@@ -160,89 +97,19 @@ const OverallTrendChart = ({
   const options = useMemo(() => {
     const annotations = {};
 
-    // Always add point markers for peaks
+    // Add peak annotations using utility functions
     peaksAndValleys.peaks.forEach((peak, index) => {
-      const timestamp = new Date(peak.timestamp);
-
-      // Add point marker (always visible)
-      annotations[`peakPoint${index}`] = {
-        type: 'point',
-        xValue: timestamp,
-        yValue: peak.value,
-        backgroundColor: 'rgba(255, 99, 132, 0.8)',
-        borderColor: 'rgb(255, 99, 132)',
-        borderWidth: 2,
-        radius: 5
-      };
-
-      // Add label (conditionally visible)
+      Object.assign(annotations, createPeakPointAnnotation(peak, index));
       if (showAnnotations) {
-        const hour = timestamp.getHours();
-        const timeLabel = hour === 0 ? '12 a.m.' :
-          hour < 12 ? `${hour} a.m.` :
-            hour === 12 ? '12 p.m.' :
-              `${hour - 12} p.m.`;
-
-        annotations[`peak${index}`] = {
-          type: 'label',
-          xValue: timestamp,
-          yValue: peak.value,
-          yAdjust: -25,
-          backgroundColor: 'rgba(255, 99, 132, 0.9)',
-          borderColor: 'rgb(255, 99, 132)',
-          borderWidth: 2,
-          borderRadius: 4,
-          color: 'white',
-          content: [`${timeLabel}`, `${peak.value.toFixed(0)} ${unit}`],
-          font: {
-            size: 10,
-            weight: 'bold'
-          },
-          padding: 6
-        };
+        Object.assign(annotations, createPeakLabelAnnotation(peak, index, unit));
       }
     });
 
-    // Always add valley point markers
+    // Add valley annotations using utility functions
     peaksAndValleys.valleys.forEach((valley, index) => {
-      const timestamp = new Date(valley.timestamp);
-
-      // Add point marker (always visible)
-      annotations[`valleyPoint${index}`] = {
-        type: 'point',
-        xValue: timestamp,
-        yValue: valley.value,
-        backgroundColor: 'rgba(54, 162, 235, 0.8)',
-        borderColor: 'rgb(54, 162, 235)',
-        borderWidth: 2,
-        radius: 5
-      };
-
-      // Add label (conditionally visible)
+      Object.assign(annotations, createValleyPointAnnotation(valley, index));
       if (showAnnotations) {
-        const hour = timestamp.getHours();
-        const timeLabel = hour === 0 ? '12 a.m.' :
-          hour < 12 ? `${hour} a.m.` :
-            hour === 12 ? '12 p.m.' :
-              `${hour - 12} p.m.`;
-
-        annotations[`valley${index}`] = {
-          type: 'label',
-          xValue: timestamp,
-          yValue: valley.value,
-          yAdjust: 25,
-          backgroundColor: 'rgba(54, 162, 235, 0.9)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 2,
-          borderRadius: 4,
-          color: 'white',
-          content: [`${timeLabel}`, `${valley.value.toFixed(0)} ${unit}`],
-          font: {
-            size: 10,
-            weight: 'bold'
-          },
-          padding: 6
-        };
+        Object.assign(annotations, createValleyLabelAnnotation(valley, index, unit));
       }
     });
 
@@ -277,7 +144,7 @@ const OverallTrendChart = ({
               enabled: true
             },
             mode: 'x',
-            // Auto-align to day boundaries when reaching 26-hour limit
+            // Only detect day view state, do NOT auto-align to prevent infinite loop
             onZoomComplete: ({ chart }) => {
               const xScale = chart.scales.x;
               const currentMin = xScale.min;
@@ -291,34 +158,8 @@ const OverallTrendChart = ({
               const inDayView = currentRange <= minRange + (60 * 60 * 1000);
               setIsInDayView(inDayView);
 
-              // If we're at or near the minimum range (within 1 hour tolerance)
-              if (inDayView) {
-                // Find the center date of current view
-                const centerTime = currentMin + (currentRange / 2);
-                const centerDate = new Date(centerTime);
-
-                // Get the date at midnight
-                const targetDate = new Date(centerDate);
-                targetDate.setHours(0, 0, 0, 0);
-
-                // Calculate aligned range: previous day 23:00 to next day 01:00
-                const alignedMin = new Date(targetDate);
-                alignedMin.setHours(-1, 0, 0, 0); // Previous day 23:00
-
-                const alignedMax = new Date(targetDate);
-                alignedMax.setDate(alignedMax.getDate() + 1);
-                alignedMax.setHours(1, 0, 0, 0); // Next day 01:00
-
-                // Apply aligned range using zoomScale (doesn't lock the view)
-                const alignedMinTime = alignedMin.getTime();
-                const alignedMaxTime = alignedMax.getTime();
-
-                // Only align if the difference is significant (more than 30 minutes off)
-                if (Math.abs(currentMin - alignedMinTime) > 30 * 60 * 1000 ||
-                  Math.abs(currentMax - alignedMaxTime) > 30 * 60 * 1000) {
-                  chart.zoomScale('x', { min: alignedMinTime, max: alignedMaxTime }, 'none');
-                }
-              }
+              // DO NOT auto-align here - it causes infinite loop
+              // Alignment only happens when user clicks Previous/Next Day buttons
             }
           },
           limits: {
@@ -403,7 +244,7 @@ const OverallTrendChart = ({
     };
   }, [unit, yAxisLabel, peaksAndValleys, showAnnotations]);
 
-  // Update chart annotations when showAnnotations, isInDayView, or currentViewRange changes
+  // Update chart annotations when showAnnotations, isInDayView changes
   React.useEffect(() => {
     if (chartRef.current && chartRef.current.options) {
       // Rebuild annotations based on current state
@@ -415,137 +256,31 @@ const OverallTrendChart = ({
         const peakTimestamps = new Set(peaksAndValleys.peaks.map(p => p.timestamp));
         const valleyTimestamps = new Set(peaksAndValleys.valleys.map(v => v.timestamp));
 
-        // Show all data points in day view
+        // Show all data points in day view using utility function
         data.forEach((point, index) => {
-          const timestamp = new Date(point.ts);
-          const value = preserveSign ? point.value : Math.abs(point.value);
-
-          // Check if this point is a peak or valley
           const isPeak = peakTimestamps.has(point.ts);
           const isValley = valleyTimestamps.has(point.ts);
 
           // Skip if it's a peak or valley (they're handled separately below)
           if (!isPeak && !isValley) {
-            const hour = timestamp.getHours();
-            const minute = timestamp.getMinutes();
-            const timeLabel = hour === 0 ? '12 a.m.' :
-              hour < 12 ? `${hour} a.m.` :
-                hour === 12 ? '12 p.m.' :
-                  `${hour - 12} p.m.`;
-
-            // Add gray point marker
-            annotations[`dayPoint${index}`] = {
-              type: 'point',
-              xValue: timestamp,
-              yValue: value,
-              backgroundColor: 'rgba(128, 128, 128, 0.6)',
-              borderColor: 'rgb(128, 128, 128)',
-              borderWidth: 1,
-              radius: 3
-            };
-
-            // Add gray label (only show on the hour to avoid clutter)
-            if (minute === 0) {
-              annotations[`dayLabel${index}`] = {
-                type: 'label',
-                xValue: timestamp,
-                yValue: value,
-                yAdjust: value > 0 ? -20 : 20,
-                backgroundColor: 'rgba(128, 128, 128, 0.8)',
-                borderColor: 'rgb(128, 128, 128)',
-                borderWidth: 1,
-                borderRadius: 3,
-                color: 'white',
-                content: [`${timeLabel}`, `${value.toFixed(0)} ${unit}`],
-                font: {
-                  size: 9
-                },
-                padding: 4
-              };
-            }
+            Object.assign(annotations, createDayViewPointAnnotation(point, index, preserveSign, unit));
           }
         });
       }
 
-      // Add peak annotations
+      // Add peak annotations using utility functions
       peaksAndValleys.peaks.forEach((peak, index) => {
-        const timestamp = new Date(peak.timestamp);
-
-        annotations[`peakPoint${index}`] = {
-          type: 'point',
-          xValue: timestamp,
-          yValue: peak.value,
-          backgroundColor: 'rgba(255, 99, 132, 0.8)',
-          borderColor: 'rgb(255, 99, 132)',
-          borderWidth: 2,
-          radius: 5
-        };
-
+        Object.assign(annotations, createPeakPointAnnotation(peak, index));
         if (showAnnotations) {
-          const hour = timestamp.getHours();
-          const timeLabel = hour === 0 ? '12 a.m.' :
-            hour < 12 ? `${hour} a.m.` :
-              hour === 12 ? '12 p.m.' :
-                `${hour - 12} p.m.`;
-
-          annotations[`peak${index}`] = {
-            type: 'label',
-            xValue: timestamp,
-            yValue: peak.value,
-            yAdjust: -25,
-            backgroundColor: 'rgba(255, 99, 132, 0.9)',
-            borderColor: 'rgb(255, 99, 132)',
-            borderWidth: 2,
-            borderRadius: 4,
-            color: 'white',
-            content: [`${timeLabel}`, `${peak.value.toFixed(0)} ${unit}`],
-            font: {
-              size: 10,
-              weight: 'bold'
-            },
-            padding: 6
-          };
+          Object.assign(annotations, createPeakLabelAnnotation(peak, index, unit));
         }
       });
 
-      // Add valley annotations
+      // Add valley annotations using utility functions
       peaksAndValleys.valleys.forEach((valley, index) => {
-        const timestamp = new Date(valley.timestamp);
-
-        annotations[`valleyPoint${index}`] = {
-          type: 'point',
-          xValue: timestamp,
-          yValue: valley.value,
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgb(54, 162, 235)',
-          borderWidth: 2,
-          radius: 5
-        };
-
+        Object.assign(annotations, createValleyPointAnnotation(valley, index));
         if (showAnnotations) {
-          const hour = timestamp.getHours();
-          const timeLabel = hour === 0 ? '12 a.m.' :
-            hour < 12 ? `${hour} a.m.` :
-              hour === 12 ? '12 p.m.' :
-                `${hour - 12} p.m.`;
-
-          annotations[`valley${index}`] = {
-            type: 'label',
-            xValue: timestamp,
-            yValue: valley.value,
-            yAdjust: 25,
-            backgroundColor: 'rgba(54, 162, 235, 0.9)',
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 2,
-            borderRadius: 4,
-            color: 'white',
-            content: [`${timeLabel}`, `${valley.value.toFixed(0)} ${unit}`],
-            font: {
-              size: 10,
-              weight: 'bold'
-            },
-            padding: 6
-          };
+          Object.assign(annotations, createValleyLabelAnnotation(valley, index, unit));
         }
       });
 
