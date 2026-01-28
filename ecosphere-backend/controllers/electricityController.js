@@ -169,7 +169,6 @@ const getSolarSourceBreakdownData = createBreakdownDataFetcher({
   calculateMetricsFn: ElectricityService.calculateMetrics.bind(ElectricityService),
   dataSources: DATA_SOURCES.SOLAR,
   dataKeys: ['carport', 'rooftop'],
-  warning: DATA_RANGES.SOLAR_BREAKDOWN.DESCRIPTION,
   dateAvailability: {
     from: DATA_RANGES.SOLAR_BREAKDOWN.FROM,
     to: DATA_RANGES.SOLAR_BREAKDOWN.TO

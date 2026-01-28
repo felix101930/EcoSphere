@@ -96,12 +96,12 @@ const GenerationTab = ({
         />
       )}
 
-      {selectedBreakdown === GENERATION_BREAKDOWNS.SOURCE && solarSourceBreakdownData && (
+      {selectedBreakdown === GENERATION_BREAKDOWNS.SOURCE && (
         <DataSourceInfo
           dataSource="Solar Source Tables (TL252, TL253)"
           dateFrom={dateFrom}
           dateTo={dateTo}
-          note="Solar source data uses 1-minute intervals, aggregated to hourly averages. TL252 (Carport), TL253 (Rooftop). Available: 2019-03-08 to 2020-11-08"
+          note="Solar source data uses 1-minute intervals, aggregated to hourly averages. TL252 (Carport), TL253 (Rooftop). Available: 2019-03-08 to 2025-12-31"
         />
       )}
     </Box>

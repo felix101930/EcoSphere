@@ -341,7 +341,7 @@ class ElectricityService {
 
   /**
    * Get solar source breakdown data (TL252, TL253) - aggregated to hourly
-   * Available: 2019-03-08 to 2020-11-08
+   * Available: 2019-03-08 to 2025-12-31
    * Note: Original unit is W (power), 1-minute intervals
    * Aggregated to hourly averages for consistent interval across all breakdowns
    * Optimized query using DATEPART for fast grouping

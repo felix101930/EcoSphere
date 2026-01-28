@@ -65,8 +65,8 @@ const DATA_RANGES = {
      */
     SOLAR_BREAKDOWN: {
         FROM: '2019-03-08',
-        TO: '2020-11-08',
-        DESCRIPTION: 'Solar source data available from 2019-03-08 to 2020-11-08. Unit is W (power), not Wh (energy). Only covers ~27% of total generation.'
+        TO: '2025-12-31',
+        DESCRIPTION: 'Solar source data available from 2019-03-08 to 2025-12-31. Unit is W (power), not Wh (energy). Only covers ~27% of total generation.'
     },
 
     /**
