@@ -121,6 +121,9 @@ const OverallTrendChart = ({
   // State for showing/hiding peak and valley annotations
   const [showAnnotations, setShowAnnotations] = useState(true);
 
+  // State for tracking if we're in 26-hour view (to show/hide day navigation buttons)
+  const [isInDayView, setIsInDayView] = useState(false);
+
   // Reference to chart instance for zoom controls
   const chartRef = React.useRef(null);
 
@@ -284,8 +287,12 @@ const OverallTrendChart = ({
               // 26 hours in milliseconds
               const minRange = 26 * 60 * 60 * 1000;
 
+              // Check if we're in day view (26-hour range)
+              const inDayView = currentRange <= minRange + (60 * 60 * 1000);
+              setIsInDayView(inDayView);
+
               // If we're at or near the minimum range (within 1 hour tolerance)
-              if (currentRange <= minRange + (60 * 60 * 1000)) {
+              if (inDayView) {
                 // Find the center date of current view
                 const centerTime = currentMin + (currentRange / 2);
                 const centerDate = new Date(centerTime);
@@ -505,6 +512,7 @@ const OverallTrendChart = ({
   const handleResetZoom = () => {
     if (chartRef.current) {
       chartRef.current.resetZoom();
+      setIsInDayView(false); // Reset to full view, hide day navigation buttons
     }
   };
 
@@ -652,31 +660,33 @@ const OverallTrendChart = ({
         <Line ref={chartRef} data={chartData} options={options} />
       </Box>
 
-      {/* Day Navigation Buttons - Below Chart */}
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        mt: 2,
-        gap: 2
-      }}>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ArrowBackIcon />}
-          onClick={handlePreviousDay}
-        >
-          Previous Day
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          endIcon={<ArrowForwardIcon />}
-          onClick={handleNextDay}
-        >
-          Next Day
-        </Button>
-      </Box>
+      {/* Day Navigation Buttons - Only show in 26-hour day view */}
+      {isInDayView && (
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          mt: 0.5,
+          gap: 2
+        }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ArrowBackIcon />}
+            onClick={handlePreviousDay}
+          >
+            Previous Day
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            endIcon={<ArrowForwardIcon />}
+            onClick={handleNextDay}
+          >
+            Next Day
+          </Button>
+        </Box>
+      )}
     </Paper>
   );
 };
