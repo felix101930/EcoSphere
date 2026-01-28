@@ -84,7 +84,7 @@ const TIME_CONSTANTS = {
 
 // Fallback values
 const FALLBACK_VALUES = {
-  DEFAULT_DATE: "2020-11-07",
+  DEFAULT_DATE: "2025-12-31",
   DEFAULT_LIMIT: 10,
 };
 

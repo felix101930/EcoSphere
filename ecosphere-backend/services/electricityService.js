@@ -57,7 +57,7 @@ class ElectricityService {
 
   /**
    * Get consumption data (TL341 - Hourly Increment)
-   * Primary data source: 634 days (2019-02-13 to 2020-11-08)
+   * Primary data source: 2019-02-13 to 2025-12-31
    * 
    * Tier 1: Use TL341 (Overall consumption data)
    * Tier 2: If TL341 has no data, aggregate equipment data
@@ -163,7 +163,7 @@ class ElectricityService {
 
   /**
    * Get generation data (TL340 - Hourly Increment)
-   * Primary data source: 634 days (2019-02-13 to 2020-11-08)
+   * Primary data source: 2019-02-13 to 2025-12-31
    */
   static async getGenerationData(dateFrom, dateTo) {
     const cacheKey = cache.constructor.generateKey('generation', dateFrom, dateTo);
@@ -202,7 +202,7 @@ class ElectricityService {
 
   /**
    * Get net energy data (TL339 - Hourly Increment)
-   * Primary data source: 634 days (2019-02-13 to 2020-11-08)
+   * Primary data source: 2019-02-13 to 2025-12-31
    */
   static async getNetEnergyData(dateFrom, dateTo) {
     const cacheKey = cache.constructor.generateKey('netEnergy', dateFrom, dateTo);
@@ -241,8 +241,8 @@ class ElectricityService {
 
   /**
    * Get phase breakdown data (TL342-345)
-   * Available: 2020-11-01 to 2020-11-08 (7 days only)
-   * Note: Phase tables use 1-minute intervals (~10,378 records per 7 days)
+   * Available: 2019-03-30 to 2025-12-31
+   * Note: Phase tables use 1-minute intervals
    * Data represents instantaneous power readings (W or Wh), not increments
    * This method aggregates to hourly data using AVG for correct power calculation
    * Optimized query using DATEPART for fast grouping
@@ -289,11 +289,11 @@ class ElectricityService {
 
   /**
    * Get equipment breakdown data (aggregated to hourly)
-   * TL213: Panel2A-1 (~15-min intervals, 2020-02-15 to 2020-11-08, 9 months)
-   * TL4: Ventilation (1-min intervals, 2020-11-01 to 2020-11-08, 7 days)
-   * TL209: Lighting (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
-   * TL211: Equipment/R&D (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
-   * TL212: Appliances (1-min intervals, 2019-11-07 to 2019-11-14, 7 days)
+   * TL213: Panel2A-1 (~15-min intervals, 2018-10-22 to 2025-12-31)
+   * TL4: Ventilation (1-min intervals, 2018-10-13 to 2025-12-31)
+   * TL209: Lighting (1-min intervals, 2018-12-14 to 2025-12-31)
+   * TL211: Equipment/R&D (1-min intervals, 2018-12-14 to 2025-12-31)
+   * TL212: Appliances (1-min intervals, 2018-12-14 to 2025-12-31)
    * Note: Data represents instantaneous power readings, not increments
    * Aggregated to hourly averages for consistent interval across all breakdowns
    * Optimized query using DATEPART for fast grouping
@@ -341,7 +341,7 @@ class ElectricityService {
 
   /**
    * Get solar source breakdown data (TL252, TL253) - aggregated to hourly
-   * Available: 2020-11-01 to 2020-11-08 (7 days only)
+   * Available: 2019-03-08 to 2025-12-31
    * Note: Original unit is W (power), 1-minute intervals
    * Aggregated to hourly averages for consistent interval across all breakdowns
    * Optimized query using DATEPART for fast grouping

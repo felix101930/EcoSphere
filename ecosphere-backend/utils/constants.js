@@ -55,7 +55,7 @@ const DATA_RANGES = {
     /**
      * Solar Source Breakdown Data (carport vs rooftop)
      * 
-     * Only available for 7 days in November 2020
+     * Available from 2019-03-08 to 2025-12-31
      * Shows breakdown of solar generation by source
      * 
      * LIMITATIONS:
@@ -64,19 +64,18 @@ const DATA_RANGES = {
      * - Missing data for other solar panels
      */
     SOLAR_BREAKDOWN: {
-        FROM: '2020-11-01',
-        TO: '2020-11-08',
-        DESCRIPTION: 'Solar source data only available for 7 days (2020-11-01 to 2020-11-08). Unit is W (power), not Wh (energy). Only covers ~27% of total generation.'
+        FROM: '2019-03-08',
+        TO: '2025-12-31',
+        DESCRIPTION: 'Solar source data available from 2019-03-08 to 2025-12-31. Unit is W (power), not Wh (energy). Only covers ~27% of total generation.'
     },
 
     /**
      * Equipment Breakdown Data (by equipment type)
      * 
-     * Different equipment categories have different date ranges
      * See DATA_SOURCES.EQUIPMENT for specific ranges per category
      */
     EQUIPMENT_BREAKDOWN: {
-        DESCRIPTION: 'Equipment data has different time ranges for different categories'
+        DESCRIPTION: 'Equipment breakdown by type'
     }
 };
 
@@ -113,22 +112,21 @@ const DATA_SOURCES = {
      * Equipment breakdown sensors (by equipment type)
      * 
      * Each sensor tracks a specific equipment category
-     * Date ranges vary because sensors were installed at different times
-     * Some sensors were only active for testing periods
+     * All equipment data extends from 2018 to 2025-12-31
      */
     EQUIPMENT: {
-        PANEL_2A1: 'TL213 (2020-02-15 to 2020-11-08)',      // Main electrical panel
-        VENTILATION: 'TL4 (2020-11-01 to 2020-11-08)',      // HVAC ventilation system
-        LIGHTING: 'TL209 (2019-11-07 to 2019-11-14)',       // Building lighting
-        EQUIPMENT: 'TL211 (2019-11-07 to 2019-11-14)',      // General equipment
-        APPLIANCES: 'TL212 (2019-11-07 to 2019-11-14)'      // Kitchen/office appliances
+        PANEL_2A1: 'TL213 (2018-10-22 to 2025-12-31)',      // Main electrical panel
+        VENTILATION: 'TL4 (2018-10-13 to 2025-12-31)',      // HVAC ventilation system
+        LIGHTING: 'TL209 (2018-12-14 to 2025-12-31)',       // Building lighting
+        EQUIPMENT: 'TL211 (2018-12-14 to 2025-12-31)',      // General equipment
+        APPLIANCES: 'TL212 (2018-12-14 to 2025-12-31)'      // Kitchen/office appliances
     },
 
     /**
      * Solar generation breakdown sensors (by source)
      * 
      * Tracks solar generation from different panel locations
-     * Only available for 7 days (pilot test period)
+     * Available from 2019-03-08 to 2025-12-31
      * Data is in Watts (instantaneous power) not Wh (energy)
      */
     SOLAR: {

@@ -197,10 +197,10 @@ export const DATE_CONFIG = {
   // Date range limits
   MAX_DATE_RANGE_DAYS: 30,
   MIN_DATE: '2019-01-01',
-  MAX_DATE: '2020-11-07',
+  MAX_DATE: '2025-12-31',
 
   // Default dates
-  DEFAULT_FALLBACK_DATE: '2020-11-07',
+  DEFAULT_FALLBACK_DATE: '2025-12-31',
 
   // Time intervals
   RECORDS_PER_DAY: 96, // 15-minute intervals

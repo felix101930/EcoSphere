@@ -1,30 +1,26 @@
 // Breakdown Selector Component - Card-based selection for data breakdown
-import { Box, Paper, Typography, Grid, Card, CardContent, CardActionArea, Chip } from '@mui/material';
-import { 
-  BarChart, 
-  ElectricBolt, 
+import { Box, Typography, Grid, Card, CardContent, CardActionArea } from '@mui/material';
+import {
+  BarChart,
+  ElectricBolt,
   Devices,
-  Warning,
   WbSunny
 } from '@mui/icons-material';
-import { 
-  CONSUMPTION_BREAKDOWNS, 
-  GENERATION_BREAKDOWNS, 
-  DATA_WARNINGS 
+import {
+  CONSUMPTION_BREAKDOWNS,
+  GENERATION_BREAKDOWNS
 } from '../../lib/constants/electricity';
 
-const BreakdownCard = ({ 
-  title, 
-  description, 
-  icon: IconComponent, 
-  selected, 
-  onClick, 
-  warning,
-  available 
+const BreakdownCard = ({
+  title,
+  description,
+  icon: IconComponent,
+  selected,
+  onClick
 }) => {
   return (
-    <Card 
-      sx={{ 
+    <Card
+      sx={{
         height: '100%',
         border: selected ? 2 : 1,
         borderColor: selected ? 'primary.main' : 'divider',
@@ -42,22 +38,6 @@ const BreakdownCard = ({
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             {description}
           </Typography>
-          {available && (
-            <Chip 
-              label={available} 
-              size="small" 
-              color="info" 
-              sx={{ mb: 1 }}
-            />
-          )}
-          {warning && (
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', mt: 1 }}>
-              <Warning sx={{ fontSize: 16, color: 'warning.main', mr: 0.5, mt: 0.2 }} />
-              <Typography variant="caption" color="warning.main">
-                {warning}
-              </Typography>
-            </Box>
-          )}
         </CardContent>
       </CardActionArea>
     </Card>
@@ -70,25 +50,19 @@ const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consu
       id: CONSUMPTION_BREAKDOWNS.OVERALL,
       title: 'Overall',
       description: 'Total consumption trend over time',
-      icon: BarChart,
-      available: '634 days available',
-      warning: null
+      icon: BarChart
     },
     {
       id: CONSUMPTION_BREAKDOWNS.PHASE,
       title: 'By Phase',
       description: 'Three-phase power breakdown (A, B, C)',
-      icon: ElectricBolt,
-      available: '7 days only',
-      warning: DATA_WARNINGS.PHASE
+      icon: ElectricBolt
     },
     {
       id: CONSUMPTION_BREAKDOWNS.EQUIPMENT,
       title: 'By Equipment',
       description: 'Consumption by equipment type',
-      icon: Devices,
-      available: 'Various ranges',
-      warning: DATA_WARNINGS.EQUIPMENT
+      icon: Devices
     }
   ];
 
@@ -97,17 +71,13 @@ const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consu
       id: GENERATION_BREAKDOWNS.OVERALL,
       title: 'Overall',
       description: 'Total generation trend over time',
-      icon: BarChart,
-      available: '634 days available',
-      warning: null
+      icon: BarChart
     },
     {
       id: GENERATION_BREAKDOWNS.SOURCE,
       title: 'By Source',
       description: 'Solar generation by panel location',
-      icon: WbSunny,
-      available: '7 days only',
-      warning: DATA_WARNINGS.SOLAR_SOURCE
+      icon: WbSunny
     }
   ];
 
@@ -127,8 +97,6 @@ const BreakdownSelector = ({ selectedBreakdown, onBreakdownChange, type = 'consu
               icon={breakdown.icon}
               selected={selectedBreakdown === breakdown.id}
               onClick={() => onBreakdownChange(breakdown.id)}
-              warning={breakdown.warning}
-              available={breakdown.available}
             />
           </Grid>
         ))}

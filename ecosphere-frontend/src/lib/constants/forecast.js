@@ -103,7 +103,7 @@ export const ML_METRICS_THRESHOLDS = {
 
 // Default demo dates (based on available data)
 export const DEFAULT_DEMO_DATES = {
-  TARGET_DATE: "2020-11-07", // Predict from Nov 8
+  TARGET_DATE: "2025-12-31", // Predict from latest available date
   FORECAST_DAYS: 7,
 };
 

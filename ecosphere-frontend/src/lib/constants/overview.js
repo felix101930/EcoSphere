@@ -21,10 +21,10 @@ export const DEMO_DATE_RANGE = {
 };
 
 export const DATA_RANGES = {
-    electricity: { start: '2019-02-13', end: '2020-11-08' },
-    thermal: { start: '2019-01-01', end: '2020-11-08' },
-    rainwater: { start: '2018-10-13', end: '2020-11-08' },
-    hotWater: { start: '2018-09-11', end: '2019-11-14' },
+    electricity: { start: '2019-02-13', end: '2025-12-31' },
+    thermal: { start: '2019-01-01', end: '2025-12-31' },
+    rainwater: { start: '2018-10-13', end: '2025-12-31' },
+    hotWater: { start: '2018-09-11', end: '2025-12-31' },
     naturalGas: { start: '2023-01', end: '2025-11' }
 };
 

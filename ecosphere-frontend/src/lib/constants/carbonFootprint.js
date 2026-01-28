@@ -7,7 +7,7 @@
 export const DATA_RANGES = {
     electricity: {
         start: '2019-02-13',
-        end: '2020-11-08'
+        end: '2025-12-31'
     }
 };
 
@@ -23,14 +23,14 @@ export const TIME_PRESETS = {
     CUSTOM: 'custom'
 };
 
-// Demo dates based on available data (Nov 2020)
+// Demo dates based on available data (latest available)
 export const DEMO_DATES = {
-    TODAY: '2020-11-08',
-    YESTERDAY: '2020-11-07',
-    LAST_7_DAYS_START: '2020-11-02',
-    LAST_7_DAYS_END: '2020-11-08',
-    LAST_30_DAYS_START: '2020-10-10',
-    LAST_30_DAYS_END: '2020-11-08'
+    TODAY: '2025-12-31',
+    YESTERDAY: '2025-12-30',
+    LAST_7_DAYS_START: '2025-12-25',
+    LAST_7_DAYS_END: '2025-12-31',
+    LAST_30_DAYS_START: '2025-12-02',
+    LAST_30_DAYS_END: '2025-12-31'
 };
 
 // ============================================================================
