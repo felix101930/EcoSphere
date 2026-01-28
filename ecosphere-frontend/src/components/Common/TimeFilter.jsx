@@ -30,6 +30,7 @@ const TimeFilter = ({
     loading
 }) => {
     const [preset, setPreset] = useState(TIME_PRESETS.LAST_7_DAYS);
+    const [validationError, setValidationError] = useState('');
 
     // Internal temporary state - initialized with Last 7 Days default or props
     const [tempDateFrom, setTempDateFrom] = useState(() => {
@@ -97,17 +98,61 @@ const TimeFilter = ({
         setTempDateTo(maxDate);
     };
 
-    // Handle Apply button - update parent and trigger data load
+    // Handle Apply button - validate dates before updating parent
     const handleApply = () => {
-        if (tempDateFrom && tempDateTo) {
-            onDateFromChange(tempDateFrom);
-            onDateToChange(tempDateTo);
+        // Clear previous validation error
+        setValidationError('');
 
-            // Use setTimeout to ensure state is updated before calling onApply
-            setTimeout(() => {
-                onApply();
-            }, 0);
+        // Validation 1: Check if dates exist
+        if (!tempDateFrom || !tempDateTo) {
+            setValidationError('Please select both From Date and To Date.');
+            return;
         }
+
+        // Validation 2: Check if From Date is not after To Date
+        if (tempDateFrom > tempDateTo) {
+            setValidationError('From Date cannot be after To Date.');
+            return;
+        }
+
+        // Validation 3: Check if dates are within available database range
+        if (dateRange) {
+            const minDate = new Date(dateRange.minDate + 'T12:00:00');
+            const maxDate = new Date(dateRange.maxDate + 'T12:00:00');
+
+            if (tempDateFrom < minDate || tempDateFrom > maxDate) {
+                setValidationError(`From Date must be between ${dateRange.minDate} and ${dateRange.maxDate}.`);
+                return;
+            }
+
+            if (tempDateTo < minDate || tempDateTo > maxDate) {
+                setValidationError(`To Date must be between ${dateRange.minDate} and ${dateRange.maxDate}.`);
+                return;
+            }
+        }
+
+        // Validation 4: Check if dates are not in the future
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // Set to end of today
+
+        if (tempDateFrom > today) {
+            setValidationError('From Date cannot be in the future.');
+            return;
+        }
+
+        if (tempDateTo > today) {
+            setValidationError('To Date cannot be in the future.');
+            return;
+        }
+
+        // All validations passed - update parent and trigger data load
+        onDateFromChange(tempDateFrom);
+        onDateToChange(tempDateTo);
+
+        // Use setTimeout to ensure state is updated before calling onApply
+        setTimeout(() => {
+            onApply();
+        }, 0);
     };
 
     // Should disable dates outside available range
@@ -161,6 +206,7 @@ const TimeFilter = ({
                         onChange={(newValue) => {
                             setTempDateFrom(newValue);
                             setPreset(TIME_PRESETS.CUSTOM);
+                            setValidationError(''); // Clear error when user changes date
                         }}
                         shouldDisableDate={shouldDisableDate}
                         slotProps={{
@@ -179,6 +225,7 @@ const TimeFilter = ({
                         onChange={(newValue) => {
                             setTempDateTo(newValue);
                             setPreset(TIME_PRESETS.CUSTOM);
+                            setValidationError(''); // Clear error when user changes date
                         }}
                         shouldDisableDate={shouldDisableDate}
                         slotProps={{
@@ -197,6 +244,13 @@ const TimeFilter = ({
                         Apply
                     </Button>
                 </Box>
+
+                {/* Validation Error Message */}
+                {validationError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                        {validationError}
+                    </Alert>
+                )}
             </LocalizationProvider>
 
             {/* Available Range Info */}
