@@ -102,18 +102,6 @@ const ForecastTab = ({ dateTo }) => {
         }
     };
 
-    // Handle hours change (filtering)
-    const handleHoursChange = (hours) => {
-        setForecastHours(hours);
-
-        // Apply filter to existing dataset if available
-        if (mlForecast && mlForecast.data) {
-            console.log(`🔄 Filtering to ${hours} hours`);
-            const filtered = MLForecastService.getFilteredForecast(hours, mlForecast);
-            setFilteredForecast(filtered);
-        }
-    };
-
     // Handle forecast type change
     const handleForecastTypeChange = (e, newType) => {
         if (newType) {
@@ -229,25 +217,6 @@ const ForecastTab = ({ dateTo }) => {
                 setFilteredForecast(filtered);
             }
         }
-    };
-
-    // Parse date safely (if needed)
-    const parseDateSafely = (dateInput) => {
-        if (!dateInput) return null;
-
-        if (typeof dateInput === 'string') {
-            let date = new Date(dateInput);
-            if (isNaN(date.getTime())) {
-                date = new Date(dateInput + 'T12:00:00');
-            }
-            return isNaN(date.getTime()) ? null : date;
-        }
-
-        if (dateInput instanceof Date) {
-            return isNaN(dateInput.getTime()) ? null : dateInput;
-        }
-
-        return null;
     };
 
     // Get the forecast data to display
@@ -516,7 +485,7 @@ const ForecastTab = ({ dateTo }) => {
                     {forecastType === FORECAST_UI_TYPES.HISTORICAL && consumptionForecast && (
                         <DataAvailabilityCard
                             metadata={consumptionForecast.metadata}
-                            title="Consumption Forecast"
+                            title="Consumption Forecast Model"
                         />
                     )}
 
