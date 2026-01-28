@@ -160,7 +160,7 @@ const OverallTrendChart = ({
   const options = useMemo(() => {
     const annotations = {};
 
-    // Always add point markers
+    // Always add point markers for peaks
     peaksAndValleys.peaks.forEach((peak, index) => {
       const timestamp = new Date(peak.timestamp);
 
@@ -401,15 +401,73 @@ const OverallTrendChart = ({
         }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unit, yAxisLabel, peaksAndValleys]);
+  }, [unit, yAxisLabel, peaksAndValleys, showAnnotations]);
 
-  // Update chart annotations when showAnnotations changes without resetting zoom
+  // Update chart annotations when showAnnotations, isInDayView, or currentViewRange changes
   React.useEffect(() => {
     if (chartRef.current && chartRef.current.options) {
-      // Rebuild annotations based on current showAnnotations state
+      // Rebuild annotations based on current state
       const annotations = {};
 
+      // In day view, show all data points (no date range restriction)
+      if (isInDayView && data && showAnnotations) {
+        // Create a set of peak and valley timestamps for quick lookup
+        const peakTimestamps = new Set(peaksAndValleys.peaks.map(p => p.timestamp));
+        const valleyTimestamps = new Set(peaksAndValleys.valleys.map(v => v.timestamp));
+
+        // Show all data points in day view
+        data.forEach((point, index) => {
+          const timestamp = new Date(point.ts);
+          const value = preserveSign ? point.value : Math.abs(point.value);
+
+          // Check if this point is a peak or valley
+          const isPeak = peakTimestamps.has(point.ts);
+          const isValley = valleyTimestamps.has(point.ts);
+
+          // Skip if it's a peak or valley (they're handled separately below)
+          if (!isPeak && !isValley) {
+            const hour = timestamp.getHours();
+            const minute = timestamp.getMinutes();
+            const timeLabel = hour === 0 ? '12 a.m.' :
+              hour < 12 ? `${hour} a.m.` :
+                hour === 12 ? '12 p.m.' :
+                  `${hour - 12} p.m.`;
+
+            // Add gray point marker
+            annotations[`dayPoint${index}`] = {
+              type: 'point',
+              xValue: timestamp,
+              yValue: value,
+              backgroundColor: 'rgba(128, 128, 128, 0.6)',
+              borderColor: 'rgb(128, 128, 128)',
+              borderWidth: 1,
+              radius: 3
+            };
+
+            // Add gray label (only show on the hour to avoid clutter)
+            if (minute === 0) {
+              annotations[`dayLabel${index}`] = {
+                type: 'label',
+                xValue: timestamp,
+                yValue: value,
+                yAdjust: value > 0 ? -20 : 20,
+                backgroundColor: 'rgba(128, 128, 128, 0.8)',
+                borderColor: 'rgb(128, 128, 128)',
+                borderWidth: 1,
+                borderRadius: 3,
+                color: 'white',
+                content: [`${timeLabel}`, `${value.toFixed(0)} ${unit}`],
+                font: {
+                  size: 9
+                },
+                padding: 4
+              };
+            }
+          }
+        });
+      }
+
+      // Add peak annotations
       peaksAndValleys.peaks.forEach((peak, index) => {
         const timestamp = new Date(peak.timestamp);
 
@@ -450,6 +508,7 @@ const OverallTrendChart = ({
         }
       });
 
+      // Add valley annotations
       peaksAndValleys.valleys.forEach((valley, index) => {
         const timestamp = new Date(valley.timestamp);
 
@@ -494,7 +553,7 @@ const OverallTrendChart = ({
       chartRef.current.options.plugins.annotation.annotations = annotations;
       chartRef.current.update('none');
     }
-  }, [showAnnotations, peaksAndValleys, unit]);
+  }, [showAnnotations, peaksAndValleys, unit, isInDayView, data, preserveSign]);
 
   // Zoom control handlers
   const handleZoomIn = () => {
