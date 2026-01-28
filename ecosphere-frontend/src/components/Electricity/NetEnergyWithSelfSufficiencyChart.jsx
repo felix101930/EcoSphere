@@ -136,50 +136,8 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         };
     }, [netEnergyData, consumptionData, generationData, selfSufficiencyData]);
 
-    // Chart options with dual Y-axis and annotations
+    // Chart options with dual Y-axis (without annotations - they are added dynamically)
     const options = useMemo(() => {
-        const annotations = {};
-
-        // Add peak annotations for Self-Supply Rate > 100% (only if showAnnotations is true)
-        if (showAnnotations) {
-            selfSufficiencyPeaks.forEach((peak, index) => {
-                const timestamp = new Date(peak.timestamp);
-                const timeLabel = formatTimeLabel(timestamp);
-
-                // Add point marker
-                annotations[`selfSufficiencyPeakPoint${index}`] = {
-                    type: 'point',
-                    xValue: timestamp,
-                    yValue: peak.value,
-                    backgroundColor: 'rgba(33, 150, 243, 0.8)',
-                    borderColor: 'rgb(33, 150, 243)',
-                    borderWidth: 2,
-                    radius: 5,
-                    yScaleID: 'y-percentage'
-                };
-
-                // Add label
-                annotations[`selfSufficiencyPeak${index}`] = {
-                    type: 'label',
-                    xValue: timestamp,
-                    yValue: peak.value,
-                    yAdjust: -25,
-                    backgroundColor: 'rgba(33, 150, 243, 0.9)',
-                    borderColor: 'rgb(33, 150, 243)',
-                    borderWidth: 2,
-                    borderRadius: 4,
-                    color: 'white',
-                    content: [`${timeLabel}`, `${peak.value.toFixed(1)}%`],
-                    font: {
-                        size: 10,
-                        weight: 'bold'
-                    },
-                    padding: 6,
-                    yScaleID: 'y-percentage'
-                };
-            });
-        }
-
         return {
             responsive: true,
             maintainAspectRatio: false,
@@ -268,7 +226,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                         numbers: { duration: 0 },
                         colors: { duration: 0 }
                     },
-                    annotations: annotations
+                    annotations: {} // Empty initially, will be updated dynamically
                 }
             },
             scales: {
@@ -306,6 +264,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                     type: 'linear',
                     position: 'right',
                     min: 0,
+                    max: 200, // Fixed max to prevent scale changes when labels are shown
                     title: {
                         display: true,
                         text: 'Self-Supply Rate (%)',
@@ -331,7 +290,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 }
             }
         };
-    }, [selfSufficiencyPeaks, showAnnotations, setIsInDayView]);
+    }, [setIsInDayView]); // Only depend on setIsInDayView, not on showAnnotations or peaks
 
     // Update chart annotations when showAnnotations changes
     React.useEffect(() => {
