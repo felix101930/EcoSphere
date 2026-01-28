@@ -6,14 +6,14 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 function sqlcmdQuery(query) {
     return new Promise((resolve, reject) => {
         const server = process.env.DB_SERVER || '.\\SQLEXPRESS';
-        const database = process.env.DB_DATABASE || 'TestSlimDB';
+        const database = process.env.DB_DATABASE || 'EcoSphereData'; // Default to new database
 
         // -W remove trailing whitespace, -s"," comma separator, -I quoted identifiers
         const args = ['-S', server, '-d', database, '-Q', query, '-W', '-s', ',', '-I'];
 
         console.log(`🔌 Spawning sqlcmd...`);
         const proc = spawn('sqlcmd', args);
-        
+
         let stdoutData = '';
         let stderrData = '';
 
@@ -29,10 +29,10 @@ function sqlcmdQuery(query) {
             try {
                 // 1. Clean the output: Split by newlines, trim whitespace
                 let lines = stdoutData.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                
+
                 // 2. Filter out SQL Server messages like "(X rows affected)" or separator lines "---,---"
-                lines = lines.filter(line => 
-                    !line.includes('rows affected') && 
+                lines = lines.filter(line =>
+                    !line.includes('rows affected') &&
                     !line.startsWith('-') &&
                     line.includes(',') // Data lines must have a comma
                 );
@@ -55,7 +55,7 @@ function sqlcmdQuery(query) {
                     }
                     return null;
                 }).filter(item => item !== null);
-                
+
                 resolve(results);
 
             } catch (err) {

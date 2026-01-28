@@ -81,7 +81,7 @@ async function analyzeTable(tableName) {
 
 async function main() {
     console.log('WATER-RELATED TABLES ANALYSIS');
-    console.log('Database: TestSlimDB');
+    console.log('Database: EcoSphereData');
     console.log('Analysis Date:', new Date().toISOString());
     console.log('\nTables to analyze:');
     WATER_TABLES.forEach((table, index) => {

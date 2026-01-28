@@ -7,7 +7,7 @@ const fs = require("fs");
 const DB_CONFIG = {
   // Use single backslash here - we'll handle escaping in buildSqlcmdCommand
   SERVER: process.env.DB_SERVER || ".\\SQLEXPRESS",
-  DATABASE: process.env.DB_DATABASE || "TestSlimDB",
+  DATABASE: process.env.DB_DATABASE || "EcoSphereData", // Default to new database
   USER: process.env.DB_USER,
   PASSWORD: process.env.DB_PASSWORD,
   AUTH_WINDOWS: "-E",

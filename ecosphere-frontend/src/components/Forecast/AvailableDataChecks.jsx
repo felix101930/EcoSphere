@@ -22,8 +22,8 @@ const AvailableDataChecks = ({ dataAvailability }) => {
             useWarning: true
         },
         {
-            key: 'hasOneYearCycle',
-            label: 'Complete 1-year cycle data',
+            key: 'hasTwoYearCycle',
+            label: 'Complete 2-year cycle data',
             useWarning: true
         }
     ];

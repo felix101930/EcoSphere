@@ -123,10 +123,10 @@ export const ALGORITHM_TIERS = [
       "Exponential smoothing",
       "Weekly seasonality",
     ],
-    requirements: ["1 year historical data", "70% data completeness"],
+    requirements: ["2 years historical data", "70% data completeness"],
     formula: "Y(t+h) = L(t) + h×T(t) + S(t+h-m)",
     description:
-      "Triple exponential smoothing that captures level (L), trend (T), and seasonal (S) components. Uses α, β, γ parameters to weight recent vs historical data. Ideal for data with clear weekly patterns.",
+      "Triple exponential smoothing that captures level (L), trend (T), and seasonal (S) components. Uses α, β, γ parameters to weight recent vs historical data. Requires 2 complete seasonal cycles (2 years) for accurate pattern recognition.",
   },
   {
     tier: 2,

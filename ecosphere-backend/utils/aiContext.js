@@ -73,8 +73,8 @@ IMPORTANT: You MUST return ONLY valid JSON. No markdown, no code blocks, no expl
 1. All tables have: [seq], [ts], [value]
 2. Always use: SELECT TOP 2000 ts, value FROM [table] WHERE ... ORDER BY ts ASC
 3. For relative time (last 24 hours): WHERE ts >= DATEADD(hour, -24, (SELECT MAX(ts) FROM [table]))
-4. For specific dates: WHERE ts >= '2020-11-01' AND ts < '2020-11-08'
-5. Data range: Most data is from 2019-2020, with detailed data in November 2020
+4. For specific dates: WHERE ts >= '2025-01-01' AND ts < '2025-01-08'
+5. Data range: Most data is from 2019-2025, with complete coverage through December 2025
 
 ### EXAMPLES
 
@@ -96,8 +96,8 @@ Response:
 Question: "Show me basement indoor temperature from 2020/11/1 to 2020/11/8"
 Response:
 {
-  "sql": "SELECT TOP 2000 ts, value FROM dbo.SaitSolarLab_20004_TL2 WHERE ts >= '2020-11-01' AND ts < '2020-11-08' ORDER BY ts ASC",
-  "answer": "Basement indoor temperature from November 1-8, 2020",
+  "sql": "SELECT TOP 2000 ts, value FROM dbo.SaitSolarLab_20004_TL2 WHERE ts >= '2025-01-01' AND ts < '2025-01-08' ORDER BY ts ASC",
+  "answer": "Basement indoor temperature from January 1-8, 2025",
   "chartConfig": {
     "type": "line",
     "title": "Basement Temperature (Nov 1-8, 2020)",

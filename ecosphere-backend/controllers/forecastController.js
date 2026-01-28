@@ -27,13 +27,15 @@ const getElectricityForecast = async (req, res) => {
             });
         }
 
-        // Get historical data (need at least 60 days before target date for training)
+        // Get historical data for Holt-Winters (requires 2 complete seasonal cycles)
         const target = new Date(targetDate + 'T12:00:00');
         const startDate = new Date(target);
-        startDate.setDate(startDate.getDate() - 365); // Get 1 year of history
+        startDate.setDate(startDate.getDate() - (2 * 365)); // Get 2 years of history for proper seasonality
 
         const startDateStr = formatDate(startDate);
         const targetDateStr = targetDate;
+
+        console.log(`📊 Fetching consumption data for Holt-Winters: ${startDateStr} to ${targetDateStr} (2 years)`);
 
         // Fetch historical consumption data
         const consumptionResponse = await ElectricityService.getConsumptionData(
@@ -51,12 +53,18 @@ const getElectricityForecast = async (req, res) => {
             });
         }
 
+        console.log(`✅ Received ${historicalData.length} data points for forecast analysis`);
+
         // Generate forecast
         const forecastResult = await ForecastService.generateForecast(
             targetDate,
             days,
             historicalData
         );
+
+        console.log(`📈 Forecast generated using: ${forecastResult.metadata.strategyName}`);
+        console.log(`   Confidence: ${forecastResult.metadata.confidence}%`);
+        console.log(`   Completeness: ${forecastResult.metadata.dataAvailability.completenessScore}%`);
 
         // Return response (no actual data comparison for real predictions)
         res.json({

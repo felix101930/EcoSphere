@@ -1,5 +1,20 @@
 // Forecast Service Constants
 
+/**
+ * Holt-Winters Algorithm Requirements:
+ * 
+ * Academic Standard:
+ * - Minimum: 2 complete seasonal cycles (2 years for annual seasonality)
+ * - Data completeness: ≥ 80-90%
+ * - No large continuous gaps
+ * 
+ * Practical Implementation:
+ * - Tier 1 (Holt-Winters): 2 years data + 70% completeness
+ * - Tier 2 (Seasonal Weighted): 1 year data + last year same period
+ * - Tier 3 (Trend Based): 30 days recent data
+ * - Tier 4 (Moving Average): 7 days recent data
+ */
+
 module.exports = {
     // Time periods
     HOURS_PER_DAY: 24,
@@ -9,7 +24,7 @@ module.exports = {
 
     // Data completeness thresholds
     MIN_HOURS_FOR_COMPLETE_DAY: 20,
-    MIN_COMPLETENESS_SCORE: 70,
+    MIN_COMPLETENESS_SCORE: 70, // For 2-year historical data (Holt-Winters standard)
     MIN_DATA_AVAILABILITY: 0.5,
     GAP_THRESHOLD_HOURS: 24,
     MAX_MISSING_PERIODS: 5,

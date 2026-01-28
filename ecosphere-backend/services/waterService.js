@@ -55,7 +55,7 @@ class WaterService {
      * Get rainwater level data (TL93)
      * Aggregated to hourly averages
      * Original interval: 10 minutes
-     * Date range: 2018-10-13 to 2020-11-08 (758 days)
+     * Date range: 2018-10-13 to 2025-12-31
      * Unit: Percentage (%)
      */
     static async getRainwaterLevelData(dateFrom, dateTo) {

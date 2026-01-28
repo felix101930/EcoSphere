@@ -99,7 +99,7 @@ const DATA_SOURCES = {
      * 
      * Tracks electrical load distribution across three phases
      * Helps identify phase imbalance issues
-     * Only available 2020-11-01 to 2020-11-08
+     * Available: 2019-02-13 to 2025-12-31
      */
     PHASE: {
         TOTAL: 'TL342',    // Total across all phases (verification)

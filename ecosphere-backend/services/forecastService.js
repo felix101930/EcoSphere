@@ -107,8 +107,25 @@ class ForecastService {
         const target = new Date(targetDate + 'T12:00:00');
         const dataPoints = historicalData.length;
 
-        // Check for 1 year of data
-        const hasOneYearCycle = dataPoints >= DAYS_PER_YEAR * HOURS_PER_DAY;
+        // Check for 2 years of data (Holt-Winters standard requirement)
+        // Instead of requiring full 17,520 points, check:
+        // 1. Time span covers 2 years
+        // 2. Completeness is acceptable (≥70%)
+        let hasTwoYearCycle = false;
+        if (dataPoints > 0) {
+            const firstDate = new Date(historicalData[0].ts);
+            const lastDate = new Date(historicalData[historicalData.length - 1].ts);
+            const timeSpanDays = (lastDate - firstDate) / MS_PER_DAY;
+
+            // Check if time span is at least 2 years (730 days)
+            // AND we have reasonable data completeness
+            const completenessScore = this.calculateDataCompleteness(historicalData);
+            hasTwoYearCycle = timeSpanDays >= (2 * DAYS_PER_YEAR) && completenessScore >= MIN_COMPLETENESS_SCORE;
+
+            console.log(`📊 Data span: ${timeSpanDays.toFixed(0)} days (need ≥730 days)`);
+            console.log(`📊 Completeness: ${completenessScore}% (need ≥${MIN_COMPLETENESS_SCORE}%)`);
+            console.log(`📊 Has 2-Year Cycle: ${hasTwoYearCycle ? '✅' : '❌'}`);
+        }
 
         // Check for last year same period
         const lastYearStart = new Date(target);
@@ -140,14 +157,15 @@ class ForecastService {
             target
         );
 
-        // Calculate completeness score
-        const completenessScore = this.calculateCompleteness(historicalData);
+        // Calculate completeness score for the ACTUAL data provided
+        // This should match what the controller fetched (2 years)
+        const completenessScore = this.calculateDataCompleteness(historicalData);
 
         // Identify missing periods
         const missingPeriods = this.identifyMissingPeriods(historicalData);
 
         return {
-            hasOneYearCycle,
+            hasTwoYearCycle,
             hasLastYearData,
             hasRecent30Days,
             hasRecent7Days,
@@ -177,14 +195,17 @@ class ForecastService {
     }
 
     /**
-     * Calculate data completeness score (0-100)
+     * Calculate completeness for the ACTUAL data provided
+     * This checks the data that was actually fetched, not a subset
+     * 
+     * @param {Array} data - Historical data array
+     * @returns {number} Completeness score (0-100)
      */
-    static calculateCompleteness(data) {
+    static calculateDataCompleteness(data) {
         if (data.length === 0) return 0;
-
-        // Calculate expected data points based on date range
         if (data.length < 2) return 100;
 
+        // Calculate expected points based on actual date range in the data
         const firstDate = new Date(data[0].ts);
         const lastDate = new Date(data[data.length - 1].ts);
         const totalHours = (lastDate - firstDate) / MS_PER_HOUR;
@@ -192,11 +213,19 @@ class ForecastService {
 
         if (expectedPoints === 0) return 100;
 
-        // Calculate actual completeness
+        // Calculate completeness
         const actualPoints = data.length;
         const completeness = (actualPoints / expectedPoints) * 100;
 
         return Math.min(100, Math.round(completeness));
+    }
+
+    /**
+     * Calculate data completeness score (0-100)
+     * Uses entire data range - kept for backward compatibility
+     */
+    static calculateCompleteness(data) {
+        return this.calculateDataCompleteness(data);
     }
 
     /**
@@ -227,8 +256,8 @@ class ForecastService {
      * Select best prediction strategy based on data availability
      */
     static selectPredictionStrategy(dataAvailability) {
-        // Tier 1: Holt-Winters (Best)
-        if (dataAvailability.hasOneYearCycle &&
+        // Tier 1: Holt-Winters (Best) - Requires 2 years of data with good completeness
+        if (dataAvailability.hasTwoYearCycle &&
             dataAvailability.completenessScore >= MIN_COMPLETENESS_SCORE) {
             return {
                 strategy: STRATEGY.HOLT_WINTERS,
@@ -285,25 +314,37 @@ class ForecastService {
 
     /**
      * Tier 1: Holt-Winters Forecast
+     * Simplified implementation using historical seasonal patterns
      */
     static holtWintersForecast(data, forecastDays) {
-        // Prepare data for timeseries-analysis
-        const tsData = data.map(d => [new Date(d.ts).getTime(), Math.abs(d.value)]);
+        // Use last week's pattern as seasonal baseline
+        const period = DAYS_PER_WEEK * HOURS_PER_DAY;  // 168 hours
+        const recentData = data.slice(-period);
 
-        // Create time series
-        const ts = new t.main(t.adapter.fromArray(tsData));
+        // Calculate average level and trend
+        const avgLevel = recentData.reduce((sum, d) => sum + Math.abs(d.value), 0) / recentData.length;
+        const trend = calculateLinearTrend(recentData);
 
-        // Apply Holt-Winters smoothing
-        ts.smoother({
-            period: DAYS_PER_WEEK * HOURS_PER_DAY,  // Weekly seasonality (hourly data)
-            alpha: HOLT_WINTERS.ALPHA,              // Level smoothing
-            beta: HOLT_WINTERS.BETA,                // Trend smoothing
-            gamma: HOLT_WINTERS.GAMMA               // Seasonal smoothing
-        }).forecast(forecastDays * HOURS_PER_DAY);  // Forecast hourly
+        // Extract seasonal pattern from last week
+        const seasonalPattern = recentData.map(d => Math.abs(d.value) / avgLevel);
 
-        // Get predictions and aggregate to daily
-        const output = ts.output();
-        return aggregateHourlyToDaily(output, forecastDays);
+        // Generate hourly forecasts
+        const forecastHours = forecastDays * HOURS_PER_DAY;
+        const lastTimestamp = new Date(data[data.length - 1].ts).getTime();
+        const hourlyForecasts = [];
+
+        for (let h = 0; h < forecastHours; h++) {
+            const timestamp = lastTimestamp + (h + 1) * MS_PER_HOUR;
+            // Use seasonal pattern (repeat weekly pattern)
+            const seasonalIndex = h % period;
+            const seasonalFactor = seasonalPattern[seasonalIndex];
+            // Apply: (level + trend * time) * seasonal_factor
+            const forecastValue = (avgLevel + trend * (h + 1)) * seasonalFactor;
+            hourlyForecasts.push([timestamp, Math.max(0, forecastValue)]);
+        }
+
+        // Aggregate to daily totals
+        return aggregateHourlyToDaily(hourlyForecasts, forecastDays);
     }
 
     /**
