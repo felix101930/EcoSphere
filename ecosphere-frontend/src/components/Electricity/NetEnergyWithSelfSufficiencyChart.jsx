@@ -1,7 +1,7 @@
 // Net Energy with Consumption & Generation Chart - Three-line chart with interactive features
 import { useMemo, useState } from 'react';
 import React from 'react';
-import { Box, Paper, Typography, FormControlLabel, Switch, Button, ButtonGroup } from '@mui/material';
+import { Box, Paper, Typography, Button, ButtonGroup } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -19,17 +19,8 @@ import {
     Legend,
     TimeScale
 } from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
-import {
-    detectDailyPeaksAndValleys,
-    createPeakPointAnnotation,
-    createPeakLabelAnnotation,
-    createValleyPointAnnotation,
-    createValleyLabelAnnotation,
-    createDayViewPointAnnotation
-} from '../../lib/utils/chartAnnotations';
 
 // Register ChartJS components
 ChartJS.register(
@@ -41,7 +32,6 @@ ChartJS.register(
     Tooltip,
     Legend,
     TimeScale,
-    annotationPlugin,
     zoomPlugin
 );
 
@@ -63,20 +53,11 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         generationSample: generationData?.[0]
     });
 
-    // State for showing/hiding peak and valley annotations (default: false)
-    const [showAnnotations, setShowAnnotations] = useState(false);
-
     // State for tracking if we're in 26-hour view (to show/hide day navigation buttons)
     const [isInDayView, setIsInDayView] = useState(false);
 
     // Reference to chart instance for zoom controls
     const chartRef = React.useRef(null);
-
-    // Detect daily peaks and valleys for Net Energy
-    const peaksAndValleys = useMemo(() => {
-        if (!netEnergyData || netEnergyData.length === 0) return { peaks: [], valleys: [] };
-        return detectDailyPeaksAndValleys(netEnergyData);
-    }, [netEnergyData]);
 
     // Prepare chart data with three lines
     const chartData = useMemo(() => {
@@ -121,24 +102,8 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         };
     }, [netEnergyData, consumptionData, generationData]);
 
-    // Chart options with annotations
+    // Chart options
     const options = useMemo(() => {
-        const annotations = {};
-
-        // Add peak annotations for Net Energy using utility functions (only if showAnnotations is true)
-        if (showAnnotations) {
-            peaksAndValleys.peaks.forEach((peak, index) => {
-                Object.assign(annotations, createPeakPointAnnotation(peak, index));
-                Object.assign(annotations, createPeakLabelAnnotation(peak, index, 'Wh'));
-            });
-
-            // Add valley annotations for Net Energy using utility functions
-            peaksAndValleys.valleys.forEach((valley, index) => {
-                Object.assign(annotations, createValleyPointAnnotation(valley, index));
-                Object.assign(annotations, createValleyLabelAnnotation(valley, index, 'Wh'));
-            });
-        }
-
         return {
             responsive: true,
             maintainAspectRatio: false,
@@ -170,7 +135,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                             enabled: true
                         },
                         mode: 'x',
-                        // Only detect day view state, do NOT auto-align to prevent infinite loop
+                        // Only detect day view state
                         onZoomComplete: ({ chart }) => {
                             const xScale = chart.scales.x;
                             const currentMin = xScale.min;
@@ -219,14 +184,6 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                             return label;
                         }
                     }
-                },
-                annotation: {
-                    clip: false,
-                    animations: {
-                        numbers: { duration: 0 },
-                        colors: { duration: 0 }
-                    },
-                    annotations: annotations
                 }
             },
             scales: {
@@ -258,59 +215,14 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
             },
             layout: {
                 padding: {
-                    top: 50,
+                    top: 20,
                     bottom: 50,
                     left: 20,
                     right: 20
                 }
             }
         };
-    }, [peaksAndValleys, showAnnotations]);
-
-    // Update chart annotations when showAnnotations, isInDayView changes
-    React.useEffect(() => {
-        if (chartRef.current && chartRef.current.options) {
-            // Rebuild annotations based on current state
-            const annotations = {};
-
-            // In day view, show all data points for Net Energy (no date range restriction)
-            if (isInDayView && netEnergyData && showAnnotations) {
-                // Create a set of peak and valley timestamps for quick lookup
-                const peakTimestamps = new Set(peaksAndValleys.peaks.map(p => p.timestamp));
-                const valleyTimestamps = new Set(peaksAndValleys.valleys.map(v => v.timestamp));
-
-                // Show all data points in day view using utility function
-                netEnergyData.forEach((point, index) => {
-                    const isPeak = peakTimestamps.has(point.ts);
-                    const isValley = valleyTimestamps.has(point.ts);
-
-                    // Skip if it's a peak or valley (they're handled separately below)
-                    if (!isPeak && !isValley) {
-                        Object.assign(annotations, createDayViewPointAnnotation(point, index, false, 'Wh'));
-                    }
-                });
-            }
-
-            // Add peak and valley annotations only if showAnnotations is true
-            if (showAnnotations) {
-                // Add peak annotations for Net Energy using utility functions
-                peaksAndValleys.peaks.forEach((peak, index) => {
-                    Object.assign(annotations, createPeakPointAnnotation(peak, index));
-                    Object.assign(annotations, createPeakLabelAnnotation(peak, index, 'Wh'));
-                });
-
-                // Add valley annotations for Net Energy using utility functions
-                peaksAndValleys.valleys.forEach((valley, index) => {
-                    Object.assign(annotations, createValleyPointAnnotation(valley, index));
-                    Object.assign(annotations, createValleyLabelAnnotation(valley, index, 'Wh'));
-                });
-            }
-
-            // Update annotations without recreating the chart
-            chartRef.current.options.plugins.annotation.annotations = annotations;
-            chartRef.current.update('none');
-        }
-    }, [showAnnotations, peaksAndValleys, isInDayView, netEnergyData]);
+    }, []);
 
     // Zoom control handlers
     const handleZoomIn = () => {
@@ -476,29 +388,17 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 <Typography variant="h6">
                     Consumption, Generation & Net Energy Trend (Daily)
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <ButtonGroup variant="outlined" size="small">
-                        <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
-                            Zoom In
-                        </Button>
-                        <Button onClick={handleZoomOut} startIcon={<ZoomOutIcon />}>
-                            Zoom Out
-                        </Button>
-                        <Button onClick={handleResetZoom} startIcon={<RestartAltIcon />}>
-                            Reset
-                        </Button>
-                    </ButtonGroup>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showAnnotations}
-                                onChange={(e) => setShowAnnotations(e.target.checked)}
-                                color="primary"
-                            />
-                        }
-                        label="Show Peak/Valley Labels"
-                    />
-                </Box>
+                <ButtonGroup variant="outlined" size="small">
+                    <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
+                        Zoom In
+                    </Button>
+                    <Button onClick={handleZoomOut} startIcon={<ZoomOutIcon />}>
+                        Zoom Out
+                    </Button>
+                    <Button onClick={handleResetZoom} startIcon={<RestartAltIcon />}>
+                        Reset
+                    </Button>
+                </ButtonGroup>
             </Box>
             <Box sx={{ height: 400, position: 'relative' }}>
                 <Line ref={chartRef} data={chartData} options={options} />
