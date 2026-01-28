@@ -1,7 +1,7 @@
 // Net Energy with Consumption & Generation Chart - Three-line chart with interactive features
 import { useMemo, useState } from 'react';
 import React from 'react';
-import { Box, Paper, Typography, Button, ButtonGroup } from '@mui/material';
+import { Box, Paper, Typography, FormControlLabel, Switch, Button, ButtonGroup } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -19,8 +19,10 @@ import {
     Legend,
     TimeScale
 } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
+import { detectDailyPeaksAndValleys, formatTimeLabel } from '../../lib/utils/chartAnnotations';
 
 // Register ChartJS components
 ChartJS.register(
@@ -32,6 +34,7 @@ ChartJS.register(
     Tooltip,
     Legend,
     TimeScale,
+    annotationPlugin,
     zoomPlugin
 );
 
@@ -57,11 +60,25 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         generationSample: generationData?.[0]
     });
 
+    // State for showing/hiding peak annotations (default: true)
+    const [showAnnotations, setShowAnnotations] = useState(true);
+
     // State for tracking if we're in 26-hour view (to show/hide day navigation buttons)
     const [isInDayView, setIsInDayView] = useState(false);
 
     // Reference to chart instance for zoom controls
     const chartRef = React.useRef(null);
+
+    // Detect daily peaks for Self-Supply Rate where value > 100%
+    const selfSufficiencyPeaks = useMemo(() => {
+        if (!selfSufficiencyData || selfSufficiencyData.length === 0) return [];
+
+        // Detect all peaks
+        const allPeaks = detectDailyPeaksAndValleys(selfSufficiencyData).peaks;
+
+        // Filter only peaks where value > 100%
+        return allPeaks.filter(peak => peak.value > SELF_SUFFICIENCY_THRESHOLD);
+    }, [selfSufficiencyData]);
 
     // Prepare chart data with four lines
     const chartData = useMemo(() => {
@@ -120,8 +137,50 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         };
     }, [netEnergyData, consumptionData, generationData, selfSufficiencyData]);
 
-    // Chart options with dual Y-axis
+    // Chart options with dual Y-axis and annotations
     const options = useMemo(() => {
+        const annotations = {};
+
+        // Add peak annotations for Self-Supply Rate > 100% (only if showAnnotations is true)
+        if (showAnnotations) {
+            selfSufficiencyPeaks.forEach((peak, index) => {
+                const timestamp = new Date(peak.timestamp);
+                const timeLabel = formatTimeLabel(timestamp);
+
+                // Add point marker
+                annotations[`selfSufficiencyPeakPoint${index}`] = {
+                    type: 'point',
+                    xValue: timestamp,
+                    yValue: peak.value,
+                    backgroundColor: 'rgba(33, 150, 243, 0.8)',
+                    borderColor: 'rgb(33, 150, 243)',
+                    borderWidth: 2,
+                    radius: 5,
+                    yScaleID: 'y-percentage'
+                };
+
+                // Add label
+                annotations[`selfSufficiencyPeak${index}`] = {
+                    type: 'label',
+                    xValue: timestamp,
+                    yValue: peak.value,
+                    yAdjust: -25,
+                    backgroundColor: 'rgba(33, 150, 243, 0.9)',
+                    borderColor: 'rgb(33, 150, 243)',
+                    borderWidth: 2,
+                    borderRadius: 4,
+                    color: 'white',
+                    content: [`${timeLabel}`, `${peak.value.toFixed(1)}%`],
+                    font: {
+                        size: 10,
+                        weight: 'bold'
+                    },
+                    padding: 6,
+                    yScaleID: 'y-percentage'
+                };
+            });
+        }
+
         return {
             responsive: true,
             maintainAspectRatio: false,
@@ -203,6 +262,14 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                             }
                         }
                     }
+                },
+                annotation: {
+                    clip: false,
+                    animations: {
+                        numbers: { duration: 0 },
+                        colors: { duration: 0 }
+                    },
+                    annotations: annotations
                 }
             },
             scales: {
@@ -265,7 +332,59 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 }
             }
         };
-    }, []);
+    }, [selfSufficiencyPeaks, showAnnotations]);
+
+    // Update chart annotations when showAnnotations changes
+    React.useEffect(() => {
+        if (chartRef.current && chartRef.current.options) {
+            // Rebuild annotations based on current state
+            const annotations = {};
+
+            // Add peak annotations for Self-Supply Rate > 100% (only if showAnnotations is true)
+            if (showAnnotations) {
+                selfSufficiencyPeaks.forEach((peak, index) => {
+                    const timestamp = new Date(peak.timestamp);
+                    const timeLabel = formatTimeLabel(timestamp);
+
+                    // Add point marker
+                    annotations[`selfSufficiencyPeakPoint${index}`] = {
+                        type: 'point',
+                        xValue: timestamp,
+                        yValue: peak.value,
+                        backgroundColor: 'rgba(33, 150, 243, 0.8)',
+                        borderColor: 'rgb(33, 150, 243)',
+                        borderWidth: 2,
+                        radius: 5,
+                        yScaleID: 'y-percentage'
+                    };
+
+                    // Add label
+                    annotations[`selfSufficiencyPeak${index}`] = {
+                        type: 'label',
+                        xValue: timestamp,
+                        yValue: peak.value,
+                        yAdjust: -25,
+                        backgroundColor: 'rgba(33, 150, 243, 0.9)',
+                        borderColor: 'rgb(33, 150, 243)',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        color: 'white',
+                        content: [`${timeLabel}`, `${peak.value.toFixed(1)}%`],
+                        font: {
+                            size: 10,
+                            weight: 'bold'
+                        },
+                        padding: 6,
+                        yScaleID: 'y-percentage'
+                    };
+                });
+            }
+
+            // Update annotations without recreating the chart
+            chartRef.current.options.plugins.annotation.annotations = annotations;
+            chartRef.current.update('none');
+        }
+    }, [showAnnotations, selfSufficiencyPeaks]);
 
     // Chart plugins for 100% threshold line on right Y-axis
     const plugins = useMemo(() => [{
@@ -446,7 +565,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         return (
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                    Consumption, Generation, Net Energy Trend & Self-Supply Rate (Daily)
+                    Net Energy Trend & Self-Supply Rate (Daily)
                 </Typography>
                 <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Typography color="text.secondary">
@@ -461,19 +580,31 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">
-                    Consumption, Generation, Net Energy Trend & Self-Supply Rate (Daily)
+                    Net Energy Trend & Self-Supply Rate (Daily)
                 </Typography>
-                <ButtonGroup variant="outlined" size="small">
-                    <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
-                        Zoom In
-                    </Button>
-                    <Button onClick={handleZoomOut} startIcon={<ZoomOutIcon />}>
-                        Zoom Out
-                    </Button>
-                    <Button onClick={handleResetZoom} startIcon={<RestartAltIcon />}>
-                        Reset
-                    </Button>
-                </ButtonGroup>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <ButtonGroup variant="outlined" size="small">
+                        <Button onClick={handleZoomIn} startIcon={<ZoomInIcon />}>
+                            Zoom In
+                        </Button>
+                        <Button onClick={handleZoomOut} startIcon={<ZoomOutIcon />}>
+                            Zoom Out
+                        </Button>
+                        <Button onClick={handleResetZoom} startIcon={<RestartAltIcon />}>
+                            Reset
+                        </Button>
+                    </ButtonGroup>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showAnnotations}
+                                onChange={(e) => setShowAnnotations(e.target.checked)}
+                                color="primary"
+                            />
+                        }
+                        label="Show Peak Labels (>100%)"
+                    />
+                </Box>
             </Box>
             <Box sx={{ height: 400, position: 'relative' }}>
                 <Line ref={chartRef} data={chartData} options={options} plugins={plugins} />
