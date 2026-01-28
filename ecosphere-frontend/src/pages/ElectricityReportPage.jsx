@@ -131,8 +131,15 @@ const ElectricityReportPage = () => {
             }
             break;
           case TAB_TYPES.NET_ENERGY:
+            // Net Energy tab needs all three datasets
             if (!netEnergyData) {
               await loadNetEnergyData(dateFrom, dateTo);
+            }
+            if (!consumptionData) {
+              await loadConsumptionData(dateFrom, dateTo);
+            }
+            if (!generationData) {
+              await loadGenerationData(dateFrom, dateTo);
             }
             break;
           default:
@@ -264,6 +271,8 @@ const ElectricityReportPage = () => {
         {activeTab === TAB_TYPES.NET_ENERGY && (
           <NetEnergyTab
             data={netEnergyData}
+            consumptionData={consumptionData}
+            generationData={generationData}
             loading={loading}
           />
         )}

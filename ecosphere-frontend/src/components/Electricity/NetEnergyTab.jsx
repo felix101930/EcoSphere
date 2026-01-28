@@ -2,8 +2,19 @@
 import { Box, CircularProgress, Alert, Paper, Typography } from '@mui/material';
 import NetEnergyMetricsCards from './NetEnergyMetricsCards';
 import NetEnergyWithSelfSufficiencyChart from './NetEnergyWithSelfSufficiencyChart';
+import DataSourceInfo from './DataSourceInfo';
 
-const NetEnergyTab = ({ data, loading }) => {
+const NetEnergyTab = ({ data, consumptionData, generationData, loading }) => {
+  // Debug: Log received data from parent
+  console.log('NetEnergyTab - Data received from parent:', {
+    hasNetEnergyData: !!data,
+    hasConsumptionData: !!consumptionData,
+    hasGenerationData: !!generationData,
+    consumptionCount: consumptionData?.data?.length,
+    generationCount: generationData?.data?.length,
+    netEnergyCount: data?.data?.length
+  });
+
   // Loading state
   if (loading && !data) {
     return (
@@ -42,17 +53,22 @@ const NetEnergyTab = ({ data, loading }) => {
         </Typography>
       </Paper>
 
-      {/* Net Energy & Self-Sufficiency Rate Combined Chart */}
+      {/* Net Energy with Consumption & Generation Chart */}
       <NetEnergyWithSelfSufficiencyChart
         netEnergyData={data.data}
+        consumptionData={consumptionData?.data}
+        generationData={generationData?.data}
         selfSufficiencyData={data.selfSufficiencyRate}
       />
 
       {/* Data Source Info */}
-      <Alert severity="info" sx={{ mt: 2 }}>
-        Data Source: {data.dataSource} | Records: {data.count} |
-        Date Range: {data.dateFrom} to {data.dateTo}
-      </Alert>
+      <DataSourceInfo
+        dataSource="TL339 (Net Energy), TL340 (Generation), TL341 (Consumption)"
+        count={data.count}
+        dateFrom={data.dateFrom}
+        dateTo={data.dateTo}
+        note="Net Energy data is stored at hourly intervals (TL339). Self-Sufficiency Rate is calculated using TL340 (Generation) and TL341 (Consumption) data."
+      />
     </Box>
   );
 };
