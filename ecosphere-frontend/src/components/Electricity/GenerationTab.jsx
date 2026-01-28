@@ -1,5 +1,5 @@
 // Generation Tab Component - Complete generation analysis
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import { GENERATION_BREAKDOWNS } from '../../lib/constants/electricity';
 import MetricsCards from './MetricsCards';
@@ -13,10 +13,10 @@ const GenerationTab = ({
   dateFrom,
   dateTo,
   onLoadSolarSourceBreakdown,
-  solarSourceBreakdownData
+  solarSourceBreakdownData,
+  selectedBreakdown,
+  onBreakdownChange
 }) => {
-  const [selectedBreakdown, setSelectedBreakdown] = useState(GENERATION_BREAKDOWNS.OVERALL);
-
   // Load breakdown data when selection changes
   useEffect(() => {
     if (!dateFrom || !dateTo) return;
@@ -61,7 +61,7 @@ const GenerationTab = ({
       <Box data-hide-in-export="true">
         <BreakdownSelector
           selectedBreakdown={selectedBreakdown}
-          onBreakdownChange={setSelectedBreakdown}
+          onBreakdownChange={onBreakdownChange}
           type="generation"
         />
       </Box>

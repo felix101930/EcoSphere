@@ -31,11 +31,38 @@ const TimeFilter = ({
 }) => {
     const [preset, setPreset] = useState(TIME_PRESETS.LAST_7_DAYS);
 
-    // Handle preset change
+    // Internal temporary state - initialized with Last 7 Days default or props
+    const [tempDateFrom, setTempDateFrom] = useState(() => {
+        if (dateFrom) return dateFrom;
+        // Calculate Last 7 Days as default
+        if (dateRange) {
+            const maxDate = new Date(dateRange.maxDate + 'T12:00:00');
+            const fromDate = new Date(maxDate);
+            fromDate.setDate(fromDate.getDate() - 7);
+            const minDate = new Date(dateRange.minDate + 'T12:00:00');
+            return fromDate < minDate ? minDate : fromDate;
+        }
+        return null;
+    });
+
+    const [tempDateTo, setTempDateTo] = useState(() => {
+        if (dateTo) return dateTo;
+        // Use max date as default
+        if (dateRange) {
+            return new Date(dateRange.maxDate + 'T12:00:00');
+        }
+        return null;
+    });
+
+    // Handle preset change - update temp dates only
     const handlePresetChange = (_event, newPreset) => {
         if (newPreset === null) return;
 
         setPreset(newPreset);
+
+        if (newPreset === TIME_PRESETS.CUSTOM) {
+            return;
+        }
 
         if (!dateRange) return;
 
@@ -54,8 +81,6 @@ const TimeFilter = ({
             case TIME_PRESETS.LAST_3_MONTHS:
                 fromDate.setMonth(fromDate.getMonth() - 3);
                 break;
-            case TIME_PRESETS.CUSTOM:
-                return;
             default:
                 break;
         }
@@ -67,8 +92,22 @@ const TimeFilter = ({
             fromDate = minDate;
         }
 
-        onDateFromChange(fromDate);
-        onDateToChange(maxDate);
+        // Update temp dates only (not parent)
+        setTempDateFrom(fromDate);
+        setTempDateTo(maxDate);
+    };
+
+    // Handle Apply button - update parent and trigger data load
+    const handleApply = () => {
+        if (tempDateFrom && tempDateTo) {
+            onDateFromChange(tempDateFrom);
+            onDateToChange(tempDateTo);
+
+            // Use setTimeout to ensure state is updated before calling onApply
+            setTimeout(() => {
+                onApply();
+            }, 0);
+        }
     };
 
     // Should disable dates outside available range
@@ -118,9 +157,9 @@ const TimeFilter = ({
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                     <DatePicker
                         label="From Date"
-                        value={dateFrom}
+                        value={tempDateFrom}
                         onChange={(newValue) => {
-                            onDateFromChange(newValue);
+                            setTempDateFrom(newValue);
                             setPreset(TIME_PRESETS.CUSTOM);
                         }}
                         shouldDisableDate={shouldDisableDate}
@@ -136,9 +175,9 @@ const TimeFilter = ({
 
                     <DatePicker
                         label="To Date"
-                        value={dateTo}
+                        value={tempDateTo}
                         onChange={(newValue) => {
-                            onDateToChange(newValue);
+                            setTempDateTo(newValue);
                             setPreset(TIME_PRESETS.CUSTOM);
                         }}
                         shouldDisableDate={shouldDisableDate}
@@ -152,8 +191,8 @@ const TimeFilter = ({
 
                     <Button
                         variant="contained"
-                        onClick={onApply}
-                        disabled={!dateFrom || !dateTo || loading}
+                        onClick={handleApply}
+                        disabled={!tempDateFrom || !tempDateTo || loading}
                     >
                         Apply
                     </Button>

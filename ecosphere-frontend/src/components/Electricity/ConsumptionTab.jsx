@@ -1,5 +1,5 @@
 // Consumption Tab Component - Complete consumption analysis
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import { CONSUMPTION_BREAKDOWNS } from '../../lib/constants/electricity';
 import MetricsCards from './MetricsCards';
@@ -16,10 +16,10 @@ const ConsumptionTab = ({
   onLoadPhaseBreakdown,
   onLoadEquipmentBreakdown,
   phaseBreakdownData,
-  equipmentBreakdownData
+  equipmentBreakdownData,
+  selectedBreakdown,
+  onBreakdownChange
 }) => {
-  const [selectedBreakdown, setSelectedBreakdown] = useState(CONSUMPTION_BREAKDOWNS.OVERALL);
-
   // Load breakdown data when selection changes
   useEffect(() => {
     if (!dateFrom || !dateTo) return;
@@ -78,7 +78,7 @@ const ConsumptionTab = ({
       <Box data-hide-in-export="true">
         <BreakdownSelector
           selectedBreakdown={selectedBreakdown}
-          onBreakdownChange={setSelectedBreakdown}
+          onBreakdownChange={onBreakdownChange}
           type="consumption"
         />
       </Box>

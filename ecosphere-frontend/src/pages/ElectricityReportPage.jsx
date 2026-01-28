@@ -9,12 +9,16 @@ import ConsumptionTab from '../components/Electricity/ConsumptionTab';
 import GenerationTab from '../components/Electricity/GenerationTab';
 import NetEnergyTab from '../components/Electricity/NetEnergyTab';
 import ForecastTab from '../components/Forecast/ForecastTab';
-import { TAB_TYPES } from '../lib/constants/electricity';
+import { TAB_TYPES, CONSUMPTION_BREAKDOWNS, GENERATION_BREAKDOWNS } from '../lib/constants/electricity';
 import { useElectricityData } from '../lib/hooks/useElectricityData';
 
 const ElectricityReportPage = () => {
   // Tab state
-  const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);  
+  const [activeTab, setActiveTab] = useState(TAB_TYPES.CONSUMPTION);
+
+  // Breakdown state - shared across tabs
+  const [consumptionBreakdown, setConsumptionBreakdown] = useState(CONSUMPTION_BREAKDOWNS.OVERALL);
+  const [generationBreakdown, setGenerationBreakdown] = useState(GENERATION_BREAKDOWNS.OVERALL);
 
   // Date filter state
   const [dateFrom, setDateFrom] = useState(null);
@@ -70,6 +74,10 @@ const ElectricityReportPage = () => {
     }
 
     try {
+      // Reset breakdowns to Overall when applying new date range
+      setConsumptionBreakdown(CONSUMPTION_BREAKDOWNS.OVERALL);
+      setGenerationBreakdown(GENERATION_BREAKDOWNS.OVERALL);
+
       // Clear all existing data first to force reload
       // This ensures all tabs get fresh data when dates change
       clearData();
@@ -233,6 +241,8 @@ const ElectricityReportPage = () => {
             onLoadEquipmentBreakdown={loadEquipmentBreakdown}
             phaseBreakdownData={phaseBreakdownData}
             equipmentBreakdownData={equipmentBreakdownData}
+            selectedBreakdown={consumptionBreakdown}
+            onBreakdownChange={setConsumptionBreakdown}
           />
         )}
         {activeTab === TAB_TYPES.GENERATION && (
@@ -243,6 +253,8 @@ const ElectricityReportPage = () => {
             dateTo={dateTo}
             onLoadSolarSourceBreakdown={loadSolarBreakdown}
             solarSourceBreakdownData={solarBreakdownData}
+            selectedBreakdown={generationBreakdown}
+            onBreakdownChange={setGenerationBreakdown}
           />
         )}
         {activeTab === TAB_TYPES.NET_ENERGY && (
