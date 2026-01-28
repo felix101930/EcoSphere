@@ -42,14 +42,14 @@ const DATA_RANGES = {
     /**
      * Phase Breakdown Data (3-phase electrical distribution)
      * 
-     * Only available for 7 days in November 2020
-     * This was a pilot test period for phase monitoring
-     * After this period, only total consumption is tracked
+     * Available from 2019-03-30 to 2025-12-31
+     * Phase monitoring data with 1-minute intervals
+     * Tracks electrical load distribution across three phases
      */
     PHASE_BREAKDOWN: {
-        FROM: '2020-11-01',
-        TO: '2020-11-08',
-        DESCRIPTION: 'Phase data only available for 7 days (2020-11-01 to 2020-11-08)'
+        FROM: '2019-03-30',
+        TO: '2025-12-31',
+        DESCRIPTION: 'Phase data available from 2019-03-30 to 2025-12-31'
     },
 
     /**

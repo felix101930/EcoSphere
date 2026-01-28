@@ -30,8 +30,8 @@ export const TIME_PRESETS = {
 
 // Data availability warnings
 export const DATA_WARNINGS = {
-  PHASE: 'Data is only available from 2020-11-01 to 2020-11-08 (7 days)',
-  SOLAR_SOURCE: 'Solar source data is only available from 2020-11-01 to 2020-11-08 (7 days). Only covers ~27% of total generation.',
+  PHASE: 'Phase data available from 2019-03-30 to 2025-12-31',
+  SOLAR_SOURCE: 'Solar source data available from 2019-03-30 to 2025-12-31. Only covers ~27% of total generation.',
   EQUIPMENT: 'Equipment data has different time ranges for different categories',
   CONSUMPTION_COVERAGE: 'TL341 measures approximately 20% of total site consumption'
 };

@@ -194,9 +194,6 @@ const PhaseBreakdownChart = ({ data, loading }) => {
         <Typography variant="h6" gutterBottom>
           Electricity Consumption Trend by Phase (Daily)
         </Typography>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Phase data is only available from 2020-11-01 to 2020-11-08 (7 days)
-        </Alert>
         <Box sx={{ height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography color="text.secondary">
             No phase data available for selected date range
