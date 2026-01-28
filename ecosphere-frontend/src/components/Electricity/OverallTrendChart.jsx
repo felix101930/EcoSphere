@@ -93,26 +93,8 @@ const OverallTrendChart = ({
     };
   }, [data, dataLabel, color, preserveSign]);
 
-  // Chart options with annotations
+  // Chart options (without annotations - they are added dynamically)
   const options = useMemo(() => {
-    const annotations = {};
-
-    // Add peak annotations using utility functions
-    peaksAndValleys.peaks.forEach((peak, index) => {
-      Object.assign(annotations, createPeakPointAnnotation(peak, index));
-      if (showAnnotations) {
-        Object.assign(annotations, createPeakLabelAnnotation(peak, index, unit));
-      }
-    });
-
-    // Add valley annotations using utility functions
-    peaksAndValleys.valleys.forEach((valley, index) => {
-      Object.assign(annotations, createValleyPointAnnotation(valley, index));
-      if (showAnnotations) {
-        Object.assign(annotations, createValleyLabelAnnotation(valley, index, unit));
-      }
-    });
-
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -203,7 +185,7 @@ const OverallTrendChart = ({
             numbers: { duration: 0 },
             colors: { duration: 0 }
           },
-          annotations: annotations
+          annotations: {} // Empty initially, will be updated dynamically
         }
       },
       scales: {
@@ -242,7 +224,7 @@ const OverallTrendChart = ({
         }
       }
     };
-  }, [unit, yAxisLabel, peaksAndValleys, showAnnotations]);
+  }, [unit, yAxisLabel]); // Only depend on unit and yAxisLabel, not on showAnnotations or peaks
 
   // Update chart annotations when showAnnotations, isInDayView changes
   React.useEffect(() => {
