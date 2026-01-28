@@ -68,8 +68,12 @@ const ElectricityReportPage = () => {
   };
 
   // Handle apply filter
-  const handleApplyFilter = async () => {
-    if (!dateFrom || !dateTo) {
+  const handleApplyFilter = async (newDateFrom, newDateTo) => {
+    // Use the passed dates if provided, otherwise use state
+    const fromDate = newDateFrom || dateFrom;
+    const toDate = newDateTo || dateTo;
+
+    if (!fromDate || !toDate) {
       return;
     }
 
@@ -82,16 +86,16 @@ const ElectricityReportPage = () => {
       // This ensures all tabs get fresh data when dates change
       clearData();
 
-      // Load data based on active tab
+      // Load data based on active tab using the new dates
       switch (activeTab) {
         case TAB_TYPES.CONSUMPTION:
-          await loadConsumptionData(dateFrom, dateTo);
+          await loadConsumptionData(fromDate, toDate);
           break;
         case TAB_TYPES.GENERATION:
-          await loadGenerationData(dateFrom, dateTo);
+          await loadGenerationData(fromDate, toDate);
           break;
         case TAB_TYPES.NET_ENERGY:
-          await loadNetEnergyData(dateFrom, dateTo);
+          await loadNetEnergyData(fromDate, toDate);
           break;
         default:
           break;

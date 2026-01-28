@@ -145,14 +145,15 @@ const TimeFilter = ({
             return;
         }
 
-        // All validations passed - update parent and trigger data load
+        // All validations passed - update parent state
         onDateFromChange(tempDateFrom);
         onDateToChange(tempDateTo);
 
-        // Use setTimeout to ensure state is updated before calling onApply
-        setTimeout(() => {
-            onApply();
-        }, 0);
+        // Call onApply with the new dates to avoid stale state issue
+        // Pass the new dates directly instead of relying on state update
+        if (onApply) {
+            onApply(tempDateFrom, tempDateTo);
+        }
     };
 
     // Should disable dates outside available range
