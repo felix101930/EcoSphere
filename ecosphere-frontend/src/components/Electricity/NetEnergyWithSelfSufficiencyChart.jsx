@@ -23,6 +23,7 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
 import { detectDailyPeaksAndValleys, formatTimeLabel } from '../../lib/utils/chartAnnotations';
+import { useChartZoom } from '../../lib/hooks/useChartZoom';
 
 // Register ChartJS components
 ChartJS.register(
@@ -50,24 +51,22 @@ const CHART_COLORS = {
 const SELF_SUFFICIENCY_THRESHOLD = 100;
 
 const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, generationData, selfSufficiencyData }) => {
-    // Debug: Log received data
-    console.log('NetEnergyChart - Data received:', {
-        netEnergyCount: netEnergyData?.length,
-        consumptionCount: consumptionData?.length,
-        generationCount: generationData?.length,
-        netEnergySample: netEnergyData?.[0],
-        consumptionSample: consumptionData?.[0],
-        generationSample: generationData?.[0]
-    });
-
     // State for showing/hiding peak annotations (default: true)
     const [showAnnotations, setShowAnnotations] = useState(true);
 
-    // State for tracking if we're in 26-hour view (to show/hide day navigation buttons)
-    const [isInDayView, setIsInDayView] = useState(false);
-
     // Reference to chart instance for zoom controls
     const chartRef = React.useRef(null);
+
+    // Use custom hook for zoom and day navigation
+    const {
+        isInDayView,
+        setIsInDayView,
+        handleZoomIn,
+        handleZoomOut,
+        handleResetZoom,
+        handlePreviousDay,
+        handleNextDay
+    } = useChartZoom(chartRef, netEnergyData);
 
     // Detect daily peaks for Self-Supply Rate where value > 100%
     const selfSufficiencyPeaks = useMemo(() => {
@@ -332,7 +331,7 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
                 }
             }
         };
-    }, [selfSufficiencyPeaks, showAnnotations]);
+    }, [selfSufficiencyPeaks, showAnnotations, setIsInDayView]);
 
     // Update chart annotations when showAnnotations changes
     React.useEffect(() => {
@@ -417,149 +416,6 @@ const NetEnergyWithSelfSufficiencyChart = ({ netEnergyData, consumptionData, gen
             ctx.restore();
         }
     }], []);
-
-    // Zoom control handlers
-    const handleZoomIn = () => {
-        if (chartRef.current) {
-            chartRef.current.zoom(1.2);
-
-            // Manually check if we're in day view after zoom
-            setTimeout(() => {
-                if (chartRef.current) {
-                    const xScale = chartRef.current.scales.x;
-                    const currentMin = xScale.min;
-                    const currentMax = xScale.max;
-                    const currentRange = currentMax - currentMin;
-                    const minRange = 26 * 60 * 60 * 1000; // 26 hours
-
-                    const inDayView = currentRange <= minRange + (60 * 60 * 1000);
-                    setIsInDayView(inDayView);
-                }
-            }, 0);
-        }
-    };
-
-    const handleZoomOut = () => {
-        if (chartRef.current) {
-            chartRef.current.zoom(0.8);
-
-            // Manually check if we're still in day view after zoom
-            setTimeout(() => {
-                if (chartRef.current) {
-                    const xScale = chartRef.current.scales.x;
-                    const currentMin = xScale.min;
-                    const currentMax = xScale.max;
-                    const currentRange = currentMax - currentMin;
-                    const minRange = 26 * 60 * 60 * 1000; // 26 hours
-
-                    const inDayView = currentRange <= minRange + (60 * 60 * 1000);
-                    setIsInDayView(inDayView);
-                }
-            }, 0);
-        }
-    };
-
-    const handleResetZoom = () => {
-        if (chartRef.current) {
-            chartRef.current.resetZoom();
-            setIsInDayView(false); // Reset to full view, hide day navigation buttons
-        }
-    };
-
-    // Day navigation handlers (shift by 24 hours, aligned to day boundaries)
-    const handlePreviousDay = () => {
-        if (chartRef.current) {
-            const xScale = chartRef.current.scales.x;
-            const currentMin = xScale.min;
-            const currentMax = xScale.max;
-            const currentRange = currentMax - currentMin;
-
-            // Get original data range
-            const originalMin = netEnergyData && netEnergyData.length > 0 ? new Date(netEnergyData[0].ts).getTime() : null;
-
-            // 26 hours in milliseconds
-            const minRange = 26 * 60 * 60 * 1000;
-
-            // If we're at the 26-hour minimum range, shift by aligned days
-            if (currentRange <= minRange + (60 * 60 * 1000)) {
-                // Find current center date
-                const centerTime = currentMin + (currentRange / 2);
-                const centerDate = new Date(centerTime);
-
-                // Move to previous day
-                const targetDate = new Date(centerDate);
-                targetDate.setDate(targetDate.getDate() - 1);
-                targetDate.setHours(0, 0, 0, 0);
-
-                // Calculate aligned range: previous day 23:00 to next day 01:00
-                const alignedMin = new Date(targetDate);
-                alignedMin.setHours(-1, 0, 0, 0); // Previous day 23:00
-
-                const alignedMax = new Date(targetDate);
-                alignedMax.setDate(alignedMax.getDate() + 1);
-                alignedMax.setHours(1, 0, 0, 0); // Next day 01:00
-
-                // Don't go before the original data start
-                if (!originalMin || alignedMin.getTime() >= originalMin) {
-                    chartRef.current.zoomScale('x', { min: alignedMin.getTime(), max: alignedMax.getTime() }, 'none');
-                }
-            } else {
-                // For larger ranges, just shift by 24 hours using pan
-                const shiftAmount = 24 * 60 * 60 * 1000;
-
-                if (!originalMin || (currentMin - shiftAmount) >= originalMin) {
-                    chartRef.current.pan({ x: shiftAmount }, undefined, 'none');
-                }
-            }
-        }
-    };
-
-    const handleNextDay = () => {
-        if (chartRef.current) {
-            const xScale = chartRef.current.scales.x;
-            const currentMin = xScale.min;
-            const currentMax = xScale.max;
-            const currentRange = currentMax - currentMin;
-
-            // Get original data range
-            const originalMax = netEnergyData && netEnergyData.length > 0 ? new Date(netEnergyData[netEnergyData.length - 1].ts).getTime() : null;
-
-            // 26 hours in milliseconds
-            const minRange = 26 * 60 * 60 * 1000;
-
-            // If we're at the 26-hour minimum range, shift by aligned days
-            if (currentRange <= minRange + (60 * 60 * 1000)) {
-                // Find current center date
-                const centerTime = currentMin + (currentRange / 2);
-                const centerDate = new Date(centerTime);
-
-                // Move to next day
-                const targetDate = new Date(centerDate);
-                targetDate.setDate(targetDate.getDate() + 1);
-                targetDate.setHours(0, 0, 0, 0);
-
-                // Calculate aligned range: previous day 23:00 to next day 01:00
-                const alignedMin = new Date(targetDate);
-                alignedMin.setHours(-1, 0, 0, 0); // Previous day 23:00
-
-                const alignedMax = new Date(targetDate);
-                alignedMax.setDate(alignedMax.getDate() + 1);
-                alignedMax.setHours(1, 0, 0, 0); // Next day 01:00
-
-                // Don't go beyond the original data end
-                if (!originalMax || alignedMax.getTime() <= originalMax) {
-                    chartRef.current.zoomScale('x', { min: alignedMin.getTime(), max: alignedMax.getTime() }, 'none');
-                }
-            } else {
-                // For larger ranges, just shift by 24 hours using pan
-                const shiftAmount = 24 * 60 * 60 * 1000;
-
-                if (!originalMax || (currentMax + shiftAmount) <= originalMax) {
-                    chartRef.current.pan({ x: -shiftAmount }, undefined, 'none');
-                }
-            }
-        }
-    };
 
     if (!chartData) {
         return (
