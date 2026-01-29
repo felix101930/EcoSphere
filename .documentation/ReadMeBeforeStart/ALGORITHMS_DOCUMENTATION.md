@@ -327,6 +327,70 @@ Where:
 
 ## 3. Water Module Algorithms
 
+### 3.0 Hot Water Data Interpretation (CRITICAL)
+
+**⚠️ IMPORTANT**: Hot water data (TL210) represents **instantaneous flow rate**, NOT cumulative consumption.
+
+**Data Type**: Flow Rate (L/h)
+- Database stores: Instantaneous flow rate measurements
+- Interval: 1-minute readings
+- Example value: 4066 L/h means water is flowing at 4066 liters per hour AT THAT MOMENT
+
+**Conversion to Actual Consumption**:
+```
+Consumption per minute = Flow Rate (L/h) × (1/60 hour) = Liters consumed
+
+Examples:
+- Flow rate: 60 L/h → Consumption: 60 × (1/60) = 1 L/min
+- Flow rate: 4066 L/h → Consumption: 4066 × (1/60) = 67.77 L/min
+- Flow rate: 200 L/h → Consumption: 200 × (1/60) = 3.33 L/min
+```
+
+**Aggregation Rules**:
+
+1. **DO NOT sum flow rates directly** - they are instantaneous measurements
+2. **ALWAYS convert to consumption first**, then aggregate:
+   ```
+   Hourly consumption = Σ(flow_rate × 1/60) for all minutes in hour
+   Daily consumption = Σ(hourly consumption) for all hours in day
+   ```
+
+3. **Example Calculation**:
+   ```
+   Minute 1: 4000 L/h → 66.67 L consumed
+   Minute 2: 4100 L/h → 68.33 L consumed
+   Minute 3: 3900 L/h → 65.00 L consumed
+   ...
+   Minute 60: 4050 L/h → 67.50 L consumed
+   
+   Hourly total = 66.67 + 68.33 + 65.00 + ... + 67.50 = ~4000 L
+   ```
+
+**Typical Usage Patterns** (3-layer office building):
+- **Baseline flow**: ~200 L/h (continuous, 24/7)
+  - May indicate: Hot water circulation system, sensor baseline, or small continuous usage
+  - Daily baseline consumption: 200 × (1/60) × 60 min × 24 hr = ~4,800 L
+- **Peak flow**: ~4,000 L/h (brief periods, 5-10 minutes)
+  - Occurs during: Morning arrival (8-9 AM), evening cleaning (10-11 PM)
+  - Peak consumption: 4,000 × (1/60) × 5 min = ~333 L per peak
+- **Daily total**: 1,700-5,000 L
+  - Low usage day: ~1,700 L (minimal peaks, baseline only)
+  - High usage day: ~5,000 L (multiple peaks + baseline)
+  - Variation: ~3x difference between low and high days
+
+**Why Baseline Exists**:
+- Hot water circulation pumps maintain temperature in pipes
+- Prevents cold water in taps (instant hot water)
+- Sensor may have fixed offset/baseline reading
+- Small continuous usage (drips, minor leaks)
+
+**Implementation Locations**:
+- **Frontend conversion**: `HotWaterTab.jsx:convertToPerMinuteConsumption()`
+- **Backend aggregation**: `waterController.js:convertFlowRateToHourlyConsumption()`
+- **Forecast input**: Uses hourly consumption totals, not flow rates
+
+---
+
 ### 3.1 Hot Water Consumption Forecast (Multi-Tier System)
 
 **Purpose**: Predict future hot water consumption
@@ -335,15 +399,24 @@ Where:
 
 **Important Note**: All hot water consumption values are converted to absolute values using `Math.abs()` before calculations, same as electricity consumption forecast.
 
+**Data Preparation for Forecast**:
+1. Fetch 2 years of 1-minute flow rate data (L/h)
+2. Convert each minute to consumption: `consumption = flow_rate × (1/60)`
+3. Aggregate to hourly totals: `hourly_total = Σ(minute_consumptions)`
+4. Feed hourly consumption data to forecast algorithms
+5. Output: Daily consumption predictions (L/day)
+
 **Tiers**:
 1. **Tier 1**: Holt-Winters (90% confidence) - Requires 1 year + 70% completeness
 2. **Tier 2**: Seasonal Weighted (80% confidence) - Requires last year + 30 days
 3. **Tier 3**: Trend-Based (65% confidence) - Requires 30 days
 4. **Tier 4**: Moving Average (50% confidence) - Requires 7 days
 
-**Implementation**: Reuses electricity forecast algorithms with hot water data
+**Implementation**: Reuses electricity forecast algorithms with hot water consumption data (after conversion)
 
-**Code Location**: `ecosphere-backend/services/forecastService.js` (same functions as electricity)
+**Code Location**: 
+- Conversion: `ecosphere-backend/controllers/waterController.js:convertFlowRateToHourlyConsumption()`
+- Forecast: `ecosphere-backend/services/forecastService.js` (same functions as electricity)
 
 ---
 
