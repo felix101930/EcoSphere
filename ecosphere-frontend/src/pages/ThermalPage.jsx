@@ -1,6 +1,6 @@
 // Thermal Page - Main thermal dashboard
 import { useState, useMemo } from 'react';
-import { Box, CircularProgress, Alert, Typography, Paper } from '@mui/material';
+import { Box, CircularProgress, Alert, Typography } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import Disclaimer from '../components/Common/Disclaimer';
@@ -313,16 +313,15 @@ const ThermalPage = () => {
         )}
 
         {/* Data Source Information */}
-        <Paper sx={{ p: 2, mt: 3, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="body2" color="text.secondary">
-            <strong>Data Source:</strong> SQL Server Database (EcoSphereData) - 13 Thermal Sensors (TL20004-TL20016)
-          </Typography>
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Data Source: SQL Server Database (EcoSphereData) - 13 Thermal Sensors (TL20004-TL20016)
           {dateRange && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              <strong>Available Date Range:</strong> {dateRange.minDate} to {dateRange.maxDate}
-            </Typography>
+            <>
+              <br />
+              Available Date Range: {dateRange.minDate} to {dateRange.maxDate}
+            </>
           )}
-        </Paper>
+        </Alert>
       </Box>
     </>
   );
