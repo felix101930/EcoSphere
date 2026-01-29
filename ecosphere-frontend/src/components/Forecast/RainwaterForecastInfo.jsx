@@ -94,9 +94,10 @@ const RainwaterForecastInfo = ({ metadata }) => {
                         Model trained on <strong>{trainingDays} days</strong> of historical rainwater level and weather data
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        The system analyzes the relationship between past weather conditions (precipitation, rain, temperature)
-                        and actual rainwater tank levels to learn how rainfall affects water collection. These learned patterns are
-                        then applied to forecast weather data to predict future rainwater levels.
+                        The system uses Simple Linear Regression to analyze the relationship between daily precipitation
+                        and daily average rainwater tank levels. The learned coefficient represents how much the water level
+                        changes per millimeter of rainfall. This model is then applied to weather forecast data to predict
+                        future rainwater levels.
                     </Typography>
                 </Box>
             </CardContent>
