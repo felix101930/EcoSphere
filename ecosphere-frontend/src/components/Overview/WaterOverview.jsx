@@ -1,6 +1,7 @@
 import { Box, Grid, Card, CardContent, Typography } from '@mui/material';
 import { Water, Opacity } from '@mui/icons-material';
 import MetricsCards from '../Electricity/MetricsCards';
+import FlowRateMetricsCards from '../Water/FlowRateMetricsCards';
 import OverallTrendChart from '../Electricity/OverallTrendChart';
 import NoDataMessage from '../Common/NoDataMessage';
 import { DATA_RANGES, SECTION_COLORS } from '../../lib/constants/overview';
@@ -85,14 +86,14 @@ export default function WaterOverview({ data }) {
                             '& .MuiPaper-root': { mb: 0 },
                             '& .MuiBox-root:has(canvas)': { height: '180px !important' }
                         }}>
-                            <MetricsCards metrics={data.hotWater.metrics} unit="L/h" metricType="Hot Water" />
+                            <FlowRateMetricsCards metrics={data.hotWater.metrics} unit="L/h" metricType="Flow Rate" />
                             <OverallTrendChart
                                 data={data.hotWater.data}
-                                title="Hot Water Consumption Trend"
-                                dataLabel="Consumption (L/h)"
+                                title="Hot Water Flow Rate Trend"
+                                dataLabel="Flow Rate (L/h)"
                                 color={SECTION_COLORS.water.hotWater}
                                 unit="L/h"
-                                yAxisLabel="Consumption (L/h)"
+                                yAxisLabel="Flow Rate (L/h)"
                             />
                         </Box>
                     )}

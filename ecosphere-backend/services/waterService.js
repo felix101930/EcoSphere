@@ -54,7 +54,7 @@ class WaterService {
     /**
      * Get rainwater level data (TL93)
      * Interval: 10 minutes (raw data from database)
-     * Date range: 2018-10-13 to 2020-11-08
+     * Date range: 2018-10-13 to 2025-12-31 (7.22 years)
      * Unit: Percentage (%)
      */
     static async getRainwaterLevelData(dateFrom, dateTo) {
@@ -69,7 +69,8 @@ class WaterService {
         const command = buildSqlcmdCommand(query);
 
         try {
-            const { stdout } = await execPromise(command);
+            // Increase maxBuffer to 50MB for large datasets
+            const { stdout } = await execPromise(command, { maxBuffer: 50 * 1024 * 1024 });
             const lines = filterOutputLines(stdout);
 
             const results = lines.map(line => {
@@ -97,7 +98,7 @@ class WaterService {
     /**
      * Get hot water consumption data (TL210)
      * Interval: 1 minute (raw data from database)
-     * Date range: 2018-09-11 to 2019-11-14
+     * Date range: 2018-12-14 to 2025-12-31 (7.05 years)
      * Unit: Liters per hour (L/h)
      */
     static async getHotWaterConsumptionData(dateFrom, dateTo) {
@@ -112,7 +113,8 @@ class WaterService {
         const command = buildSqlcmdCommand(query);
 
         try {
-            const { stdout } = await execPromise(command);
+            // Increase maxBuffer to 50MB for large datasets (1-minute interval data)
+            const { stdout } = await execPromise(command, { maxBuffer: 50 * 1024 * 1024 });
             const lines = filterOutputLines(stdout);
 
             const results = lines.map(line => {

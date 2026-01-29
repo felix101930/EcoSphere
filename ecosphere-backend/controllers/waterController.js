@@ -11,12 +11,12 @@ const { asyncHandler, createDataFetcher, validateParams } = require('../utils/co
 // Water-specific constants
 const WATER_DATA_SOURCES = {
     RAINWATER: 'TL93 (Rain_Water_Level_POLL) - 10-minute intervals',
-    HOT_WATER: 'TL210 (GBT Domestic Hot Water consumption) - 1-minute intervals'
+    HOT_WATER: 'TL210 (GBT Domestic Hot Water flow rate) - 1-minute intervals'
 };
 
 const WATER_UNITS = {
     RAINWATER: '%',
-    HOT_WATER: 'L/h'
+    HOT_WATER: 'L/h (flow rate)'
 };
 
 /**
@@ -124,26 +124,34 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
         });
     }
 
-    // Calculate start date (1 year before target date for training)
+    // Calculate start date (2 years before target date for Tier 1 Holt-Winters)
     const target = new Date(targetDate + 'T12:00:00');
     const startDate = new Date(target);
-    startDate.setDate(startDate.getDate() - 365);
+    startDate.setDate(startDate.getDate() - (2 * 365)); // 2 years for complete seasonal cycles
 
     const startDateStr = formatDate(startDate);
     const targetDateStr = targetDate;
 
-    // Fetch historical hot water consumption data
-    const historicalData = await WaterService.getHotWaterConsumptionData(
+    console.log(`📊 Fetching hot water data: ${startDateStr} to ${targetDateStr} (2 years)`);
+
+    // Fetch historical hot water consumption data (1-minute interval)
+    const rawData = await WaterService.getHotWaterConsumptionData(
         startDateStr,
         targetDateStr
     );
 
-    if (!historicalData || historicalData.length === 0) {
+    if (!rawData || rawData.length === 0) {
         return res.status(HTTP_STATUS.NOT_FOUND).json({
             success: false,
             error: 'No historical data available for the specified period'
         });
     }
+
+    console.log(`✅ Received ${rawData.length} raw data points (1-minute interval)`);
+
+    // Aggregate 1-minute data to hourly for forecast analysis
+    const historicalData = aggregateToHourly(rawData);
+    console.log(`✅ Aggregated to ${historicalData.length} hourly data points`);
 
     // Generate forecast
     const forecastResult = await ForecastService.generateForecast(
@@ -151,6 +159,9 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
         days,
         historicalData
     );
+
+    console.log(`📈 Forecast generated using: ${forecastResult.metadata.strategyName}`);
+    console.log(`   Confidence: ${forecastResult.metadata.confidence}%`);
 
     // Return response
     res.json({
@@ -161,6 +172,54 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
         metadata: forecastResult.metadata
     });
 });
+
+/**
+ * Aggregate 1-minute flow rate data to hourly total consumption
+ * 
+ * Data interpretation:
+ * - Database values are instantaneous flow rates in L/h
+ * - Each minute's actual consumption = (flow rate in L/h) × (1/60 hour) = liters consumed
+ * - Hourly total = sum of all minute consumptions in that hour
+ * 
+ * Example:
+ * - Flow rate: 60 L/h → Consumption per minute: 60 × (1/60) = 1 L
+ * - Flow rate: 4,104 L/h → Consumption per minute: 4,104 × (1/60) = 68.4 L
+ * 
+ * @param {Array} data - Array of {ts, value} objects where value is in L/h (instantaneous flow rate)
+ * @returns {Array} Array of {ts, value} objects where value is total liters consumed per hour
+ */
+function aggregateToHourly(data) {
+    const hourlyMap = new Map();
+
+    data.forEach(point => {
+        // Extract hour (YYYY-MM-DD HH:00:00)
+        const hourKey = point.ts.substring(0, 13) + ':00:00';
+
+        if (!hourlyMap.has(hourKey)) {
+            hourlyMap.set(hourKey, { sum: 0, count: 0 });
+        }
+
+        const hourData = hourlyMap.get(hourKey);
+        // Convert flow rate (L/h) to actual consumption in 1 minute
+        // Formula: L/h × (1/60) h = L consumed in that minute
+        hourData.sum += point.value * (1 / 60);
+        hourData.count += 1;
+    });
+
+    // Convert map to array with totals
+    const hourlyData = [];
+    for (const [ts, data] of hourlyMap.entries()) {
+        hourlyData.push({
+            ts: ts,
+            value: data.sum  // Total liters consumed in that hour
+        });
+    }
+
+    // Sort by timestamp
+    hourlyData.sort((a, b) => a.ts.localeCompare(b.ts));
+
+    return hourlyData;
+}
 
 /**
  * Helper: Format date to YYYY-MM-DD

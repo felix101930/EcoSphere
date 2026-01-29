@@ -321,11 +321,10 @@ class ForecastService {
         const period = DAYS_PER_WEEK * HOURS_PER_DAY;  // 168 hours
         const recentData = data.slice(-period);
 
-        // Calculate average level and trend
+        // Calculate average level (no trend for stability)
         const avgLevel = recentData.reduce((sum, d) => sum + Math.abs(d.value), 0) / recentData.length;
-        const trend = calculateLinearTrend(recentData);
 
-        // Extract seasonal pattern from last week
+        // Extract seasonal pattern from last week (normalized)
         const seasonalPattern = recentData.map(d => Math.abs(d.value) / avgLevel);
 
         // Generate hourly forecasts
@@ -338,8 +337,8 @@ class ForecastService {
             // Use seasonal pattern (repeat weekly pattern)
             const seasonalIndex = h % period;
             const seasonalFactor = seasonalPattern[seasonalIndex];
-            // Apply: (level + trend * time) * seasonal_factor
-            const forecastValue = (avgLevel + trend * (h + 1)) * seasonalFactor;
+            // Apply seasonal pattern to average level (no trend to avoid explosion)
+            const forecastValue = avgLevel * seasonalFactor;
             hourlyForecasts.push([timestamp, Math.max(0, forecastValue)]);
         }
 

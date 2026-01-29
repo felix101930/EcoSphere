@@ -86,8 +86,8 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
 
                     {/* Info Alert */}
                     <Alert severity="info" sx={{ mt: 2 }}>
-                        The forecast will predict the next {forecastDays} days of hot water consumption
-                        based on historical usage patterns.
+                        The forecast will predict the next {forecastDays} days of hot water consumption (daily total in liters)
+                        based on historical flow rate patterns. Flow rates (L/h) are converted to daily consumption totals.
                     </Alert>
                 </CardContent>
             </Card>
@@ -119,8 +119,8 @@ const HotWaterForecastView = ({ dateTo, loading, error, forecast, onLoadForecast
                     <ForecastChart
                         consumptionData={forecast}
                         generationData={null}
-                        yAxisLabel="Hot Water Consumption (L/h)"
-                        unit="L/h"
+                        yAxisLabel="Daily Hot Water Consumption (L/day)"
+                        unit="L"
                         consumptionLabel="Hot Water Consumption Forecast"
                         decimalPlaces={2}
                         title="📈 Hot Water Consumption Forecast"
