@@ -1,6 +1,6 @@
 # EcoSphere Algorithms Documentation
 
-**Document Version**: 2026-01-16 (Updated: Natural Gas Forecast Algorithms)  
+**Document Version**: 2026-01-28 (Updated: Electricity Chart.js Configurations)  
 **Purpose**: Comprehensive documentation of all algorithms, calculations, and API integrations used in the EcoSphere system  
 **Target Audience**: Development team, data scientists, and system maintainers
 
@@ -16,6 +16,8 @@
 6. [External API Integrations](#6-external-api-integrations)
 7. [Data Aggregation Methods](#7-data-aggregation-methods)
 8. [Algorithm Performance Metrics](#8-algorithm-performance-metrics)
+   - 8.1 [Chart.js Configuration Standards](#81-chartjs-configuration-standards-electricity-module)
+   - 8.2 [Forecast Algorithm Confidence Levels](#82-forecast-algorithm-confidence-levels)
 
 ---
 
@@ -1001,7 +1003,206 @@ totalPrecip = Σ(hourlyPrecip)
 
 ## 8. Algorithm Performance Metrics
 
-### 8.1 Forecast Algorithm Confidence Levels
+### 8.1 Chart.js Configuration Standards (Electricity Module)
+
+**Purpose**: Document reusable Chart.js configurations for consistent visualization across modules
+
+**Plugin Required**: `chartjs-plugin-zoom` (npm package)
+
+#### 8.1.1 Base Chart Configuration
+
+**Zoom and Pan Settings**:
+```javascript
+plugins: {
+    zoom: {
+        pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: 'ctrl',  // Ctrl + drag to pan
+        },
+        zoom: {
+            wheel: {
+                enabled: true,
+                speed: 0.1,  // Mouse wheel zoom speed
+            },
+            pinch: {
+                enabled: true  // Touch pinch zoom
+            },
+            mode: 'x',  // Zoom only on X-axis
+        },
+        limits: {
+            x: { min: 'original', max: 'original' },  // Prevent zooming beyond data range
+        }
+    }
+}
+```
+
+**Tooltip Configuration**:
+```javascript
+plugins: {
+    tooltip: {
+        enabled: true,
+        callbacks: {
+            label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                // Always show absolute values for consumption
+                label += Math.abs(context.parsed.y).toLocaleString() + ' Wh';
+                return label;
+            }
+        }
+    }
+}
+```
+
+**Interaction Settings**:
+```javascript
+interaction: {
+    mode: 'index',  // Show all datasets at same X position
+    intersect: false,  // Don't require exact point hover
+}
+```
+
+**Legend Configuration**:
+```javascript
+plugins: {
+    legend: {
+        display: true,
+        position: 'top',
+        labels: {
+            usePointStyle: true,  // Use circles instead of rectangles
+            padding: 15,
+            font: { size: 12 }
+        }
+    }
+}
+```
+
+**Implementation Location**: 
+- `ecosphere-frontend/src/components/Electricity/OverallTrendChart.jsx`
+- `ecosphere-frontend/src/components/Electricity/NetEnergyWithSelfSufficiencyChart.jsx`
+- Reusable for Water and Thermal modules
+
+---
+
+#### 8.1.2 Dual Y-Axis Configuration
+
+**Use Case**: Display Net Energy and Self-Sufficiency Rate on same chart
+
+**Configuration**:
+```javascript
+scales: {
+    y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        title: {
+            display: true,
+            text: 'Net Energy (Wh)'
+        },
+        grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+        }
+    },
+    y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        title: {
+            display: true,
+            text: 'Self-Sufficiency Rate (%)'
+        },
+        grid: {
+            drawOnChartArea: false  // Don't draw grid lines for right axis
+        },
+        ticks: {
+            callback: function(value) {
+                return value + '%';
+            }
+        }
+    }
+}
+```
+
+**Dataset Configuration**:
+```javascript
+datasets: [
+    {
+        label: 'Net Energy',
+        yAxisID: 'y',  // Use left axis
+        // ... other config
+    },
+    {
+        label: 'Self-Sufficiency Rate',
+        yAxisID: 'y1',  // Use right axis
+        // ... other config
+    }
+]
+```
+
+**Implementation Location**: `ecosphere-frontend/src/components/Electricity/NetEnergyWithSelfSufficiencyChart.jsx`
+
+---
+
+#### 8.1.3 Color Standards
+
+**SAIT Brand Colors**:
+- **Consumption**: `#DA291C` (SAIT Red)
+- **Generation**: `#4CAF50` (Green)
+- **Net Energy**: `#005EB8` (SAIT Blue)
+- **Predicted Values**: Same colors with 50% opacity
+
+**Usage**:
+```javascript
+datasets: [
+    {
+        label: 'Consumption',
+        borderColor: '#DA291C',
+        backgroundColor: 'rgba(218, 41, 28, 0.1)',
+        // ... other config
+    },
+    {
+        label: 'Generation',
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        // ... other config
+    }
+]
+```
+
+---
+
+#### 8.1.4 Data Label Configuration
+
+**Use Case**: Show values on forecast chart points
+
+**Plugin Required**: `chartjs-plugin-datalabels`
+
+**Configuration**:
+```javascript
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+datasets: [{
+    // ... other config
+    datalabels: {
+        display: true,
+        align: 'top',
+        anchor: 'end',
+        formatter: (value) => Math.round(value).toLocaleString(),
+        font: { size: 10, weight: 'bold' },
+        color: '#DA291C'
+    }
+}]
+
+// Pass plugin to Chart component
+<Line data={chartData} options={options} plugins={[ChartDataLabels]} />
+```
+
+**Implementation Location**: `ecosphere-frontend/src/components/Forecast/ForecastChart.jsx`
+
+---
+
+### 8.2 Forecast Algorithm Confidence Levels
 
 #### Electricity & Water (Hourly/Daily Data)
 
