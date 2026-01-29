@@ -51,14 +51,15 @@ const ThermalForecastView = ({
 
     return (
         <Box>
-            {/* Configuration Card - Hide in export */}
-            <Card data-hide-in-export="true" sx={{ mb: 3 }}>
+            {/* Configuration Card */}
+            <Card sx={{ mb: 3 }}>
                 <CardContent>
                     <Typography variant="h6" gutterBottom>
                         ⚙️ Forecast Configuration
                     </Typography>
 
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end', mt: 2 }}>
+                    {/* Hide configuration controls in export */}
+                    <Box data-hide-in-export="true" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end', mt: 2 }}>
                         {/* Forecast Period Selector */}
                         <FormControl sx={{ minWidth: 150 }}>
                             <InputLabel>Forecast Period</InputLabel>
