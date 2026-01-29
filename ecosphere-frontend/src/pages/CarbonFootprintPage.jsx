@@ -9,7 +9,7 @@ import AutomaticCalculationView from '../components/CarbonFootprint/AutomaticCal
 import CustomCalculator from '../components/CarbonFootprint/CustomCalculator';
 import CarbonFootprintAlgorithmInfo from '../components/CarbonFootprint/CarbonFootprintAlgorithmInfo';
 import useCarbonFootprintData from '../lib/hooks/useCarbonFootprintData';
-import { CARBON_INTENSITY, TIME_PRESETS } from '../lib/constants/carbonFootprint';
+import { CARBON_INTENSITY, TIME_PRESETS, DATA_RANGES } from '../lib/constants/carbonFootprint';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -152,6 +152,13 @@ export default function CarbonFootprintPage() {
         <CustomCalculator
           emissionFactor={emissionFactor}
         />
+
+        {/* Data Source Information */}
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Data Source: SQL Server Database (EcoSphereData) - Electricity Consumption (TL341) | Electricity Maps API - Carbon Intensity (CA-AB)
+          <br />
+          Available Date Range: {DATA_RANGES.electricity.start} to {DATA_RANGES.electricity.end}
+        </Alert>
       </Box>
     </>
   );
