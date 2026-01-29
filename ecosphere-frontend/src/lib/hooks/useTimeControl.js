@@ -20,17 +20,17 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
   // Calculate max time index for multiple days mode (all 15-min intervals)
   const maxMultipleDaysTimeIndex = useMemo(() => {
     if (Object.keys(multipleDaysDetailData).length === 0) return 0;
-    
+
     let totalPoints = 0;
     const dates = Object.keys(multipleDaysDetailData).sort();
-    
+
     dates.forEach(date => {
       const dateData = multipleDaysDetailData[date];
       if (dateData && dateData[sensorIds[0]]) {
         totalPoints += dateData[sensorIds[0]].length;
       }
     });
-    
+
     return Math.max(0, totalPoints - 1);
   }, [multipleDaysDetailData, sensorIds]);
 
@@ -52,7 +52,7 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
       if (Object.keys(multipleDaysDetailData).length > 0) {
         const allTimePoints = [];
         const dates = Object.keys(multipleDaysDetailData).sort();
-        
+
         // Flatten all time points from all dates
         dates.forEach(date => {
           const dateData = multipleDaysDetailData[date];
@@ -62,7 +62,7 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
             });
           }
         });
-        
+
         if (allTimePoints[currentTimeIndex]) {
           const { date, timeIndex } = allTimePoints[currentTimeIndex];
           const currentData = {};
@@ -74,9 +74,11 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
               currentData[sensorId] = null;
             }
           });
+
           return currentData;
         }
       }
+
       return {};
     }
   }, [viewMode, dailyData, multipleDaysDetailData, sensorIds, currentTimeIndex]);
@@ -95,7 +97,7 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
       if (Object.keys(multipleDaysDetailData).length > 0) {
         const allTimePoints = [];
         const dates = Object.keys(multipleDaysDetailData).sort();
-        
+
         // Flatten all time points from all dates
         dates.forEach(date => {
           const dateData = multipleDaysDetailData[date];
@@ -105,7 +107,7 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
             });
           }
         });
-        
+
         if (allTimePoints[currentTimeIndex]) {
           const { date, ts } = allTimePoints[currentTimeIndex];
           const dateObj = new Date(date + 'T00:00:00');
@@ -126,19 +128,19 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
   // Handle date click from chart (Multiple Days mode)
   const handleDateClick = useCallback((index) => {
     setCurrentDateIndex(index);
-    
+
     // Calculate the time index for the start of the clicked date
     if (Object.keys(multipleDaysDetailData).length > 0) {
       const dates = Object.keys(multipleDaysDetailData).sort();
       let cumulativeIndex = 0;
-      
+
       for (let i = 0; i < index && i < dates.length; i++) {
         const dateData = multipleDaysDetailData[dates[i]];
         if (dateData && dateData[sensorIds[0]]) {
           cumulativeIndex += dateData[sensorIds[0]].length;
         }
       }
-      
+
       setCurrentTimeIndex(cumulativeIndex);
     }
   }, [multipleDaysDetailData, sensorIds]);
@@ -155,11 +157,11 @@ export const useTimeControl = (viewMode, dailyData, multipleDaysDetailData, sens
     currentDateIndex,
     maxTimeIndex,
     maxMultipleDaysTimeIndex,
-    
+
     // Computed values
     currentData: getCurrentData(),
     currentTime: getCurrentTime(),
-    
+
     // Actions
     setCurrentTimeIndex,
     setCurrentDateIndex,

@@ -8,8 +8,13 @@ function sqlcmdQuery(query) {
         const server = process.env.DB_SERVER || '.\\SQLEXPRESS';
         const database = process.env.DB_DATABASE || 'EcoSphereData'; // Default to new database
 
-        // -W remove trailing whitespace, -s"," comma separator, -I quoted identifiers
-        const args = ['-S', server, '-d', database, '-Q', query, '-W', '-s', ',', '-I'];
+        // Build args array with proper authentication
+        // -E: Windows Authentication
+        // -C: Trust server certificate (required for ODBC Driver 18)
+        // -W: Remove trailing whitespace
+        // -s",": Comma separator
+        // -I: Quoted identifiers
+        const args = ['-S', server, '-d', database, '-E', '-C', '-Q', query, '-W', '-s', ',', '-I'];
 
         console.log(`🔌 Spawning sqlcmd...`);
         const proc = spawn('sqlcmd', args);

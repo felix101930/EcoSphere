@@ -1,6 +1,6 @@
 // Thermal Page - Main thermal dashboard
-import { useState } from 'react';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { useState, useMemo } from 'react';
+import { Box, CircularProgress, Alert, Typography, Paper } from '@mui/material';
 import PageHeader from '../components/Common/PageHeader';
 import ExportReportDialog from '../components/Common/ExportReportDialog';
 import Disclaimer from '../components/Common/Disclaimer';
@@ -42,12 +42,14 @@ const ThermalPage = () => {
     forecastError,
     outdoorTemperature,
     outdoorTemperatureHourly,
+    sensorsDateRange,
     loadSingleDayData,
     loadMultipleDaysData,
     validateDateRange,
     loadThermalForecast,
     setSelectedDate
   } = useThermalData(selectedFloor);
+
   const timeControl = useTimeControl(
     viewMode,
     dailyData,
@@ -66,6 +68,15 @@ const ThermalPage = () => {
     handleDateClick,
     resetTimeIndex
   } = timeControl;
+
+  // Calculate date range from available dates
+  const dateRange = useMemo(() => {
+    if (availableDates.length === 0) return null;
+    return {
+      minDate: availableDates[0],
+      maxDate: availableDates[availableDates.length - 1]
+    };
+  }, [availableDates]);
 
   // Floor management hook
   const floorManagement = useFloorManagement(
@@ -89,8 +100,7 @@ const ThermalPage = () => {
       setDateRangeError(null);
 
       if (newMode === VIEW_MODES.SINGLE) {
-        // Switching to Single Day - selectedDate already has the last selected date
-        // Just reload the data if needed
+        // Switching to Single Day
         if (selectedDate && sensorIds) {
           try {
             await loadSingleDayData(selectedDate, sensorIds);
@@ -99,7 +109,7 @@ const ThermalPage = () => {
             // Error already handled in hook
           }
         }
-      } else {
+      } else if (newMode === VIEW_MODES.MULTIPLE) {
         // Switching to Multiple Days - set default range if not set
         if (!dateFrom || !dateTo) {
           if (availableDates.length > 0) {
@@ -107,8 +117,8 @@ const ThermalPage = () => {
             const lastDateStr = availableDates[availableDates.length - 1];
             const lastDate = new Date(lastDateStr + 'T12:00:00');
 
-            // Calculate 5 days before (or use earliest available date)
-            const daysToGoBack = Math.min(4, availableDates.length - 1);
+            // Calculate 7 days before (or use earliest available date)
+            const daysToGoBack = Math.min(6, availableDates.length - 1);
             const fromDateStr = availableDates[availableDates.length - 1 - daysToGoBack];
             const fromDate = new Date(fromDateStr + 'T12:00:00');
 
@@ -248,6 +258,7 @@ const ThermalPage = () => {
             onGenerateChart={handleGenerateChart}
             dateRangeError={dateRangeError}
             loading={loading}
+            dateRange={dateRange}
           />
         </Box>
 
@@ -280,6 +291,8 @@ const ThermalPage = () => {
               floor={selectedFloor}
               outdoorTemperatureHourly={outdoorTemperatureHourly}
               currentTimeIndex={currentTimeIndex}
+              sensorsDateRange={sensorsDateRange}
+              sensorIds={sensorIds}
             />
 
             {/* Time/Date Slider - Hide in export */}
@@ -298,6 +311,18 @@ const ThermalPage = () => {
             </Box>
           </>
         )}
+
+        {/* Data Source Information */}
+        <Paper sx={{ p: 2, mt: 3, backgroundColor: '#f5f5f5' }}>
+          <Typography variant="body2" color="text.secondary">
+            <strong>Data Source:</strong> SQL Server Database (EcoSphereData) - 13 Thermal Sensors (TL20004-TL20016)
+          </Typography>
+          {dateRange && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              <strong>Available Date Range:</strong> {dateRange.minDate} to {dateRange.maxDate}
+            </Typography>
+          )}
+        </Paper>
       </Box>
     </>
   );

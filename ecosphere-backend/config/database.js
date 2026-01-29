@@ -60,7 +60,7 @@ const QUERY_CONSTANTS = {
   CSV_DELIMITER: ",",
 
   // sqlcmd parameters
-  SQLCMD_PARAMS: '-s "," -W -h -1',
+  SQLCMD_PARAMS: '-s "," -W -h -1 -f 65001',
 
   // Array length checks
   MIN_PARTS_BASIC: 2,

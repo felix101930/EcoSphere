@@ -21,6 +21,7 @@ export const useThermalData = (selectedFloor) => {
   const [forecastError, setForecastError] = useState(null);
   const [outdoorTemperature, setOutdoorTemperature] = useState([]);
   const [outdoorTemperatureHourly, setOutdoorTemperatureHourly] = useState([]);
+  const [sensorsDateRange, setSensorsDateRange] = useState({});
 
   // Get sensor IDs for current floor
   const sensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
@@ -51,15 +52,17 @@ export const useThermalData = (selectedFloor) => {
         const initialSensorIds = FLOOR_CONFIGS[selectedFloor].sensorIds;
 
         // Load thermal data and outdoor temperature in parallel
-        const [data, outdoorTemp, outdoorTempHourly] = await Promise.all([
+        const [data, outdoorTemp, outdoorTempHourly, dateRanges] = await Promise.all([
           ThermalService.getMultipleSensorsDailyData(lastDateStr, initialSensorIds),
           WeatherService.getOutdoorTemperature(lastDateStr, lastDateStr).catch(() => []),
-          WeatherService.getOutdoorTemperatureHourly(lastDateStr).catch(() => [])
+          WeatherService.getOutdoorTemperatureHourly(lastDateStr).catch(() => []),
+          ThermalService.getSensorsDateRange(initialSensorIds).catch(() => { })
         ]);
 
         setDailyData(data);
         setOutdoorTemperature(outdoorTemp);
         setOutdoorTemperatureHourly(outdoorTempHourly);
+        setSensorsDateRange(dateRanges);
 
         setLoading(false);
       } catch (err) {
@@ -85,16 +88,18 @@ export const useThermalData = (selectedFloor) => {
       const day = String(date.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
 
-      // Load thermal data, daily outdoor temp, and hourly outdoor temp in parallel
-      const [data, outdoorTemp, outdoorTempHourly] = await Promise.all([
+      // Load thermal data, daily outdoor temp, hourly outdoor temp, and date ranges in parallel
+      const [data, outdoorTemp, outdoorTempHourly, dateRanges] = await Promise.all([
         ThermalService.getMultipleSensorsDailyData(dateStr, floorSensorIds),
         WeatherService.getOutdoorTemperature(dateStr, dateStr).catch(() => []),
-        WeatherService.getOutdoorTemperatureHourly(dateStr).catch(() => [])
+        WeatherService.getOutdoorTemperatureHourly(dateStr).catch(() => []),
+        ThermalService.getSensorsDateRange(floorSensorIds).catch(() => { })
       ]);
 
       setDailyData(data);
       setOutdoorTemperature(outdoorTemp);
       setOutdoorTemperatureHourly(outdoorTempHourly);
+      setSensorsDateRange(dateRanges);
       setSelectedDate(date);
 
       setLoading(false);
@@ -125,13 +130,15 @@ export const useThermalData = (selectedFloor) => {
       const dateToStr = formatDate(dateTo);
 
       // Load aggregated data for chart and outdoor temperature in parallel
-      const [aggData, outdoorTemp] = await Promise.all([
+      const [aggData, outdoorTemp, dateRanges] = await Promise.all([
         ThermalService.getAggregatedData(dateFromStr, dateToStr, floorSensorIds),
-        WeatherService.getOutdoorTemperature(dateFromStr, dateToStr).catch(() => [])
+        WeatherService.getOutdoorTemperature(dateFromStr, dateToStr).catch(() => []),
+        ThermalService.getSensorsDateRange(floorSensorIds).catch(() => { })
       ]);
 
       setAggregatedData(aggData);
       setOutdoorTemperature(outdoorTemp);
+      setSensorsDateRange(dateRanges);
 
       // Load detailed 15-min data and hourly outdoor temperature for all days in range
       const dates = Object.keys(aggData).sort();
@@ -241,6 +248,7 @@ export const useThermalData = (selectedFloor) => {
     forecastError,
     outdoorTemperature,
     outdoorTemperatureHourly,
+    sensorsDateRange,
 
     // Actions
     loadSingleDayData,

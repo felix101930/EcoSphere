@@ -35,7 +35,8 @@ const ThermalControlPanel = ({
   // Multiple days props
   onGenerateChart,
   dateRangeError,
-  loading
+  loading,
+  dateRange
 }) => {
   return (
     <Box sx={{ mb: 3, p: 2, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
@@ -180,6 +181,13 @@ const ThermalControlPanel = ({
       {dateRangeError && (
         <Alert severity="warning" sx={{ mt: 2 }}>
           {dateRangeError}
+        </Alert>
+      )}
+
+      {/* Available Date Range Info - Show in Single Day and Multiple Days modes */}
+      {(viewMode === VIEW_MODES.SINGLE || viewMode === VIEW_MODES.MULTIPLE) && dateRange && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          Available Date Range: {dateRange.minDate} to {dateRange.maxDate}
         </Alert>
       )}
 

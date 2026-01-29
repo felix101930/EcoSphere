@@ -49,6 +49,66 @@ const CACHE_TTL = {
 
 class ThermalService {
   /**
+   * Get date range for multiple sensors
+   * 
+   * Returns min and max dates for each sensor
+   * Used to show sensor availability information
+   * 
+   * @param {Array<string>} sensorIds - Array of sensor IDs
+   * @returns {Promise<Object>} Object with sensor IDs as keys, {minDate, maxDate} as values
+   */
+  static async getSensorsDateRange(sensorIds) {
+    const cacheKey = cache.constructor.generateKey('thermalSensorsDateRange', sensorIds.join(','));
+    const cached = cache.get(cacheKey);
+    if (cached) return cached;
+
+    try {
+      const dateRangePromises = sensorIds.map(async (sensorId) => {
+        const fullTableName = getFullTableName(sensorId);
+        const query = `SELECT MIN(CONVERT(varchar, ts, 23)) as minDate, MAX(CONVERT(varchar, ts, 23)) as maxDate FROM [${fullTableName}]`;
+        const command = buildSqlcmdCommand(query);
+
+        try {
+          const { stdout } = await execPromise(command);
+          const lines = filterOutputLines(stdout);
+
+          if (lines.length > 0) {
+            const parts = lines[0].split(QUERY_CONSTANTS.CSV_DELIMITER).map(p => p.trim());
+            return {
+              sensorId,
+              minDate: parts[0] || null,
+              maxDate: parts[1] || null
+            };
+          }
+          return { sensorId, minDate: null, maxDate: null };
+        } catch (error) {
+          console.error(`Error getting date range for ${sensorId}:`, error.message);
+          return { sensorId, minDate: null, maxDate: null };
+        }
+      });
+
+      const results = await Promise.all(dateRangePromises);
+
+      // Convert array to object with sensorId as key
+      const dateRangeMap = {};
+      results.forEach(result => {
+        dateRangeMap[result.sensorId] = {
+          minDate: result.minDate,
+          maxDate: result.maxDate
+        };
+      });
+
+      // Cache for 24 hours
+      cache.set(cacheKey, dateRangeMap, CACHE_TTL.DATE_RANGE);
+
+      return dateRangeMap;
+    } catch (error) {
+      console.error('Error getting sensors date range:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Get available dates with data for a sensor
    * 
    * Returns list of dates that have thermal data
@@ -121,17 +181,22 @@ class ThermalService {
     // Check cache first to avoid expensive database query
     const cacheKey = cache.constructor.generateKey('thermalDaily', sensorId, date);
     const cached = cache.get(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log(`[ThermalService] Returning cached data for ${sensorId} ${date}, length: ${cached.length}`);
+      return cached;
+    }
 
     // Get full table name with schema
     const fullTableName = getFullTableName(sensorId);
 
     // Query to get all readings for a specific date
-    // seq: sequence number (1-96 for complete day)
     // ts: timestamp in YYYY-MM-DD HH:MM:SS format
     // value: temperature in Celsius
-    const query = `SELECT seq, CONVERT(varchar, ts, 120) as ts, value FROM [${fullTableName}] WHERE CONVERT(varchar, ts, 23) = '${date}' ORDER BY ts`;
+    // Note: No seq field in thermal tables, unlike original design
+    const query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${fullTableName}] WHERE CONVERT(varchar, ts, 23) = '${date}' ORDER BY ts`;
     const command = buildSqlcmdCommand(query);
+
+    console.log(`[ThermalService] Fetching daily data for ${sensorId} ${date}`);
 
     try {
       // Execute SQL query via sqlcmd
@@ -140,21 +205,33 @@ class ThermalService {
       // Filter out header/footer lines
       const lines = filterOutputLines(stdout);
 
+      console.log(`[ThermalService] Filtered lines count: ${lines.length}`);
+      if (lines.length > 0) {
+        console.log(`[ThermalService] First line:`, lines[0]);
+        console.log(`[ThermalService] Last line:`, lines[lines.length - 1]);
+      }
+
       // Parse CSV output into objects
-      // Expected format: "seq,timestamp,value"
-      const results = lines.map(line => {
+      // Expected format: "timestamp,value"
+      const results = lines.map((line, index) => {
         const parts = line.split(QUERY_CONSTANTS.CSV_DELIMITER).map(p => p.trim());
 
-        // Validate we have all required fields (seq, ts, value)
-        if (parts.length >= QUERY_CONSTANTS.MIN_PARTS_WITH_SEQ) {
+        // Validate we have all required fields (ts, value)
+        if (parts.length >= QUERY_CONSTANTS.MIN_PARTS_BASIC) {
           return {
-            seq: parseInt(parts[0]),      // Sequence number (1-96)
-            ts: parts[1],                  // Timestamp string
-            value: parseFloat(parts[2])    // Temperature in Celsius
+            seq: index + 1,                // Generate sequence number (1-based index)
+            ts: parts[0],                  // Timestamp string
+            value: parseFloat(parts[1])    // Temperature in Celsius
           };
         }
         return null;
       }).filter(item => item !== null);  // Remove invalid rows
+
+      console.log(`[ThermalService] Parsed results count: ${results.length}`);
+      if (results.length > 0) {
+        console.log(`[ThermalService] First result:`, results[0]);
+        console.log(`[ThermalService] Last result:`, results[results.length - 1]);
+      }
 
       // Use appropriate cache TTL based on data recency
       // Historical data (>7 days old) cached forever
@@ -429,13 +506,7 @@ class ThermalService {
     // Query to find most recent date with exactly 96 records (complete day)
     // 96 records = 24 hours × 4 readings per hour (15-minute intervals)
     // HAVING COUNT(*) = 96 ensures we only get complete days
-    const query = `
-      SELECT TOP 1 CONVERT(varchar, ts, 23) as date, COUNT(*) as count 
-      FROM [${fullTableName}] 
-      GROUP BY CONVERT(varchar, ts, 23) 
-      HAVING COUNT(*) = ${TIME_CONSTANTS.RECORDS_PER_COMPLETE_DAY}
-      ORDER BY date DESC
-    `;
+    const query = `SELECT TOP 1 CONVERT(varchar, ts, 23) as date, COUNT(*) as count FROM [${fullTableName}] GROUP BY CONVERT(varchar, ts, 23) HAVING COUNT(*) = ${TIME_CONSTANTS.RECORDS_PER_COMPLETE_DAY} ORDER BY date DESC`;
 
     const command = buildSqlcmdCommand(query);
 

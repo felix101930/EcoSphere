@@ -20,6 +20,24 @@ const {
 } = require('../utils/thermalValidation');
 
 /**
+ * Get date range for multiple sensors
+ */
+const getSensorsDateRange = asyncHandler(async (req, res) => {
+  // Parse sensor IDs from query or use defaults
+  const sensorIds = parseSensorIds(
+    req.query[THERMAL_QUERY_PARAMS.SENSORS],
+    DEFAULT_SENSOR_LIST
+  );
+
+  const dateRanges = await ThermalService.getSensorsDateRange(sensorIds);
+
+  res.json({
+    [THERMAL_RESPONSE_FIELDS.SUCCESS]: true,
+    [THERMAL_RESPONSE_FIELDS.DATA]: dateRanges
+  });
+});
+
+/**
  * Get available dates with data for a sensor
  */
 const getAvailableDates = asyncHandler(async (req, res) => {
@@ -327,6 +345,7 @@ function aggregateMultiSensorData(sensorDataArrays, sensorIds) {
 module.exports = {
   getAvailableDates,
   getLastCompleteDate,
+  getSensorsDateRange,
   getDailyData,
   getMultipleSensorsDailyData,
   getMultipleSensorsAggregatedData,

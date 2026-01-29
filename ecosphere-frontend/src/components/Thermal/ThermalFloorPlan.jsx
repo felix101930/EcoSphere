@@ -6,7 +6,15 @@ import level2Plan from '../../assets/floorplan/level2.png';
 import ThermalService from '../../services/ThermalService';
 import { FLOOR_CONFIGS, SENSOR_POSITIONS, TEMPERATURE_CONFIG, getSensorDisplayName } from '../../lib/constants/thermal';
 
-const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureHourly = [], currentTimeIndex = 0 }) => {
+const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureHourly = [], currentTimeIndex = 0, sensorsDateRange = {}, sensorIds = [] }) => {
+  // Debug logging
+  console.log('[ThermalFloorPlan] Props:', {
+    floor,
+    sensorIds,
+    sensorsDateRangeKeys: Object.keys(sensorsDateRange),
+    sensorsDateRange
+  });
+
   // Floor image mapping
   const floorImages = {
     basement: basementPlan,
@@ -172,6 +180,36 @@ const ThermalFloorPlan = ({ currentData, floor = 'basement', outdoorTemperatureH
           </Box>
         ))}
       </Box>
+
+      {/* Sensor data availability information */}
+      {Object.keys(sensorsDateRange).length > 0 && (
+        <Box sx={{ mt: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+            📊 Sensor Data Availability
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {sensorIds.map(sensorId => {
+              const sensorNumber = sensorId.replace('_TL2', '');
+              const displayName = getSensorDisplayName(sensorNumber);
+              const dateRange = sensorsDateRange[sensorId];
+
+              if (!dateRange || !dateRange.minDate || !dateRange.maxDate) {
+                return (
+                  <Typography key={sensorId} variant="caption" color="text.secondary">
+                    • {displayName}: No data available
+                  </Typography>
+                );
+              }
+
+              return (
+                <Typography key={sensorId} variant="caption" color="text.secondary">
+                  • {displayName}: {dateRange.minDate} to {dateRange.maxDate}
+                </Typography>
+              );
+            })}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

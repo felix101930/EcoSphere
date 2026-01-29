@@ -37,16 +37,47 @@ class ThermalService {
   }
 
   /**
+   * Get date range for multiple sensors
+   */
+  async getSensorsDateRange(sensorIds = ['20004_TL2', '20005_TL2', '20006_TL2']) {
+    try {
+      const sensorsParam = sensorIds.join(',');
+      const response = await fetch(`${API_BASE_URL}/sensors-date-range?sensors=${sensorsParam}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch sensors date range');
+      }
+      const result = await response.json();
+      return result.data || {};
+    } catch (error) {
+      console.error('Error fetching sensors date range:', error);
+      return {};
+    }
+  }
+
+  /**
    * Get daily data for multiple sensors
    */
   async getMultipleSensorsDailyData(date, sensorIds = ['20004_TL2', '20005_TL2', '20006_TL2']) {
     try {
       const sensorsParam = sensorIds.join(',');
-      const response = await fetch(`${API_BASE_URL}/daily-multiple/${date}?sensors=${sensorsParam}`);
+      const url = `${API_BASE_URL}/daily-multiple/${date}?sensors=${sensorsParam}`;
+      console.log('[ThermalService] Fetching multiple sensors data:', { date, sensorIds, url });
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch multiple sensors data');
       }
       const result = await response.json();
+
+      console.log('[ThermalService] Received data:', {
+        date,
+        dataKeys: Object.keys(result.data || {}),
+        firstSensorId: sensorIds[0],
+        firstSensorDataLength: result.data?.[sensorIds[0]]?.length,
+        firstSensorFirstRecord: result.data?.[sensorIds[0]]?.[0],
+        firstSensorLastRecord: result.data?.[sensorIds[0]]?.[result.data?.[sensorIds[0]]?.length - 1]
+      });
+
       return result.data || {};
     } catch (error) {
       console.error('Error fetching multiple sensors data:', error);

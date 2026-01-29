@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   getAvailableDates,
   getLastCompleteDate,
+  getSensorsDateRange,
   getDailyData,
   getMultipleSensorsDailyData,
   getMultipleSensorsAggregatedData,
@@ -19,6 +20,9 @@ router.get('/available-dates', getAvailableDates);
 
 // Get last complete date
 router.get('/last-complete-date', getLastCompleteDate);
+
+// Get date range for multiple sensors
+router.get('/sensors-date-range', getSensorsDateRange);
 
 // Get daily data for a single sensor
 router.get('/daily/:sensorId/:date', getDailyData);
