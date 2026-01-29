@@ -10,18 +10,13 @@ const { asyncHandler, createDataFetcher, validateParams } = require('../utils/co
 
 // Water-specific constants
 const WATER_DATA_SOURCES = {
-    RAINWATER: 'TL93 (Rain_Water_Level_POLL)',
-    HOT_WATER: 'TL210 (GBT Domestic Hot Water consumption)'
+    RAINWATER: 'TL93 (Rain_Water_Level_POLL) - 10-minute intervals',
+    HOT_WATER: 'TL210 (GBT Domestic Hot Water consumption) - 1-minute intervals'
 };
 
 const WATER_UNITS = {
     RAINWATER: '%',
     HOT_WATER: 'L/h'
-};
-
-const WATER_AGGREGATION = {
-    RAINWATER: 'hourly_average',
-    HOT_WATER: 'hourly_sum'
 };
 
 /**
@@ -44,7 +39,6 @@ const getAvailableDateRange = asyncHandler(async (req, res) => {
 
 /**
  * Get rainwater level data
- * Uses createDataFetcher to eliminate boilerplate code
  */
 const getRainwaterLevelData = asyncHandler(async (req, res) => {
     const { dateFrom, dateTo } = req.params;
@@ -65,7 +59,7 @@ const getRainwaterLevelData = asyncHandler(async (req, res) => {
     // Calculate metrics
     const metrics = WaterService.calculateMetrics(data);
 
-    // Return response with aggregation info
+    // Return response
     res.json({
         success: true,
         data: data,
@@ -74,15 +68,12 @@ const getRainwaterLevelData = asyncHandler(async (req, res) => {
         dateFrom: dateFrom,
         dateTo: dateTo,
         dataSource: WATER_DATA_SOURCES.RAINWATER,
-        unit: WATER_UNITS.RAINWATER,
-        aggregation: data.aggregation || WATER_AGGREGATION.RAINWATER,
-        granularity: data.granularity || 'hourly'
+        unit: WATER_UNITS.RAINWATER
     });
 });
 
 /**
  * Get hot water consumption data
- * Uses createDataFetcher to eliminate boilerplate code
  */
 const getHotWaterConsumptionData = asyncHandler(async (req, res) => {
     const { dateFrom, dateTo } = req.params;
@@ -103,7 +94,7 @@ const getHotWaterConsumptionData = asyncHandler(async (req, res) => {
     // Calculate metrics
     const metrics = WaterService.calculateMetrics(data);
 
-    // Return response with aggregation info
+    // Return response
     res.json({
         success: true,
         data: data,
@@ -112,9 +103,7 @@ const getHotWaterConsumptionData = asyncHandler(async (req, res) => {
         dateFrom: dateFrom,
         dateTo: dateTo,
         dataSource: WATER_DATA_SOURCES.HOT_WATER,
-        unit: WATER_UNITS.HOT_WATER,
-        aggregation: data.aggregation || WATER_AGGREGATION.HOT_WATER,
-        granularity: data.granularity || 'hourly'
+        unit: WATER_UNITS.HOT_WATER
     });
 });
 

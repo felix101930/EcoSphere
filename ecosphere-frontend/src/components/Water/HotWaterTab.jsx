@@ -70,7 +70,6 @@ const HotWaterTab = ({ data, loading, dateTo, dateFrom, forecast, forecastLoadin
                                 count={data.count}
                                 dateFrom={dateFrom}
                                 dateTo={dateTo}
-                                note={`Aggregation: ${data.aggregation || 'Hourly sum from 1-minute intervals'} | Granularity: ${data.granularity || 'hourly'}`}
                             />
                         </>
                     )}
