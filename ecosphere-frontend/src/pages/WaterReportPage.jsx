@@ -213,6 +213,7 @@ const WaterReportPage = () => {
                     <RainwaterTab
                         data={rainwaterData}
                         loading={loading}
+                        dateFrom={dateFrom}
                         dateTo={dateTo}
                         forecast={rainwaterForecast}
                         forecastLoading={loading}
@@ -224,6 +225,7 @@ const WaterReportPage = () => {
                     <HotWaterTab
                         data={hotWaterData}
                         loading={loading}
+                        dateFrom={dateFrom}
                         dateTo={dateTo}
                         forecast={hotWaterForecast}
                         forecastLoading={loading}

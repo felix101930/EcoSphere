@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Box, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
 import OverallTrendChart from '../Electricity/OverallTrendChart';
 import MetricsCards from '../Electricity/MetricsCards';
+import DataSourceInfo from '../Electricity/DataSourceInfo';
 import HotWaterForecastView from './HotWaterForecastView';
 import { CHART_COLORS } from '../../lib/constants/water';
 
@@ -12,7 +13,7 @@ const SUB_TABS = {
     FORECAST: 'forecast'
 };
 
-const HotWaterTab = ({ data, loading, dateTo, forecast, forecastLoading, forecastError, onLoadForecast }) => {
+const HotWaterTab = ({ data, loading, dateTo, dateFrom, forecast, forecastLoading, forecastError, onLoadForecast }) => {
     const [activeSubTab, setActiveSubTab] = useState(SUB_TABS.OVERVIEW);
 
     // Handle sub-tab change
@@ -64,12 +65,13 @@ const HotWaterTab = ({ data, loading, dateTo, forecast, forecastLoading, forecas
                             />
 
                             {/* Data Info */}
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <strong>Data Source:</strong> {data.dataSource}<br />
-                                <strong>Aggregation:</strong> Hourly sum from 1-minute intervals<br />
-                                <strong>Date Range:</strong> {data.dateFrom} to {data.dateTo}<br />
-                                <strong>Data Points:</strong> {data.count}
-                            </Alert>
+                            <DataSourceInfo
+                                dataSource={data.dataSource}
+                                count={data.count}
+                                dateFrom={dateFrom}
+                                dateTo={dateTo}
+                                note="Aggregation: Hourly sum from 1-minute intervals"
+                            />
                         </>
                     )}
                 </>
