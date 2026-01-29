@@ -134,7 +134,7 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
 
     console.log(`📊 Fetching hot water data: ${startDateStr} to ${targetDateStr} (2 years)`);
 
-    // Fetch historical hot water consumption data (1-minute interval)
+    // Fetch historical hot water flow rate data (1-minute interval)
     const rawData = await WaterService.getHotWaterConsumptionData(
         startDateStr,
         targetDateStr
@@ -147,11 +147,11 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
         });
     }
 
-    console.log(`✅ Received ${rawData.length} raw data points (1-minute interval)`);
+    console.log(`✅ Received ${rawData.length} raw data points (1-minute interval flow rate)`);
 
-    // Aggregate 1-minute data to hourly for forecast analysis
-    const historicalData = aggregateToHourly(rawData);
-    console.log(`✅ Aggregated to ${historicalData.length} hourly data points`);
+    // Convert flow rate (L/h) to per-minute consumption (L/min) and aggregate to hourly
+    const historicalData = convertFlowRateToHourlyConsumption(rawData);
+    console.log(`✅ Converted to ${historicalData.length} hourly consumption data points`);
 
     // Generate forecast
     const forecastResult = await ForecastService.generateForecast(
@@ -174,21 +174,25 @@ const getHotWaterForecast = asyncHandler(async (req, res) => {
 });
 
 /**
- * Aggregate 1-minute flow rate data to hourly total consumption
+ * Convert flow rate data to hourly consumption totals
  * 
  * Data interpretation:
  * - Database values are instantaneous flow rates in L/h
  * - Each minute's actual consumption = (flow rate in L/h) × (1/60 hour) = liters consumed
  * - Hourly total = sum of all minute consumptions in that hour
  * 
+ * This function is used for forecast analysis, converting flow rate measurements
+ * into actual consumption amounts that can be predicted.
+ * 
  * Example:
  * - Flow rate: 60 L/h → Consumption per minute: 60 × (1/60) = 1 L
  * - Flow rate: 4,104 L/h → Consumption per minute: 4,104 × (1/60) = 68.4 L
+ * - If 60 L/h sustained for 60 minutes → Hourly consumption: 1 L × 60 = 60 L
  * 
  * @param {Array} data - Array of {ts, value} objects where value is in L/h (instantaneous flow rate)
  * @returns {Array} Array of {ts, value} objects where value is total liters consumed per hour
  */
-function aggregateToHourly(data) {
+function convertFlowRateToHourlyConsumption(data) {
     const hourlyMap = new Map();
 
     data.forEach(point => {
