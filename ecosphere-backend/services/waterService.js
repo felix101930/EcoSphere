@@ -52,11 +52,15 @@ class WaterService {
     }
 
     /**
-     * Get rainwater level data (TL93)
-     * Aggregated to hourly averages
+     * Get rainwater level data (TL93) with adaptive granularity
      * Original interval: 10 minutes
      * Date range: 2018-10-13 to 2025-12-31
      * Unit: Percentage (%)
+     * 
+     * Adaptive granularity:
+     * - ≤7 days: 10-minute intervals (raw data)
+     * - 8-30 days: Hourly averages
+     * - >30 days: Daily averages
      */
     static async getRainwaterLevelData(dateFrom, dateTo) {
         const cacheKey = cache.constructor.generateKey('rainwaterLevel', dateFrom, dateTo);
@@ -65,8 +69,26 @@ class WaterService {
 
         const tableName = TABLE_NAMES.RAINWATER_LEVEL;
 
-        // Aggregate 10-minute data to hourly averages using DATEPART
-        const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+        // Calculate date range in days
+        const daysDiff = this.calculateDaysDifference(dateFrom, dateTo);
+
+        let query;
+        let aggregation;
+
+        if (daysDiff <= 7) {
+            // Raw 10-minute data for short periods
+            query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') ORDER BY ts`;
+            aggregation = '10-minute intervals (raw data)';
+        } else if (daysDiff <= 30) {
+            // Hourly averages for medium periods
+            query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+            aggregation = 'Hourly averages';
+        } else {
+            // Daily averages for long periods
+            query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' 12:00:00' as ts, AVG(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE) ORDER BY CAST(ts AS DATE)`;
+            aggregation = 'Daily averages';
+        }
+
         const command = buildSqlcmdCommand(query);
 
         try {
@@ -83,6 +105,10 @@ class WaterService {
                 }
                 return null;
             }).filter(item => item !== null);
+
+            // Add aggregation metadata
+            results.aggregation = aggregation;
+            results.granularity = daysDiff <= 7 ? '10-minute' : (daysDiff <= 30 ? 'hourly' : 'daily');
 
             // Use appropriate TTL based on data recency
             const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
@@ -96,11 +122,15 @@ class WaterService {
     }
 
     /**
-     * Get hot water consumption data (TL210)
-     * Aggregated to hourly sums
+     * Get hot water consumption data (TL210) with adaptive granularity
      * Original interval: 1 minute
      * Date range: 2018-09-11 to 2019-11-14 (430 days)
      * Unit: Liters per hour (L/h)
+     * 
+     * Adaptive granularity:
+     * - ≤7 days: 1-minute intervals (raw data)
+     * - 8-30 days: Hourly sums
+     * - >30 days: Daily sums
      */
     static async getHotWaterConsumptionData(dateFrom, dateTo) {
         const cacheKey = cache.constructor.generateKey('hotWaterConsumption', dateFrom, dateTo);
@@ -109,8 +139,26 @@ class WaterService {
 
         const tableName = TABLE_NAMES.HOT_WATER_CONSUMPTION;
 
-        // Aggregate 1-minute data to hourly sums using DATEPART
-        const query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+        // Calculate date range in days
+        const daysDiff = this.calculateDaysDifference(dateFrom, dateTo);
+
+        let query;
+        let aggregation;
+
+        if (daysDiff <= 7) {
+            // Raw 1-minute data for short periods
+            query = `SELECT CONVERT(varchar, ts, 120) as ts, value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') ORDER BY ts`;
+            aggregation = '1-minute intervals (raw data)';
+        } else if (daysDiff <= 30) {
+            // Hourly sums for medium periods
+            query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' ' + RIGHT('0' + CAST(DATEPART(HOUR, ts) AS VARCHAR), 2) + ':00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE), DATEPART(HOUR, ts) ORDER BY CAST(ts AS DATE), DATEPART(HOUR, ts)`;
+            aggregation = 'Hourly sums';
+        } else {
+            // Daily sums for long periods
+            query = `SELECT CONVERT(varchar, CAST(ts AS DATE), 23) + ' 12:00:00' as ts, SUM(value) as value FROM [${tableName}] WHERE ts >= '${dateFrom}' AND ts < DATEADD(day, 1, '${dateTo}') GROUP BY CAST(ts AS DATE) ORDER BY CAST(ts AS DATE)`;
+            aggregation = 'Daily sums';
+        }
+
         const command = buildSqlcmdCommand(query);
 
         try {
@@ -127,6 +175,10 @@ class WaterService {
                 }
                 return null;
             }).filter(item => item !== null);
+
+            // Add aggregation metadata
+            results.aggregation = aggregation;
+            results.granularity = daysDiff <= 7 ? '1-minute' : (daysDiff <= 30 ? 'hourly' : 'daily');
 
             // Use appropriate TTL based on data recency
             const ttl = this.isRecentData(dateTo) ? CACHE_TTL.RECENT_DATA : CACHE_TTL.HISTORICAL_DATA;
@@ -178,6 +230,20 @@ class WaterService {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const dateToCheck = new Date(dateTo);
         return dateToCheck >= sevenDaysAgo;
+    }
+
+    /**
+     * Calculate difference in days between two dates
+     * @param {string} dateFrom - Start date in YYYY-MM-DD format
+     * @param {string} dateTo - End date in YYYY-MM-DD format
+     * @returns {number} Number of days
+     */
+    static calculateDaysDifference(dateFrom, dateTo) {
+        const from = new Date(dateFrom + 'T12:00:00');
+        const to = new Date(dateTo + 'T12:00:00');
+        const diffTime = Math.abs(to - from);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
     }
 }
 

@@ -70,7 +70,7 @@ const RainwaterTab = ({ data, loading, dateTo, dateFrom, forecast, forecastLoadi
                                 count={data.count}
                                 dateFrom={dateFrom}
                                 dateTo={dateTo}
-                                note="Aggregation: Hourly average from 10-minute intervals"
+                                note={`Aggregation: ${data.aggregation || 'Hourly average from 10-minute intervals'} | Granularity: ${data.granularity || 'hourly'}`}
                             />
                         </>
                     )}

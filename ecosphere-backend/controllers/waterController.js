@@ -46,28 +46,76 @@ const getAvailableDateRange = asyncHandler(async (req, res) => {
  * Get rainwater level data
  * Uses createDataFetcher to eliminate boilerplate code
  */
-const getRainwaterLevelData = createDataFetcher({
-    fetchDataFn: WaterService.getRainwaterLevelData.bind(WaterService),
-    calculateMetricsFn: WaterService.calculateMetrics.bind(WaterService),
-    dataSource: WATER_DATA_SOURCES.RAINWATER,
-    additionalMetadata: {
-        unit: WATER_UNITS.RAINWATER,
-        aggregation: WATER_AGGREGATION.RAINWATER
+const getRainwaterLevelData = asyncHandler(async (req, res) => {
+    const { dateFrom, dateTo } = req.params;
+
+    // Validate parameters
+    validateParams({ dateFrom, dateTo });
+
+    // Fetch data
+    const data = await WaterService.getRainwaterLevelData(dateFrom, dateTo);
+
+    if (!data || data.length === 0) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+            success: false,
+            error: 'No data found for the specified date range'
+        });
     }
+
+    // Calculate metrics
+    const metrics = WaterService.calculateMetrics(data);
+
+    // Return response with aggregation info
+    res.json({
+        success: true,
+        data: data,
+        metrics: metrics,
+        count: data.length,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        dataSource: WATER_DATA_SOURCES.RAINWATER,
+        unit: WATER_UNITS.RAINWATER,
+        aggregation: data.aggregation || WATER_AGGREGATION.RAINWATER,
+        granularity: data.granularity || 'hourly'
+    });
 });
 
 /**
  * Get hot water consumption data
  * Uses createDataFetcher to eliminate boilerplate code
  */
-const getHotWaterConsumptionData = createDataFetcher({
-    fetchDataFn: WaterService.getHotWaterConsumptionData.bind(WaterService),
-    calculateMetricsFn: WaterService.calculateMetrics.bind(WaterService),
-    dataSource: WATER_DATA_SOURCES.HOT_WATER,
-    additionalMetadata: {
-        unit: WATER_UNITS.HOT_WATER,
-        aggregation: WATER_AGGREGATION.HOT_WATER
+const getHotWaterConsumptionData = asyncHandler(async (req, res) => {
+    const { dateFrom, dateTo } = req.params;
+
+    // Validate parameters
+    validateParams({ dateFrom, dateTo });
+
+    // Fetch data
+    const data = await WaterService.getHotWaterConsumptionData(dateFrom, dateTo);
+
+    if (!data || data.length === 0) {
+        return res.status(HTTP_STATUS.NOT_FOUND).json({
+            success: false,
+            error: 'No data found for the specified date range'
+        });
     }
+
+    // Calculate metrics
+    const metrics = WaterService.calculateMetrics(data);
+
+    // Return response with aggregation info
+    res.json({
+        success: true,
+        data: data,
+        metrics: metrics,
+        count: data.length,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        dataSource: WATER_DATA_SOURCES.HOT_WATER,
+        unit: WATER_UNITS.HOT_WATER,
+        aggregation: data.aggregation || WATER_AGGREGATION.HOT_WATER,
+        granularity: data.granularity || 'hourly'
+    });
 });
 
 /**

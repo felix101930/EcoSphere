@@ -63,8 +63,12 @@ const WaterReportPage = () => {
     };
 
     // Handle apply filter
-    const handleApplyFilter = async () => {
-        if (!dateFrom || !dateTo) {
+    const handleApplyFilter = async (newDateFrom, newDateTo) => {
+        // Use passed dates if available, otherwise use state
+        const fromDate = newDateFrom || dateFrom;
+        const toDate = newDateTo || dateTo;
+
+        if (!fromDate || !toDate) {
             return;
         }
 
@@ -72,10 +76,10 @@ const WaterReportPage = () => {
             // Load data based on active tab
             switch (activeTab) {
                 case TAB_TYPES.RAINWATER:
-                    await loadRainwaterData(dateFrom, dateTo);
+                    await loadRainwaterData(fromDate, toDate);
                     break;
                 case TAB_TYPES.HOT_WATER:
-                    await loadHotWaterData(dateFrom, dateTo);
+                    await loadHotWaterData(fromDate, toDate);
                     break;
                 default:
                     break;
