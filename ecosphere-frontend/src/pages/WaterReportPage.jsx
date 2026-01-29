@@ -36,9 +36,9 @@ const WaterReportPage = () => {
         loadRainwaterForecast
     } = useWaterData();
 
-    // Set default date range when dateRange is loaded
+    // Set default date range when dateRange is loaded or tab changes
     useEffect(() => {
-        if (dateRange && !dateFrom && !dateTo) {
+        if (dateRange) {
             // Determine which date range to use based on active tab
             const relevantRange = activeTab === TAB_TYPES.RAINWATER
                 ? dateRange.rainwater
@@ -51,11 +51,17 @@ const WaterReportPage = () => {
                 const minDate = new Date(maxDate);
                 minDate.setDate(minDate.getDate() - 7);
 
+                // Check if minDate is before the available range
+                const availableMinDate = new Date(relevantRange.minDate + 'T12:00:00');
+                if (minDate < availableMinDate) {
+                    minDate.setTime(availableMinDate.getTime());
+                }
+
                 setDateFrom(minDate);
                 setDateTo(maxDate);
             }
         }
-    }, [dateRange, dateFrom, dateTo, activeTab]);
+    }, [dateRange, activeTab]);
 
     // Handle tab change
     const handleTabChange = (_event, newValue) => {
